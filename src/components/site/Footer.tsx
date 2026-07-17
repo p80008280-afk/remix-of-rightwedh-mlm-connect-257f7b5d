@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Leaf } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export function Footer() {
@@ -8,14 +8,18 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-1">
           <div className="flex items-center gap-3">
-            <img src={logoAsset.url} alt="Logo" className="h-14 w-14 object-contain bg-background/10 rounded-full p-1" />
+            <div className="h-12 w-12 rounded-full bg-background/10 ring-2 ring-gold/40 flex items-center justify-center">
+              <img src={logoAsset.url} alt="Logo" className="h-10 w-10 object-contain" />
+            </div>
             <div>
               <div className="font-serif text-lg font-bold">Righwedh Sanjivni</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-gold">Ayurveda · Wellness</div>
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] text-gold">
+                <Leaf className="h-2.5 w-2.5" /> Pure Ayurveda
+              </div>
             </div>
           </div>
           <p className="mt-4 text-sm text-primary-foreground/70 leading-relaxed">
-            Ancient Ayurveda wisdom meets a modern income opportunity. Grow health, wealth and a
+            Ancient Ayurveda wisdom meets a modern income opportunity. Build health, wealth and a
             trusted community with Righwedh Sanjivni.
           </p>
         </div>
@@ -35,6 +39,7 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-primary-foreground/80">
             <li><Link to="/login" className="hover:text-gold">Member Login</Link></li>
             <li><Link to="/register" className="hover:text-gold">Join Us</Link></li>
+            <li><Link to="/admin" className="hover:text-gold">Admin Panel</Link></li>
           </ul>
         </div>
 

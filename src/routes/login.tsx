@@ -18,7 +18,9 @@ function Login() {
       <section className="min-h-[80vh] flex items-center justify-center bg-gradient-leaf px-6 py-16">
         <div className="w-full max-w-md rounded-3xl border border-border bg-card p-10 shadow-elegant">
           <div className="flex flex-col items-center">
-            <img src={logoAsset.url} alt="Logo" className="h-20 w-20 object-contain" />
+            <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center ring-2 ring-gold/40 shadow-soft">
+              <img src={logoAsset.url} alt="Logo" className="h-16 w-16 object-contain" />
+            </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Member Login</h1>
             <p className="mt-1 text-sm text-muted-foreground">Welcome back to Righwedh Sanjivni</p>
           </div>
@@ -26,7 +28,7 @@ function Login() {
             className="mt-8 space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              alert("Login system agle phase mein activate hoga.");
+              alert("The member login system will be activated in the next phase.");
             }}
           >
             <label className="block text-sm font-medium">
@@ -42,7 +44,10 @@ function Login() {
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Naye member? <Link to="/register" className="text-primary font-semibold hover:text-primary-glow">Sponsor link se register karein</Link>
+            New member? <Link to="/register" className="text-primary font-semibold hover:text-primary-glow">Register with a sponsor link</Link>
+          </p>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Admin? <Link to="/admin" className="text-primary font-semibold hover:text-primary-glow">Go to Admin Panel</Link>
           </p>
         </div>
       </section>

@@ -6,7 +6,7 @@ export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
       { title: "Join Righwedh Sanjivni — Register" },
-      { name: "description", content: "Righwedh Sanjivni family ka hissa banein. Apne sponsor ke referral link se register karein aur Ayurveda business shuru karein." },
+      { name: "description", content: "Join the Righwedh Sanjivni family. Register with your sponsor's referral link and start your Ayurveda business." },
     ],
   }),
   component: Register,
@@ -18,17 +18,19 @@ function Register() {
       <section className="min-h-[80vh] flex items-center justify-center bg-gradient-leaf px-6 py-16">
         <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-10 shadow-elegant">
           <div className="flex flex-col items-center">
-            <img src={logoAsset.url} alt="Logo" className="h-20 w-20 object-contain" />
+            <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center ring-2 ring-gold/40 shadow-soft">
+              <img src={logoAsset.url} alt="Logo" className="h-16 w-16 object-contain" />
+            </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Join Our Family</h1>
             <p className="mt-1 text-sm text-muted-foreground text-center">
-              Sponsor ke referral link se register karein.
+              Register using your sponsor's referral link.
             </p>
           </div>
           <form
             className="mt-8 space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              alert("Registration system agle phase mein activate hoga.");
+              alert("The registration system will be activated in the next phase.");
             }}
           >
             <div className="grid sm:grid-cols-2 gap-4">

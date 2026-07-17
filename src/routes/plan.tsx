@@ -1,13 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Users, DollarSign, TrendingUp, Trophy, Plus, ArrowRight } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/plan")({
   head: () => ({
     meta: [
       { title: "Business Plan — Righwedh Sanjivni Binary MLM" },
-      { name: "description", content: "Righwedh Sanjivni ka binary MLM plan — direct sale commission, pair matching bonus, level income aur rank rewards. Simple aur fair." },
+      { name: "description", content: "The Righwedh Sanjivni binary MLM plan — direct sale commission, pair matching bonus, level income and rank rewards. Simple and fair." },
       { property: "og:title", content: "Business Plan — Righwedh Sanjivni" },
       { property: "og:description", content: "Fair binary plan: direct + pair + rank income." },
     ],
@@ -23,9 +22,15 @@ function Plan() {
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Business Plan</div>
           <h1 className="mt-4 font-serif text-5xl md:text-6xl">Righwedh Binary Plan</h1>
           <p className="mt-6 text-primary-foreground/80 max-w-2xl mx-auto">
-            Ek simple binary structure — do legs (Left & Right). Har sale par direct commission,
-            aur har match par pair bonus. Team apni marzi se badhaayein.
+            A simple binary structure — two legs (Left & Right). Earn a direct commission on every
+            sale and a pair bonus on every match. Grow your team at your own pace.
           </p>
+
+          <div className="mt-10 grid grid-cols-3 gap-4 max-w-xl mx-auto">
+            <PlanStat label="Product MRP" value="₹ 3,250" />
+            <PlanStat label="Direct Commission" value="₹ 900" gold />
+            <PlanStat label="Pair Match" value="₹ 300" gold />
+          </div>
         </div>
       </section>
 
@@ -33,23 +38,21 @@ function Plan() {
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">How It Works</div>
-          <h2 className="mt-3 font-serif text-4xl text-primary">Simple example — A, B aur C</h2>
+          <h2 className="mt-3 font-serif text-4xl text-primary">A simple example — A, B and C</h2>
         </div>
 
         <div className="mt-14 grid lg:grid-cols-2 gap-12 items-center">
-          {/* Tree */}
           <div className="rounded-3xl border border-border bg-card p-10 shadow-elegant">
             <TreeDemo />
           </div>
-          {/* Steps */}
           <ol className="space-y-5">
             {[
-              { s: "Step 1", t: "Aap = A", d: "Aap register karte hain sponsor ke referral link se." },
-              { s: "Step 2", t: "B aur C jodo", d: "Aap apne left par B aur right par C ko join karte hain — dono aapke direct." },
-              { s: "Step 3", t: "Direct Commission", d: "Jab B kuch bhi purchase karta hai — A ko direct commission. Jab C purchase karta hai — A ko commission." },
-              { s: "Step 4", t: "Pair Bonus", d: "Jab B aur C dono ka BV match hota hai — A ko pair matching bonus milta hai." },
-              { s: "Step 5", t: "Neeche wali line", d: "B aur C bhi apne neeche apni team banate hain — unka pair unke upar chalta hai, aur infinite depth tak chain badhti hai." },
-              { s: "Step 6", t: "\"+\" Option", d: "Har member ke tree me + button — kabhi bhi apni left/right empty position par naya member invite karein." },
+              { s: "Step 1", t: "You are A", d: "You register using your sponsor's referral link." },
+              { s: "Step 2", t: "Add B and C", d: "You place B on your left and C on your right — both are your directs." },
+              { s: "Step 3", t: "Direct Commission", d: "Whenever B makes a purchase, A earns ₹900. Whenever C makes a purchase, A earns ₹900." },
+              { s: "Step 4", t: "Pair Bonus", d: "When the BV of B and C matches, A earns a pair matching bonus of ₹300." },
+              { s: "Step 5", t: "The chain grows", d: "B and C build their own teams below them — their pairs count for their upline, and the chain grows to infinite depth." },
+              { s: "Step 6", t: "The \"+\" option", d: "Every member sees a + button on their tree — invite a new member into any empty left/right position at any time." },
             ].map((s, i) => (
               <li key={i} className="relative rounded-2xl border border-border bg-card p-6 pl-16 shadow-soft">
                 <div className="absolute left-4 top-6 h-10 w-10 rounded-full bg-gradient-gold flex items-center justify-center text-gold-foreground font-serif font-bold text-lg shadow-gold">
@@ -69,14 +72,14 @@ function Plan() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center">
             <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Income Streams</div>
-            <h2 className="mt-3 font-serif text-4xl text-primary">4 tarah ki income</h2>
+            <h2 className="mt-3 font-serif text-4xl text-primary">Four ways to earn</h2>
           </div>
           <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: DollarSign, t: "Direct Sale Income", d: "Har direct member ke purchase par fixed % commission aapke wallet mein." },
-              { icon: Users, t: "Pair Matching Bonus", d: "Left aur Right leg ka BV match hone par upar wale ko pair bonus." },
-              { icon: TrendingUp, t: "Level Income", d: "Neeche ki generations par bhi small % commission — deep team rewards." },
-              { icon: Trophy, t: "Rank & Reward Bonus", d: "Silver, Gold, Diamond ranks — travel, gifts aur cash rewards." },
+              { icon: DollarSign, t: "Direct Sale Income", d: "Earn ₹900 fixed commission for every product purchase made by your direct member." },
+              { icon: Users, t: "Pair Matching Bonus", d: "Earn ₹300 every time your Left and Right legs form a matched pair in BV." },
+              { icon: TrendingUp, t: "Level Income", d: "A small % commission from the generations below you — deep-team rewards." },
+              { icon: Trophy, t: "Rank & Reward Bonus", d: "Silver, Gold and Diamond ranks unlock travel, gifts and cash rewards." },
             ].map((f) => (
               <div key={f.t} className="rounded-2xl bg-card p-8 shadow-soft border border-border">
                 <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
@@ -93,7 +96,7 @@ function Plan() {
       {/* CTA */}
       <section className="mx-auto max-w-4xl px-6 py-20 text-center">
         <h2 className="font-serif text-4xl text-primary">Ready to build your team?</h2>
-        <p className="mt-3 text-muted-foreground">Register hone ke liye apne sponsor se referral link maangein.</p>
+        <p className="mt-3 text-muted-foreground">Ask your sponsor for their referral link to get started.</p>
         <Link
           to="/register"
           className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-8 py-4 text-base font-semibold text-gold-foreground shadow-gold hover:opacity-90"
@@ -102,6 +105,15 @@ function Plan() {
         </Link>
       </section>
     </SiteLayout>
+  );
+}
+
+function PlanStat({ label, value, gold }: { label: string; value: string; gold?: boolean }) {
+  return (
+    <div className={`rounded-xl px-3 py-4 border ${gold ? "bg-gradient-gold border-gold/40 text-gold-foreground shadow-gold" : "bg-primary-foreground/10 border-primary-foreground/20"}`}>
+      <div className={`text-[10px] uppercase tracking-widest font-semibold ${gold ? "text-gold-foreground/80" : "text-primary-foreground/70"}`}>{label}</div>
+      <div className="mt-1 font-bold text-xl">{value}</div>
+    </div>
   );
 }
 
@@ -143,7 +155,7 @@ function TreeDemo() {
         <Node label="+" tone="muted" />
       </div>
       <div className="mt-4 text-xs text-muted-foreground text-center max-w-sm">
-        Har circle par <b>+</b> ka option — us position par naya member invite karein.
+        Tap the <b>+</b> on any circle to invite a new member into that position.
       </div>
     </div>
   );
