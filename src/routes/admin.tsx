@@ -116,8 +116,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       {/* SIDEBAR */}
       <aside className="w-64 bg-primary text-primary-foreground min-h-screen sticky top-0 flex flex-col">
         <div className="px-6 py-5 border-b border-primary-foreground/10 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-background/10 ring-2 ring-gold/40 flex items-center justify-center">
-            <img src={logoAsset.url} alt="Logo" className="h-8 w-8 object-contain" />
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-white ring-2 ring-gold/50 flex items-center justify-center">
+            <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
             <div className="font-serif font-bold">Righwedh</div>
