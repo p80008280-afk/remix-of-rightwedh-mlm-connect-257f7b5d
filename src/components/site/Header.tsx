@@ -49,15 +49,18 @@ export function Header() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-3">
-          <Link to="/login" className="text-sm font-medium text-primary hover:text-primary-glow">
-            Login
-          </Link>
-          <Link
-            to="/register"
-            className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition"
-          >
-            Join Now
-          </Link>
+          {authed ? (
+            <Link to={"/_authenticated/dashboard" as any} className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
+              My Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm font-medium text-primary hover:text-primary-glow">Login</Link>
+              <Link to="/register" className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
+                Join Now
+              </Link>
+            </>
+          )}
         </div>
 
         <button className="lg:hidden p-2" onClick={() => setOpen((o) => !o)} aria-label="Menu">
