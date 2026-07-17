@@ -1,18 +1,66 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo.png.asset.json";
 
+const search = z.object({ ref: z.string().optional(), pos: z.enum(["left", "right"]).optional() });
+
 export const Route = createFileRoute("/register")({
+  validateSearch: search,
   head: () => ({
     meta: [
-      { title: "Join Righwedh Sanjivni — Register" },
-      { name: "description", content: "Join the Righwedh Sanjivni family. Register with your sponsor's referral link and start your Ayurveda business." },
+      { title: "Register — Righwedh Sanjivni" },
+      { name: "description", content: "Join Righwedh Sanjivni. Register with your sponsor's referral code." },
     ],
   }),
   component: Register,
 });
 
 function Register() {
+  const nav = useNavigate();
+  const s = useSearch({ from: "/register" });
+  const [form, setForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    sponsor_code: s.ref?.toUpperCase() || "",
+    position: s.pos || "left",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function up<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const { data, error: err } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: {
+          full_name: form.full_name,
+          phone: form.phone,
+          sponsor_code: form.sponsor_code.trim().toUpperCase(),
+          position: form.position,
+        },
+      },
+    });
+    if (err || !data.user) {
+      setError(err?.message || "Registration failed");
+      setLoading(false);
+      return;
+    }
+    await nav({ to: "/_authenticated/dashboard" as any });
+  }
+
   return (
     <SiteLayout>
       <section className="min-h-[80vh] flex items-center justify-center bg-gradient-leaf px-6 py-16">
@@ -23,34 +71,51 @@ function Register() {
             </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Join Our Family</h1>
             <p className="mt-1 text-sm text-muted-foreground text-center">
-              Register using your sponsor's referral link.
+              Register using your sponsor's referral code.
             </p>
           </div>
-          <form
-            className="mt-8 space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert("The registration system will be activated in the next phase.");
-            }}
-          >
+          <form className="mt-8 space-y-4" onSubmit={submit}>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Full Name" name="name" />
-              <Field label="Sponsor ID" name="sponsor" />
+              <Field label="Full Name" value={form.full_name} onChange={(v) => up("full_name", v)} />
+              <Field
+                label="Sponsor Code"
+                value={form.sponsor_code}
+                onChange={(v) => up("sponsor_code", v.toUpperCase())}
+                placeholder="e.g. RSABC123"
+                required={false}
+              />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Phone" name="phone" type="tel" />
-              <Field label="Email" name="email" type="email" />
+              <Field label="Phone" type="tel" value={form.phone} onChange={(v) => up("phone", v)} />
+              <Field label="Email" type="email" value={form.email} onChange={(v) => up("email", v)} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Position" name="position" placeholder="Left or Right" />
-              <Field label="Password" name="password" type="password" />
+              <label className="block text-sm font-medium">
+                Position
+                <select
+                  value={form.position}
+                  onChange={(e) => up("position", e.target.value as "left" | "right")}
+                  className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
+                >
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </select>
+              </label>
+              <Field label="Password" type="password" value={form.password} onChange={(v) => up("password", v)} />
             </div>
-            <button className="w-full rounded-full bg-gradient-gold py-3.5 font-semibold text-gold-foreground shadow-gold hover:opacity-90">
-              Register
+            {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
+            <button
+              disabled={loading}
+              className="w-full rounded-full bg-gradient-gold py-3.5 font-semibold text-gold-foreground shadow-gold hover:opacity-90 disabled:opacity-60"
+            >
+              {loading ? "Creating..." : "Register"}
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already a member? <Link to="/login" className="text-primary font-semibold hover:text-primary-glow">Login</Link>
+            Already a member?{" "}
+            <Link to="/login" className="text-primary font-semibold hover:text-primary-glow">
+              Login
+            </Link>
           </p>
         </div>
       </section>
@@ -58,15 +123,18 @@ function Register() {
   );
 }
 
-function Field({ label, name, type = "text", placeholder }: { label: string; name: string; type?: string; placeholder?: string }) {
+function Field({
+  label, value, onChange, type = "text", placeholder, required = true,
+}: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; required?: boolean; }) {
   return (
     <label className="block text-sm font-medium">
       {label}
       <input
-        name={name}
         type={type}
+        required={required}
         placeholder={placeholder}
-        required
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
       />
     </label>
