@@ -309,23 +309,150 @@ function TabKyc() {
 }
 
 function TabProducts() {
+  const [showForm, setShowForm] = useState(false);
+  const [products, setProducts] = useState([
+    { name: "Aaurva Capsule", cat: "Wellness", mrp: "₹ 3,250", joining: "₹ 3,250", direct: "₹ 900", pair: "₹ 300", stock: 240, status: "Active" },
+    { name: "Immuno Shakti Syrup", cat: "Immunity", mrp: "₹ 850", joining: "₹ 850", direct: "₹ 240", pair: "₹ 80", stock: 180, status: "Active" },
+    { name: "Detox Plus Churna", cat: "Detox", mrp: "₹ 650", joining: "₹ 650", direct: "₹ 180", pair: "₹ 60", stock: 120, status: "Active" },
+    { name: "Kesh Vardhak Hair Oil", cat: "Hair Care", mrp: "₹ 550", joining: "₹ 550", direct: "₹ 150", pair: "₹ 50", stock: 95, status: "Active" },
+    { name: "Twak Glow Face Cream", cat: "Skin Care", mrp: "₹ 950", joining: "₹ 950", direct: "₹ 270", pair: "₹ 90", stock: 60, status: "Active" },
+    { name: "Joint Relief Oil", cat: "Joint Care", mrp: "₹ 720", joining: "₹ 720", direct: "₹ 200", pair: "₹ 70", stock: 145, status: "Active" },
+  ]);
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <button className="rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold">+ Add Product</button>
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-muted-foreground">
+          Add or edit any product. Each product has its own <b className="text-primary">Joining Fee (MRP)</b>, <b className="text-primary">Direct Sale Commission</b> and <b className="text-primary">Pair Matching Bonus</b>.
+        </div>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold"
+        >
+          {showForm ? "Close" : "+ Add Product"}
+        </button>
       </div>
-      <Table rows={[
-        { name: "Aaurva Capsule", cat: "Wellness", mrp: "₹ 3,250", direct: "₹ 900", pair: "₹ 300", stock: 240, status: "Active" },
-      ]} cols={[
-        { key: "name", label: "Product" },
-        { key: "cat", label: "Category" },
-        { key: "mrp", label: "MRP" },
-        { key: "direct", label: "Direct Comm." },
-        { key: "pair", label: "Pair Match" },
-        { key: "stock", label: "Stock" },
-        { key: "status", label: "Status" },
-      ]} />
+
+      {showForm && <ProductForm onCancel={() => setShowForm(false)} onSave={(p) => { setProducts([p, ...products]); setShowForm(false); }} />}
+
+      <Table
+        rows={products}
+        cols={[
+          { key: "name", label: "Product" },
+          { key: "cat", label: "Category" },
+          { key: "mrp", label: "MRP" },
+          { key: "joining", label: "Joining Fee" },
+          { key: "direct", label: "Direct Comm." },
+          { key: "pair", label: "Pair Match" },
+          { key: "stock", label: "Stock" },
+          { key: "status", label: "Status" },
+        ]}
+      />
     </div>
+  );
+}
+
+function ProductForm({
+  onCancel,
+  onSave,
+}: {
+  onCancel: () => void;
+  onSave: (p: { name: string; cat: string; mrp: string; joining: string; direct: string; pair: string; stock: number; status: string }) => void;
+}) {
+  const [name, setName] = useState("");
+  const [cat, setCat] = useState("Wellness");
+  const [desc, setDesc] = useState("");
+  const [mrp, setMrp] = useState("");
+  const [joining, setJoining] = useState("");
+  const [direct, setDirect] = useState("");
+  const [pair, setPair] = useState("");
+  const [stock, setStock] = useState("");
+  const [status, setStatus] = useState("Active");
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void desc;
+    onSave({
+      name: name || "Untitled Product",
+      cat,
+      mrp: `₹ ${mrp || "0"}`,
+      joining: `₹ ${joining || mrp || "0"}`,
+      direct: `₹ ${direct || "0"}`,
+      pair: `₹ ${pair || "0"}`,
+      stock: Number(stock) || 0,
+      status,
+    });
+  };
+
+  return (
+    <form onSubmit={submit} className="rounded-2xl border border-gold/30 bg-card p-6 shadow-elegant space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-xs uppercase tracking-widest text-gold font-semibold">New Product</div>
+          <div className="font-serif text-xl text-primary">Add product with its own commission plan</div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field label="Product Title">
+          <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Immuno Shakti Syrup" className={inputCls} />
+        </Field>
+        <Field label="Category">
+          <select value={cat} onChange={(e) => setCat(e.target.value)} className={inputCls}>
+            {["Wellness", "Immunity", "Detox", "Hair Care", "Skin Care", "Joint Care", "Digestive", "Other"].map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </Field>
+      </div>
+
+      <Field label="Description">
+        <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} placeholder="Short product description shown on the website…" className={inputCls} />
+      </Field>
+
+      <div className="grid md:grid-cols-4 gap-4">
+        <Field label="MRP (₹)">
+          <input type="number" value={mrp} onChange={(e) => setMrp(e.target.value)} required placeholder="3250" className={inputCls} />
+        </Field>
+        <Field label="Joining Fee (₹)">
+          <input type="number" value={joining} onChange={(e) => setJoining(e.target.value)} placeholder="Same as MRP" className={inputCls} />
+        </Field>
+        <Field label="Direct Sale Commission (₹)">
+          <input type="number" value={direct} onChange={(e) => setDirect(e.target.value)} required placeholder="900" className={inputCls} />
+        </Field>
+        <Field label="Pair Matching Bonus (₹)">
+          <input type="number" value={pair} onChange={(e) => setPair(e.target.value)} required placeholder="300" className={inputCls} />
+        </Field>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <Field label="Stock">
+          <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" className={inputCls} />
+        </Field>
+        <Field label="Status">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls}>
+            <option>Active</option><option>Draft</option><option>Out of Stock</option>
+          </select>
+        </Field>
+        <Field label="Product Image">
+          <input type="file" accept="image/*" className={`${inputCls} file:mr-3 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground file:px-3 file:py-1.5 file:text-xs`} />
+        </Field>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold">Cancel</button>
+        <button className="rounded-full bg-gradient-gold px-6 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold">Save Product</button>
+      </div>
+    </form>
+  );
+}
+
+const inputCls = "w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm focus:ring-2 focus:ring-ring";
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-xs font-semibold text-primary mb-1.5 uppercase tracking-wider">{label}</span>
+      {children}
+    </label>
   );
 }
 
