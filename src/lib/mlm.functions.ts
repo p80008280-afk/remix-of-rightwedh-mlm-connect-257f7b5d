@@ -123,7 +123,7 @@ export const updateMemberStatus = createServerFn({ method: "POST" })
     });
     if (!isAdmin) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {};
+    const patch: { kyc_status?: string; is_active?: boolean } = {};
     if (data.kyc_status) patch.kyc_status = data.kyc_status;
     if (typeof data.is_active === "boolean") patch.is_active = data.is_active;
     const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.userId);
