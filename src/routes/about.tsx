@@ -6,9 +6,9 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About Us — Righwedh Sanjivni" },
-      { name: "description", content: "Righwedh Sanjivni ki kahani — Ayurveda ki paramparaa aur ek fair business opportunity ka sangam. Founded by Kartik Tirgar." },
+      { name: "description", content: "The story of Righwedh Sanjivni — where the tradition of Ayurveda meets a fair business opportunity. Founded by Kartik Tirgar." },
       { property: "og:title", content: "About Righwedh Sanjivni" },
-      { property: "og:description", content: "Ayurveda ki paramparaa aur modern MLM opportunity." },
+      { property: "og:description", content: "Ayurvedic tradition meets a modern income opportunity." },
     ],
   }),
   component: About,
@@ -22,7 +22,7 @@ function About() {
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Our Story</div>
           <h1 className="mt-4 font-serif text-5xl md:text-6xl">About Righwedh Sanjivni</h1>
           <p className="mt-6 text-lg text-primary-foreground/80 max-w-2xl mx-auto leading-relaxed">
-            Ayurveda ki 5000 saal purani vidya ko har ghar tak pahuchana — yehi humara sapna hai.
+            Bringing 5,000 years of Ayurvedic wisdom to every home — that is our dream.
           </p>
         </div>
       </section>
@@ -30,23 +30,22 @@ function About() {
       <section className="mx-auto max-w-6xl px-6 py-20 grid lg:grid-cols-2 gap-14 items-center">
         <div>
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Vision</div>
-          <h2 className="mt-3 font-serif text-4xl text-primary">Har ghar Ayurveda, har haath rozgar.</h2>
+          <h2 className="mt-3 font-serif text-4xl text-primary">Ayurveda in every home, livelihood in every hand.</h2>
           <p className="mt-5 text-muted-foreground leading-relaxed">
-            Righwedh Sanjivni ki sthapna Shri <b>Kartik Tirgar</b> ji ne ki, is vishwas ke saath ki
-            achhi sehat aur behtar aajivika dono ek saath sambhav hain. Hum Rajasthan ke Pratapgarh,
-            Chhoti Sadri se apna kaarya sanchalit karte hain, aur poore Bharat mein apne parivaar
-            ko badhate ja rahe hain.
+            Righwedh Sanjivni was founded by Shri <b>Kartik Tirgar</b> with a simple belief: good
+            health and a better livelihood can go hand in hand. We operate from Pratapgarh, Chhoti
+            Sadri in Rajasthan and are growing our family across India.
           </p>
           <p className="mt-4 text-muted-foreground leading-relaxed">
-            Har product certified hai, har member ko fair opportunity milti hai, aur har payout
-            transparent hota hai.
+            Every product is certified, every member gets a fair opportunity, and every payout is
+            fully transparent.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-5">
           {[
-            { icon: Leaf, t: "Purity", d: "Shuddh, jadi-booti aadhaarit formulations." },
-            { icon: Heart, t: "Trust", d: "Har member ke saath imandaar rishta." },
-            { icon: Target, t: "Growth", d: "Fair binary plan sabke liye." },
+            { icon: Leaf, t: "Purity", d: "Pure, herb-based formulations." },
+            { icon: Heart, t: "Trust", d: "An honest relationship with every member." },
+            { icon: Target, t: "Growth", d: "A fair binary plan for everyone." },
             { icon: Award, t: "Excellence", d: "Global standards, Indian roots." },
           ].map((v) => (
             <div key={v.t} className="rounded-2xl border border-border bg-card p-6 shadow-soft">
@@ -65,9 +64,8 @@ function About() {
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Founder</div>
           <h2 className="mt-3 font-serif text-4xl text-primary">Kartik Tirgar</h2>
           <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-            Ayurveda ke prati samarpit aur network marketing mein vishwas rakhne wale Kartik ji ka
-            sapna hai — ek aisa manch banana jahan achhi sehat aur achhi income sab ke liye
-            sulabh ho.
+            A firm believer in Ayurveda and the power of network marketing, Kartik's dream is to
+            build a platform where good health and a good income are accessible to everyone.
           </p>
         </div>
       </section>

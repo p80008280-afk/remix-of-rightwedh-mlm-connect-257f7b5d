@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { Mail, Phone, MapPin, Clock, User } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, User, Wallet } from "lucide-react";
+import qrAsset from "@/assets/phonepe-qr.png.asset.json";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact — Righwedh Sanjivni" },
-      { name: "description", content: "Righwedh Sanjivni se sampark karein — Pratapgarh, Chhoti Sadri. Phone: +91 86199 90944. 24 hour support available." },
+      { name: "description", content: "Get in touch with Righwedh Sanjivni — Pratapgarh, Chhoti Sadri. Phone: +91 86199 90944. 24 hour support available." },
       { property: "og:title", content: "Contact Righwedh Sanjivni" },
       { property: "og:description", content: "24 hour Ayurveda & business support." },
     ],
@@ -22,7 +23,7 @@ function Contact() {
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Contact</div>
           <h1 className="mt-4 font-serif text-5xl md:text-6xl">Get in touch</h1>
           <p className="mt-4 text-primary-foreground/80 max-w-xl mx-auto">
-            Product, membership ya business enquiry — hum 24 hours available hain.
+            Product, membership or business enquiry — we're available 24 hours a day.
           </p>
         </div>
       </section>
@@ -35,6 +36,7 @@ function Contact() {
             { icon: Mail, t: "Email", d: "kartik.tirgar14@gmail.com", href: "mailto:kartik.tirgar14@gmail.com" },
             { icon: MapPin, t: "Address", d: "Pratapgarh, Chhoti Sadri, Rajasthan, India" },
             { icon: Clock, t: "Support Hours", d: "24 hours, 7 days a week" },
+            { icon: Wallet, t: "UPI ID", d: "kartiktirgar@ybl" },
           ].map((i) => (
             <div key={i.t} className="flex gap-4 rounded-2xl border border-border bg-card p-6 shadow-soft">
               <div className="h-12 w-12 rounded-lg bg-gradient-gold flex items-center justify-center shrink-0">
@@ -50,13 +52,19 @@ function Contact() {
               </div>
             </div>
           ))}
+
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            <div className="text-xs uppercase tracking-widest text-gold font-semibold mb-3">PhonePe QR</div>
+            <img src={qrAsset.url} alt="PhonePe QR code" className="w-48 rounded-xl mx-auto" />
+            <div className="mt-3 text-center text-sm text-muted-foreground">Scan & Pay — KARTIK TIRGAR</div>
+          </div>
         </div>
 
         <form
-          className="rounded-3xl border border-border bg-card p-8 shadow-elegant space-y-4"
+          className="rounded-3xl border border-border bg-card p-8 shadow-elegant space-y-4 h-fit"
           onSubmit={(e) => {
             e.preventDefault();
-            alert("Dhanyavaad! Hum jald hi sampark karenge.");
+            alert("Thank you! We will contact you shortly.");
           }}
         >
           <h2 className="font-serif text-2xl text-primary">Send us a message</h2>

@@ -1,9 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
-import logoAsset from "@/assets/logo.png.asset.json";
+import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star } from "lucide-react";
+import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
+import qrAsset from "@/assets/phonepe-qr.png.asset.json";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Righwedh Sanjivni — Pure Ayurveda & Binary Business Opportunity" },
+      { name: "description", content: "Righwedh Sanjivni offers 100% pure Ayurvedic wellness products and a transparent binary MLM plan. Earn direct sale commission and pair matching bonus." },
+      { property: "og:title", content: "Righwedh Sanjivni — Ayurveda & Income Opportunity" },
+      { property: "og:description", content: "Pure Ayurveda products with a fair binary income plan." },
+    ],
+  }),
   component: Home,
 });
 
@@ -12,21 +21,21 @@ function Home() {
     <SiteLayout>
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
-        <div className="absolute inset-0 opacity-[0.08]" style={{
-          backgroundImage: "radial-gradient(circle at 20% 20%, oklch(0.75 0.13 85) 0%, transparent 40%), radial-gradient(circle at 80% 70%, oklch(0.5 0.13 150) 0%, transparent 40%)",
+        <div className="absolute inset-0 opacity-[0.12]" style={{
+          backgroundImage: "radial-gradient(circle at 15% 20%, oklch(0.75 0.13 85) 0%, transparent 45%), radial-gradient(circle at 85% 75%, oklch(0.5 0.13 150) 0%, transparent 45%)",
         }} />
-        <div className="relative mx-auto max-w-7xl px-6 py-24 lg:py-32 grid lg:grid-cols-2 gap-14 items-center">
+        <div className="relative mx-auto max-w-7xl px-6 py-24 lg:py-28 grid lg:grid-cols-2 gap-14 items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-medium text-gold uppercase tracking-widest">
               <Sparkles className="h-3.5 w-3.5" /> Ayurveda · Wealth · Wellness
             </div>
             <h1 className="mt-6 font-serif text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05]">
-              Nature ki shakti,<br />
-              <span className="text-gold">aapke jeevan mein.</span>
+              The power of nature,<br />
+              <span className="text-gold">in your life.</span>
             </h1>
             <p className="mt-6 text-lg text-primary-foreground/80 max-w-xl leading-relaxed">
-              Righwedh Sanjivni laata hai shuddh Ayurvedic products aur ek shandaar business
-              opportunity — jahan har sale, har pair aapko income aur pehchaan deta hai.
+              Righwedh Sanjivni brings you pure Ayurvedic products and a rewarding business
+              opportunity — where every sale and every pair builds real income and recognition.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
@@ -44,8 +53,8 @@ function Home() {
             </div>
             <div className="mt-12 grid grid-cols-3 gap-6 max-w-lg">
               {[
-                { n: "10K+", l: "Members" },
-                { n: "50+", l: "Products" },
+                { n: "₹900", l: "Direct Commission" },
+                { n: "₹300", l: "Pair Matching" },
                 { n: "24/7", l: "Support" },
               ].map((s) => (
                 <div key={s.l}>
@@ -56,10 +65,30 @@ function Home() {
             </div>
           </div>
 
-          <div className="relative flex justify-center">
-            <div className="absolute inset-0 bg-gold/20 blur-3xl rounded-full" />
-            <div className="relative bg-background/95 rounded-full p-8 shadow-elegant border-4 border-gold/40">
-              <img src={logoAsset.url} alt="Righwedh Sanjivni" className="h-72 w-72 md:h-96 md:w-96 object-contain" />
+          {/* HERO PRODUCT CARD (real product image, no floating logo) */}
+          <div className="relative">
+            <div className="absolute -inset-6 bg-gold/15 blur-3xl rounded-3xl" />
+            <div className="relative rounded-3xl overflow-hidden border border-gold/30 bg-background shadow-elegant">
+              <div className="relative aspect-[4/5]">
+                <img src={capsuleAsset.url} alt="Aaurva Ayurvedic Weight Natural Power capsule" className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute top-4 left-4 rounded-full bg-gold text-gold-foreground text-[11px] px-3 py-1 font-bold shadow-gold">
+                  BESTSELLER
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/85 via-black/50 to-transparent text-white">
+                  <div className="text-[11px] uppercase tracking-[0.25em] text-gold">Aaurva Capsule</div>
+                  <div className="font-serif text-2xl mt-1">Ayurvedic Weight Natural Power</div>
+                  <div className="mt-3 flex items-end justify-between">
+                    <div>
+                      <div className="text-xs text-white/70">MRP</div>
+                      <div className="font-bold text-2xl">₹ 3,250</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-white/70">Earn per sale</div>
+                      <div className="font-bold text-xl text-gold">₹ 900</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -69,17 +98,17 @@ function Home() {
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="text-center max-w-2xl mx-auto">
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Why Righwedh Sanjivni</div>
-          <h2 className="mt-3 font-serif text-4xl md:text-5xl text-primary">Ek platform, anek avsar.</h2>
+          <h2 className="mt-3 font-serif text-4xl md:text-5xl text-primary">One platform, endless opportunity.</h2>
           <p className="mt-4 text-muted-foreground">
-            Purity of Ayurveda, transparency of technology, aur ek fair binary income plan — sab kuch ek jagah.
+            The purity of Ayurveda, the transparency of technology, and a fair binary income plan — all in one place.
           </p>
         </div>
         <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: Leaf, title: "100% Ayurveda", desc: "Shuddh jadi-bootiyon se banaye gaye premium products." },
-            { icon: ShieldCheck, title: "Trusted Quality", desc: "GMP, ISO certified manufacturing standards." },
-            { icon: Users, title: "Binary Team Plan", desc: "Left & right leg build karke pair income kamayein." },
-            { icon: TrendingUp, title: "Unlimited Growth", desc: "Direct + pair + rank bonus — kamai ki koi seema nahi." },
+            { icon: Leaf, title: "100% Ayurveda", desc: "Premium products made from pure, natural herbs." },
+            { icon: ShieldCheck, title: "Trusted Quality", desc: "Manufactured to GMP & ISO certified standards." },
+            { icon: Users, title: "Binary Team Plan", desc: "Build left & right legs and earn pair income." },
+            { icon: TrendingUp, title: "Unlimited Growth", desc: "Direct + pair + rank bonus — no earning cap." },
           ].map((f) => (
             <div key={f.title} className="group relative rounded-2xl border border-border bg-card p-8 shadow-soft hover:shadow-elegant transition">
               <div className="h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center shadow-gold">
@@ -99,14 +128,14 @@ function Home() {
             <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Business Plan</div>
             <h2 className="mt-3 font-serif text-4xl md:text-5xl text-primary">Simple Binary — Powerful Income.</h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
-              Aap A hain. Aap do log jodte hain — B aur C. Jab bhi B ya C sale karta hai, aapko direct
-              commission milta hai. Aur jab B aur C ka pair banta hai, upar wale ko pair bonus milta hai.
-              Har member ke paas apna "+" option hai — team apni marzi se badhaein.
+              You are A. You bring in two people — B and C. Whenever B or C makes a sale, you earn
+              a direct commission. And when B and C form a matching pair, you earn a pair bonus.
+              Every member has their own "+" option to invite new members into any empty position.
             </p>
             <ul className="mt-6 space-y-3">
               {[
-                "Direct sponsor commission on every sale",
-                "Pair matching bonus for every left-right match",
+                "₹900 direct sponsor commission on every product sale",
+                "₹300 pair matching bonus on every left-right match",
                 "Level & rank rewards for growing leaders",
                 "Real-time genealogy tree with plus-position invites",
               ].map((i) => (
@@ -119,11 +148,10 @@ function Home() {
               to="/plan"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:bg-primary-glow transition"
             >
-              Full Plan Explore Karein <ArrowRight className="h-4 w-4" />
+              Explore The Full Plan <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
-          {/* Tree diagram */}
           <div className="relative">
             <div className="rounded-3xl border border-border bg-card p-10 shadow-elegant">
               <BinaryTreePreview />
@@ -132,51 +160,93 @@ function Home() {
         </div>
       </section>
 
-      {/* PRODUCT TEASER */}
+      {/* FLAGSHIP PRODUCT */}
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Featured</div>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl text-primary">Premium Ayurveda Range</h2>
+            <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Flagship Product</div>
+            <h2 className="mt-3 font-serif text-4xl md:text-5xl text-primary">Aaurva — Weight Natural Power</h2>
           </div>
           <Link to="/products" className="text-primary font-semibold hover:text-primary-glow inline-flex items-center gap-1">
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            { n: "Sanjivni Immunity Booster", p: "₹ 799", bv: 40 },
-            { n: "Ayur Detox Green Blend", p: "₹ 649", bv: 32 },
-            { n: "Ojas Wellness Tonic", p: "₹ 1,199", bv: 60 },
-          ].map((p) => (
-            <div key={p.n} className="group rounded-2xl border border-border bg-card overflow-hidden shadow-soft hover:shadow-elegant transition">
-              <div className="aspect-[4/3] bg-gradient-leaf flex items-center justify-center relative">
-                <div className="absolute inset-0 bg-gold/5" />
-                <Leaf className="h-24 w-24 text-primary/40" />
-                <div className="absolute top-4 right-4 rounded-full bg-primary text-primary-foreground text-xs px-3 py-1 font-semibold">
-                  BV {p.bv}
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="font-serif text-lg text-primary">{p.n}</h3>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="font-bold text-xl text-primary">{p.p}</div>
-                  <Award className="h-5 w-5 text-gold" />
-                </div>
+
+        <div className="mt-12 grid lg:grid-cols-2 gap-10 items-center">
+          <div className="relative rounded-3xl overflow-hidden border border-border shadow-elegant bg-gradient-leaf">
+            <img src={capsuleAsset.url} alt="Aaurva capsule bottle" className="w-full aspect-square object-cover" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1 text-gold">
+              {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}
+              <span className="ml-2 text-xs text-muted-foreground">Trusted by 10,000+ customers</span>
+            </div>
+            <h3 className="mt-4 font-serif text-3xl text-primary">Ayurvedic Weight Natural Power</h3>
+            <p className="mt-3 text-muted-foreground leading-relaxed">
+              A 100% pure herbal weight gain formula with 10+ powerful Ayurvedic ingredients.
+              60 capsules per bottle — crafted for natural strength, stamina and vitality.
+            </p>
+
+            <div className="mt-6 grid grid-cols-3 gap-4">
+              <Stat label="MRP" value="₹ 3,250" />
+              <Stat label="Direct Commission" value="₹ 900" accent />
+              <Stat label="Pair Matching" value="₹ 300" accent />
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/products" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-glow">
+                Shop Now <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link to="/plan" className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-6 py-3 text-sm font-semibold text-primary hover:bg-primary/5">
+                Earning Details
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PAYMENT / UPI */}
+      <section className="bg-gradient-leaf py-24">
+        <div className="mx-auto max-w-6xl px-6 grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Accepted Payment</div>
+            <h2 className="mt-3 font-serif text-4xl text-primary">Pay easily with UPI</h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              Scan the PhonePe QR code or use our UPI ID to place your product order. After payment,
+              share the transaction screenshot with your sponsor or on WhatsApp to activate your order.
+            </p>
+            <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
+              <div className="text-xs uppercase tracking-widest text-gold font-semibold">UPI ID</div>
+              <div className="mt-1 font-serif text-2xl text-primary select-all">kartiktirgar@ybl</div>
+              <div className="mt-1 text-xs text-muted-foreground">Account name: KARTIK TIRGAR</div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span className="rounded-full bg-card border border-border px-3 py-1">PhonePe</span>
+              <span className="rounded-full bg-card border border-border px-3 py-1">Google Pay</span>
+              <span className="rounded-full bg-card border border-border px-3 py-1">Paytm</span>
+              <span className="rounded-full bg-card border border-border px-3 py-1">Any UPI App</span>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <div className="rounded-3xl bg-card border border-border shadow-elegant p-6 max-w-xs">
+              <img src={qrAsset.url} alt="PhonePe QR — Kartik Tirgar" className="w-full rounded-xl" />
+              <div className="mt-4 text-center">
+                <div className="font-serif text-lg text-primary">Scan & Pay</div>
+                <div className="text-xs text-muted-foreground">KARTIK TIRGAR</div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-7xl px-6 pb-24">
+      <section className="mx-auto max-w-7xl px-6 pb-24 pt-24">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-hero p-12 md:p-16 text-center text-primary-foreground shadow-elegant">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at center, oklch(0.75 0.13 85) 0%, transparent 60%)" }} />
           <div className="relative">
-            <h2 className="font-serif text-4xl md:text-5xl">Apni journey aaj shuru karein.</h2>
+            <h2 className="font-serif text-4xl md:text-5xl">Start your journey today.</h2>
             <p className="mt-4 text-primary-foreground/80 max-w-xl mx-auto">
-              Sirf sponsor ke referral link se register karke Righwedh Sanjivni family ka hissa banein.
+              Join the Righwedh Sanjivni family through your sponsor's referral link.
             </p>
             <Link
               to="/register"
@@ -188,6 +258,15 @@ function Home() {
         </div>
       </section>
     </SiteLayout>
+  );
+}
+
+function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className={`rounded-xl p-4 border ${accent ? "bg-gradient-gold border-gold/40 text-gold-foreground shadow-gold" : "bg-card border-border"}`}>
+      <div className={`text-[10px] uppercase tracking-widest font-semibold ${accent ? "text-gold-foreground/80" : "text-muted-foreground"}`}>{label}</div>
+      <div className={`mt-1 font-bold text-lg ${accent ? "" : "text-primary"}`}>{value}</div>
+    </div>
   );
 }
 
@@ -216,21 +295,17 @@ function BinaryTreePreview() {
         <TreePill label="C" />
       </div>
       <div className="w-full flex justify-between max-w-xs mt-2">
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex gap-3">
-            <TreePill label="D" />
-            <TreePill label="E" />
-          </div>
+        <div className="flex gap-3">
+          <TreePill label="D" />
+          <TreePill label="E" />
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex gap-3">
-            <TreePill label="F" />
-            <TreePill label="+" tone="gold" />
-          </div>
+        <div className="flex gap-3">
+          <TreePill label="F" />
+          <TreePill label="+" tone="gold" />
         </div>
       </div>
       <p className="text-xs text-muted-foreground mt-4 text-center max-w-xs">
-        Har node par "+" button — apni left ya right position par naya member add karein.
+        Tap the "+" on any node to invite a new member into that left or right position.
       </p>
     </div>
   );

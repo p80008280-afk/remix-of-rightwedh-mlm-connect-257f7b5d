@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Leaf } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 const nav = [
@@ -14,13 +14,17 @@ const nav = [
 export function Header() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-50 backdrop-blur bg-background/85 border-b border-border/60">
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-background/90 border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
         <Link to="/" className="flex items-center gap-3 group">
-          <img src={logoAsset.url} alt="Righwedh Sanjivni logo" className="h-14 w-14 object-contain" />
+          <div className="relative h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-soft ring-2 ring-gold/40">
+            <img src={logoAsset.url} alt="Righwedh Sanjivni" className="h-10 w-10 object-contain" />
+          </div>
           <div className="hidden sm:block leading-tight">
-            <div className="font-serif text-lg font-bold text-primary">Righwedh Sanjivni</div>
-            <div className="text-[10px] tracking-[0.25em] uppercase text-gold">Ayurveda · Wellness</div>
+            <div className="font-serif text-lg font-bold text-primary tracking-tight">Righwedh Sanjivni</div>
+            <div className="flex items-center gap-1.5 text-[10px] tracking-[0.28em] uppercase text-gold font-semibold">
+              <Leaf className="h-2.5 w-2.5" /> Pure Ayurveda
+            </div>
           </div>
         </Link>
 
@@ -38,10 +42,7 @@ export function Header() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-3">
-          <Link
-            to="/login"
-            className="text-sm font-medium text-primary hover:text-primary-glow"
-          >
+          <Link to="/login" className="text-sm font-medium text-primary hover:text-primary-glow">
             Login
           </Link>
           <Link
