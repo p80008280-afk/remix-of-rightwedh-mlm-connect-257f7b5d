@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Menu, X, Leaf } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 
@@ -13,6 +14,12 @@ const nav = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setAuthed(!!session));
+    return () => sub.subscription.unsubscribe();
+  }, []);
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-background/90 border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
@@ -42,15 +49,18 @@ export function Header() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-3">
-          <Link to="/login" className="text-sm font-medium text-primary hover:text-primary-glow">
-            Login
-          </Link>
-          <Link
-            to="/register"
-            className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition"
-          >
-            Join Now
-          </Link>
+          {authed ? (
+            <Link to={"/_authenticated/dashboard" as any} className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
+              My Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm font-medium text-primary hover:text-primary-glow">Login</Link>
+              <Link to="/register" className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
+                Join Now
+              </Link>
+            </>
+          )}
         </div>
 
         <button className="lg:hidden p-2" onClick={() => setOpen((o) => !o)} aria-label="Menu">
