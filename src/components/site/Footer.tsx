@@ -8,8 +8,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-1">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-background/10 ring-2 ring-gold/40 flex items-center justify-center">
-              <img src={logoAsset.url} alt="Logo" className="h-10 w-10 object-contain" />
+            <div className="h-12 w-12 rounded-full overflow-hidden bg-white ring-2 ring-gold/50 flex items-center justify-center">
+              <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <div className="font-serif text-lg font-bold">Righwedh Sanjivni</div>
