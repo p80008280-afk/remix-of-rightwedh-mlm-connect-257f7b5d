@@ -59,8 +59,8 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero px-6 py-16">
       <div className="w-full max-w-md rounded-3xl bg-card p-10 shadow-elegant border border-gold/30">
         <div className="flex flex-col items-center">
-          <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center ring-2 ring-gold/40">
-            <img src={logoAsset.url} alt="Logo" className="h-12 w-12 object-contain" />
+          <div className="h-16 w-16 rounded-full overflow-hidden bg-white flex items-center justify-center ring-2 ring-gold/50">
+            <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <h1 className="mt-4 font-serif text-3xl text-primary">Admin Panel</h1>
           <p className="mt-1 text-xs uppercase tracking-widest text-gold font-semibold">Righwedh Sanjivni</p>
