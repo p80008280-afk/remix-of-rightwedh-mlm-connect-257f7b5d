@@ -18,8 +18,8 @@ function Register() {
       <section className="min-h-[80vh] flex items-center justify-center bg-gradient-leaf px-6 py-16">
         <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-10 shadow-elegant">
           <div className="flex flex-col items-center">
-            <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center ring-2 ring-gold/40 shadow-soft">
-              <img src={logoAsset.url} alt="Logo" className="h-16 w-16 object-contain" />
+            <div className="h-20 w-20 rounded-full overflow-hidden bg-white flex items-center justify-center ring-2 ring-gold/50 shadow-soft">
+              <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Join Our Family</h1>
             <p className="mt-1 text-sm text-muted-foreground text-center">

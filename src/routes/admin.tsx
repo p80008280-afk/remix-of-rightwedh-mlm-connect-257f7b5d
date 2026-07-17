@@ -59,8 +59,8 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero px-6 py-16">
       <div className="w-full max-w-md rounded-3xl bg-card p-10 shadow-elegant border border-gold/30">
         <div className="flex flex-col items-center">
-          <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center ring-2 ring-gold/40">
-            <img src={logoAsset.url} alt="Logo" className="h-12 w-12 object-contain" />
+          <div className="h-16 w-16 rounded-full overflow-hidden bg-white flex items-center justify-center ring-2 ring-gold/50">
+            <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <h1 className="mt-4 font-serif text-3xl text-primary">Admin Panel</h1>
           <p className="mt-1 text-xs uppercase tracking-widest text-gold font-semibold">Righwedh Sanjivni</p>
@@ -116,8 +116,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       {/* SIDEBAR */}
       <aside className="w-64 bg-primary text-primary-foreground min-h-screen sticky top-0 flex flex-col">
         <div className="px-6 py-5 border-b border-primary-foreground/10 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-background/10 ring-2 ring-gold/40 flex items-center justify-center">
-            <img src={logoAsset.url} alt="Logo" className="h-8 w-8 object-contain" />
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-white ring-2 ring-gold/50 flex items-center justify-center">
+            <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
             <div className="font-serif font-bold">Righwedh</div>
