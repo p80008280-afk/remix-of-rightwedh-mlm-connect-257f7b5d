@@ -68,6 +68,7 @@ function Dashboard() {
     setCommissions((c.data || []) as Commission[]);
     setWithdrawals((wd.data || []) as Withdrawal[]);
     setTeam((tm.data || []) as TeamMember[]);
+    if (ps.data) setSettings(ps.data as PlanSettings);
     setLoading(false);
   }
 
