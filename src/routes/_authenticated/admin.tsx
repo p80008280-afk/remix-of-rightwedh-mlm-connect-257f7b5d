@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Profile = { id: string; full_name: string; email: string; phone: string; referral_code: string; is_active: boolean; kyc_status: string; created_at: string };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
-type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; created_at: string };
+type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string };
 type Withdrawal = { id: string; user_id: string; amount: number; upi_id: string; status: string; created_at: string };
 
 function Admin() {
