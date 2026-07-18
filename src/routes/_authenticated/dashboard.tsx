@@ -165,12 +165,15 @@ function Dashboard() {
         {tab === "orders" && (
           <Section title="My Orders">
             <SimpleTable
-              cols={["Date", "Product", "Amount", "UPI Ref", "Status"]}
+              cols={["Date", "Product", "Amount", "UPI Ref", "Screenshot", "Status"]}
               rows={orders.map(o => [
                 new Date(o.created_at).toLocaleDateString(),
                 products.find(p => p.id === o.product_id)?.name || "—",
                 `₹${o.amount}`,
                 o.upi_reference || "—",
+                o.payment_screenshot_url
+                  ? <a key="ss" href={o.payment_screenshot_url} target="_blank" rel="noreferrer" className="text-primary underline text-xs">View</a>
+                  : <span key="ss" className="text-xs text-muted-foreground">—</span>,
                 <StatusPill key="s" status={o.status} />,
               ])}
               empty="No orders yet. Buy a product from the Shop tab to activate your account."
