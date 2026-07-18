@@ -367,23 +367,33 @@ function ShopTab({ products, profile, onDone }: { products: Product[]; profile: 
   );
 }
 
-function WithdrawTab({ wallet, profile, withdrawals, onDone }: { wallet: WalletRow; profile: Profile; withdrawals: Withdrawal[]; onDone: () => void }) {
+function WithdrawTab({ wallet, profile, withdrawals, settings, onDone }: { wallet: WalletRow; profile: Profile; withdrawals: Withdrawal[]; settings: PlanSettings | null; onDone: () => void }) {
   const [amount, setAmount] = useState("");
   const [upi, setUpi] = useState(profile.upi_id || "");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const minWd = settings?.min_withdrawal ?? 300;
+  const tdsPct = settings?.tds_percent ?? 5;
+  const adminChg = settings?.admin_charge ?? 0;
+  const days = settings?.withdrawal_days ?? 7;
+
+  const amt = Number(amount) || 0;
+  const tds = +(amt * tdsPct / 100).toFixed(2);
+  const net = Math.max(0, +(amt - tds - adminChg).toFixed(2));
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const amt = Number(amount);
-    if (amt <= 0 || amt > wallet.balance) { setMsg("Invalid amount"); return; }
+    if (amt < minWd) { setMsg(`Minimum withdrawal is ₹${minWd}`); return; }
+    if (amt > wallet.balance) { setMsg("Amount exceeds wallet balance"); return; }
     setBusy(true);
     const { error } = await supabase.from("withdrawals").insert({
       user_id: profile.id, amount: amt, upi_id: upi.trim(),
+      tds_amount: tds, net_amount: net,
     });
     setBusy(false);
     if (error) { setMsg("Error: " + error.message); return; }
-    setMsg("Withdrawal request submitted. Admin will process within 48 hours.");
+    setMsg(`Withdrawal request submitted. You will receive ₹${net} in your UPI within ${days} days after admin approval.`);
     setAmount(""); onDone();
   }
 
@@ -393,17 +403,35 @@ function WithdrawTab({ wallet, profile, withdrawals, onDone }: { wallet: WalletR
         <div className="text-xs uppercase tracking-widest">Available Balance</div>
         <div className="font-serif text-4xl font-bold mt-1">₹{wallet.balance}</div>
       </div>
+
+      <div className="rounded-2xl bg-card border border-border p-5 shadow-soft grid gap-3 sm:grid-cols-4 text-center text-sm">
+        <div><div className="text-xs text-muted-foreground uppercase">Minimum</div><div className="font-serif text-primary text-lg font-bold">₹{minWd}</div></div>
+        <div><div className="text-xs text-muted-foreground uppercase">TDS</div><div className="font-serif text-primary text-lg font-bold">{tdsPct}%</div></div>
+        <div><div className="text-xs text-muted-foreground uppercase">Admin Charge</div><div className="font-serif text-primary text-lg font-bold">₹{adminChg}</div></div>
+        <div><div className="text-xs text-muted-foreground uppercase">Payout Time</div><div className="font-serif text-primary text-lg font-bold">{days} days</div></div>
+      </div>
+
       <Section title="Request Withdrawal">
         {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3 mb-4">{msg}</div>}
         <form onSubmit={submit} className="space-y-4 max-w-md">
           <label className="block text-sm font-medium">
-            Amount (₹)
-            <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} required className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
+            Amount (₹) <span className="text-xs text-muted-foreground">— min ₹{minWd}</span>
+            <input type="number" min={minWd} value={amount} onChange={(e) => setAmount(e.target.value)} required className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
           </label>
           <label className="block text-sm font-medium">
             Your UPI ID
             <input value={upi} onChange={(e) => setUpi(e.target.value)} required placeholder="yourname@ybl" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
           </label>
+
+          {amt > 0 && (
+            <div className="rounded-lg bg-cream p-4 text-sm space-y-1">
+              <div className="flex justify-between"><span>Requested</span><b>₹{amt}</b></div>
+              <div className="flex justify-between text-muted-foreground"><span>TDS ({tdsPct}%)</span><span>− ₹{tds}</span></div>
+              {adminChg > 0 && <div className="flex justify-between text-muted-foreground"><span>Admin charge</span><span>− ₹{adminChg}</span></div>}
+              <div className="flex justify-between border-t border-border pt-1 mt-1 text-primary font-bold"><span>You will receive</span><span>₹{net}</span></div>
+            </div>
+          )}
+
           <button disabled={busy} className="rounded-full bg-primary text-primary-foreground px-8 py-3 text-sm font-semibold disabled:opacity-60">
             {busy ? "Submitting..." : "Submit Request"}
           </button>
@@ -411,10 +439,13 @@ function WithdrawTab({ wallet, profile, withdrawals, onDone }: { wallet: WalletR
       </Section>
       <Section title="Withdrawal History">
         <SimpleTable
-          cols={["Date", "Amount", "UPI", "Status"]}
+          cols={["Date", "Amount", "TDS", "Net Paid", "UPI", "Status"]}
           rows={withdrawals.map(w => [
             new Date(w.created_at).toLocaleDateString(),
-            `₹${w.amount}`, w.upi_id,
+            `₹${w.amount}`,
+            `₹${(w as any).tds_amount ?? 0}`,
+            `₹${(w as any).net_amount ?? w.amount}`,
+            w.upi_id,
             <StatusPill key="s" status={w.status} />,
           ])}
           empty="No withdrawal requests yet."
