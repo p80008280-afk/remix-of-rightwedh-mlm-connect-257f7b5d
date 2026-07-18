@@ -213,7 +213,7 @@ function Dashboard() {
         )}
 
         {tab === "withdraw" && (
-          <WithdrawTab wallet={wallet} profile={profile} withdrawals={withdrawals} onDone={loadAll} />
+          <WithdrawTab wallet={wallet} profile={profile} withdrawals={withdrawals} settings={settings} onDone={loadAll} />
         )}
 
         {tab === "profile" && (
