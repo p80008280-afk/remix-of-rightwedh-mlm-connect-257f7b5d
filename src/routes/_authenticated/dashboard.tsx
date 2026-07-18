@@ -15,7 +15,8 @@ type Profile = {
 type WalletRow = { balance: number; total_earned: number; direct_income: number; pair_income: number };
 type TreeStats = { left_count: number; right_count: number; matched_pairs: number };
 type Product = { id: string; name: string; description: string; mrp: number; image_url: string; category: string };
-type Order = { id: string; product_id: string; amount: number; status: string; created_at: string; upi_reference: string };
+type Order = { id: string; product_id: string; amount: number; status: string; created_at: string; upi_reference: string; payment_screenshot_url: string | null };
+type PlanSettings = { min_withdrawal: number; tds_percent: number; admin_charge: number; withdrawal_days: number; daily_pair_cap: number };
 type Commission = { id: string; type: string; amount: number; note: string; created_at: string };
 type Withdrawal = { id: string; amount: number; upi_id: string; status: string; created_at: string };
 type TeamMember = { id: string; full_name: string; referral_code: string; position: string | null; created_at: string; is_active: boolean };
@@ -41,13 +42,14 @@ function Dashboard() {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [settings, setSettings] = useState<PlanSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function loadAll() {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return;
     const uid = userRes.user.id;
-    const [p, w, s, pr, o, c, wd, tm] = await Promise.all([
+    const [p, w, s, pr, o, c, wd, tm, ps] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
       supabase.from("tree_stats").select("*").eq("user_id", uid).maybeSingle(),
@@ -56,6 +58,7 @@ function Dashboard() {
       supabase.from("commissions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id,full_name,referral_code,position,created_at,is_active").eq("sponsor_id", uid),
+      supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
     ]);
     if (p.data) setProfile(p.data as Profile);
     if (w.data) setWallet(w.data as WalletRow);
@@ -65,6 +68,7 @@ function Dashboard() {
     setCommissions((c.data || []) as Commission[]);
     setWithdrawals((wd.data || []) as Withdrawal[]);
     setTeam((tm.data || []) as TeamMember[]);
+    if (ps.data) setSettings(ps.data as PlanSettings);
     setLoading(false);
   }
 
@@ -161,12 +165,15 @@ function Dashboard() {
         {tab === "orders" && (
           <Section title="My Orders">
             <SimpleTable
-              cols={["Date", "Product", "Amount", "UPI Ref", "Status"]}
+              cols={["Date", "Product", "Amount", "UPI Ref", "Screenshot", "Status"]}
               rows={orders.map(o => [
                 new Date(o.created_at).toLocaleDateString(),
                 products.find(p => p.id === o.product_id)?.name || "—",
                 `₹${o.amount}`,
                 o.upi_reference || "—",
+                o.payment_screenshot_url
+                  ? <a key="ss" href={o.payment_screenshot_url} target="_blank" rel="noreferrer" className="text-primary underline text-xs">View</a>
+                  : <span key="ss" className="text-xs text-muted-foreground">—</span>,
                 <StatusPill key="s" status={o.status} />,
               ])}
               empty="No orders yet. Buy a product from the Shop tab to activate your account."
@@ -206,7 +213,7 @@ function Dashboard() {
         )}
 
         {tab === "withdraw" && (
-          <WithdrawTab wallet={wallet} profile={profile} withdrawals={withdrawals} onDone={loadAll} />
+          <WithdrawTab wallet={wallet} profile={profile} withdrawals={withdrawals} settings={settings} onDone={loadAll} />
         )}
 
         {tab === "profile" && (
@@ -277,25 +284,35 @@ function StatusPill({ status }: { status: string }) {
 function ShopTab({ products, profile, onDone }: { products: Product[]; profile: Profile; onDone: () => void }) {
   const [selected, setSelected] = useState<Product | null>(null);
   const [upiRef, setUpiRef] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function place() {
-    if (!selected) return;
+    if (!selected || !file) { setMsg("Please upload your payment screenshot."); return; }
     setBusy(true);
-    const { error } = await supabase.from("orders").insert({
-      user_id: profile.id,
-      product_id: selected.id,
-      amount: selected.mrp,
-      status: "pending",
-      upi_reference: upiRef.trim(),
-    });
-    setBusy(false);
-    if (error) { setMsg("Error: " + error.message); return; }
-    setMsg("Order placed! Admin will verify your UPI payment and activate your account within 24 hours.");
-    setSelected(null);
-    setUpiRef("");
-    onDone();
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${profile.id}/${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("payment-proofs").upload(path, file, { upsert: false });
+      if (up.error) throw up.error;
+      const signed = await supabase.storage.from("payment-proofs").createSignedUrl(path, 60 * 60 * 24 * 365);
+      const url = signed.data?.signedUrl || "";
+      const { error } = await supabase.from("orders").insert({
+        user_id: profile.id,
+        product_id: selected.id,
+        amount: selected.mrp,
+        status: "pending",
+        upi_reference: upiRef.trim(),
+        payment_screenshot_url: url,
+      });
+      if (error) throw error;
+      setMsg("Order submitted! Admin will verify your payment and activate your account. Check the 'My Orders' tab.");
+      setSelected(null); setUpiRef(""); setFile(null);
+      onDone();
+    } catch (e: any) {
+      setMsg("Error: " + (e.message || String(e)));
+    } finally { setBusy(false); }
   }
 
   return (
@@ -319,22 +336,27 @@ function ShopTab({ products, profile, onDone }: { products: Product[]; profile: 
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setSelected(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 overflow-y-auto" onClick={() => setSelected(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
             <h3 className="font-serif text-2xl text-primary">Pay ₹{selected.mrp}</h3>
             <p className="text-sm text-muted-foreground mt-1">for {selected.name}</p>
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
               <div className="mt-1 font-mono text-lg font-bold text-primary">kartiktirgar@ybl</div>
-              <p className="text-xs text-muted-foreground mt-2">Open PhonePe/Google Pay → Send ₹{selected.mrp} to above UPI ID → paste UTR/Reference below.</p>
+              <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → Send ₹{selected.mrp} to above UPI ID → upload the payment screenshot below.</p>
             </div>
             <label className="block mt-4 text-sm font-medium">
-              UPI Reference / UTR Number
-              <input value={upiRef} onChange={(e) => setUpiRef(e.target.value)} required placeholder="12 digit UTR" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
+              Payment Screenshot <span className="text-destructive">*</span>
+              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:px-3 file:py-1.5" />
+              {file && <div className="mt-1 text-xs text-muted-foreground">Selected: {file.name}</div>}
+            </label>
+            <label className="block mt-4 text-sm font-medium">
+              UPI Reference / UTR Number <span className="text-muted-foreground text-xs">(optional)</span>
+              <input value={upiRef} onChange={(e) => setUpiRef(e.target.value)} placeholder="12 digit UTR" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
             </label>
             <div className="mt-6 flex gap-3">
               <button onClick={() => setSelected(null)} className="flex-1 rounded-full border border-input py-2.5 text-sm">Cancel</button>
-              <button disabled={busy || !upiRef} onClick={place} className="flex-1 rounded-full bg-gradient-gold py-2.5 text-sm font-semibold text-gold-foreground disabled:opacity-60">
+              <button disabled={busy || !file} onClick={place} className="flex-1 rounded-full bg-gradient-gold py-2.5 text-sm font-semibold text-gold-foreground disabled:opacity-60">
                 {busy ? "Submitting..." : "I have paid, Submit"}
               </button>
             </div>
@@ -345,23 +367,33 @@ function ShopTab({ products, profile, onDone }: { products: Product[]; profile: 
   );
 }
 
-function WithdrawTab({ wallet, profile, withdrawals, onDone }: { wallet: WalletRow; profile: Profile; withdrawals: Withdrawal[]; onDone: () => void }) {
+function WithdrawTab({ wallet, profile, withdrawals, settings, onDone }: { wallet: WalletRow; profile: Profile; withdrawals: Withdrawal[]; settings: PlanSettings | null; onDone: () => void }) {
   const [amount, setAmount] = useState("");
   const [upi, setUpi] = useState(profile.upi_id || "");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const minWd = settings?.min_withdrawal ?? 300;
+  const tdsPct = settings?.tds_percent ?? 5;
+  const adminChg = settings?.admin_charge ?? 0;
+  const days = settings?.withdrawal_days ?? 7;
+
+  const amt = Number(amount) || 0;
+  const tds = +(amt * tdsPct / 100).toFixed(2);
+  const net = Math.max(0, +(amt - tds - adminChg).toFixed(2));
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const amt = Number(amount);
-    if (amt <= 0 || amt > wallet.balance) { setMsg("Invalid amount"); return; }
+    if (amt < minWd) { setMsg(`Minimum withdrawal is ₹${minWd}`); return; }
+    if (amt > wallet.balance) { setMsg("Amount exceeds wallet balance"); return; }
     setBusy(true);
     const { error } = await supabase.from("withdrawals").insert({
       user_id: profile.id, amount: amt, upi_id: upi.trim(),
+      tds_amount: tds, net_amount: net,
     });
     setBusy(false);
     if (error) { setMsg("Error: " + error.message); return; }
-    setMsg("Withdrawal request submitted. Admin will process within 48 hours.");
+    setMsg(`Withdrawal request submitted. You will receive ₹${net} in your UPI within ${days} days after admin approval.`);
     setAmount(""); onDone();
   }
 
@@ -371,17 +403,35 @@ function WithdrawTab({ wallet, profile, withdrawals, onDone }: { wallet: WalletR
         <div className="text-xs uppercase tracking-widest">Available Balance</div>
         <div className="font-serif text-4xl font-bold mt-1">₹{wallet.balance}</div>
       </div>
+
+      <div className="rounded-2xl bg-card border border-border p-5 shadow-soft grid gap-3 sm:grid-cols-4 text-center text-sm">
+        <div><div className="text-xs text-muted-foreground uppercase">Minimum</div><div className="font-serif text-primary text-lg font-bold">₹{minWd}</div></div>
+        <div><div className="text-xs text-muted-foreground uppercase">TDS</div><div className="font-serif text-primary text-lg font-bold">{tdsPct}%</div></div>
+        <div><div className="text-xs text-muted-foreground uppercase">Admin Charge</div><div className="font-serif text-primary text-lg font-bold">₹{adminChg}</div></div>
+        <div><div className="text-xs text-muted-foreground uppercase">Payout Time</div><div className="font-serif text-primary text-lg font-bold">{days} days</div></div>
+      </div>
+
       <Section title="Request Withdrawal">
         {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3 mb-4">{msg}</div>}
         <form onSubmit={submit} className="space-y-4 max-w-md">
           <label className="block text-sm font-medium">
-            Amount (₹)
-            <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} required className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
+            Amount (₹) <span className="text-xs text-muted-foreground">— min ₹{minWd}</span>
+            <input type="number" min={minWd} value={amount} onChange={(e) => setAmount(e.target.value)} required className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
           </label>
           <label className="block text-sm font-medium">
             Your UPI ID
             <input value={upi} onChange={(e) => setUpi(e.target.value)} required placeholder="yourname@ybl" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
           </label>
+
+          {amt > 0 && (
+            <div className="rounded-lg bg-cream p-4 text-sm space-y-1">
+              <div className="flex justify-between"><span>Requested</span><b>₹{amt}</b></div>
+              <div className="flex justify-between text-muted-foreground"><span>TDS ({tdsPct}%)</span><span>− ₹{tds}</span></div>
+              {adminChg > 0 && <div className="flex justify-between text-muted-foreground"><span>Admin charge</span><span>− ₹{adminChg}</span></div>}
+              <div className="flex justify-between border-t border-border pt-1 mt-1 text-primary font-bold"><span>You will receive</span><span>₹{net}</span></div>
+            </div>
+          )}
+
           <button disabled={busy} className="rounded-full bg-primary text-primary-foreground px-8 py-3 text-sm font-semibold disabled:opacity-60">
             {busy ? "Submitting..." : "Submit Request"}
           </button>
@@ -389,10 +439,13 @@ function WithdrawTab({ wallet, profile, withdrawals, onDone }: { wallet: WalletR
       </Section>
       <Section title="Withdrawal History">
         <SimpleTable
-          cols={["Date", "Amount", "UPI", "Status"]}
+          cols={["Date", "Amount", "TDS", "Net Paid", "UPI", "Status"]}
           rows={withdrawals.map(w => [
             new Date(w.created_at).toLocaleDateString(),
-            `₹${w.amount}`, w.upi_id,
+            `₹${w.amount}`,
+            `₹${(w as any).tds_amount ?? 0}`,
+            `₹${(w as any).net_amount ?? w.amount}`,
+            w.upi_id,
             <StatusPill key="s" status={w.status} />,
           ])}
           empty="No withdrawal requests yet."

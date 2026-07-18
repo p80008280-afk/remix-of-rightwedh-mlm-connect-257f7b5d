@@ -93,6 +93,32 @@ function Plan() {
         </div>
       </section>
 
+      {/* PLAN RULES */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Plan Terms & Rules</div>
+          <h2 className="mt-3 font-serif text-4xl text-primary">Fair, transparent, capped</h2>
+        </div>
+        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[
+            { t: "Joining Fee", d: "₹3,250 — one time via Ayurvedic product purchase." },
+            { t: "Direct Sale Commission", d: "₹900 fixed on every direct member's purchase." },
+            { t: "Pair Matching Bonus", d: "₹300 per matched pair (1 Left + 1 Right)." },
+            { t: "Daily Capping", d: "Maximum 20 pairs per day, per member. Extra pairs carry no bonus." },
+            { t: "Monthly Repurchase", d: "1 product repurchase per month is compulsory to keep the ID active and eligible for pair income." },
+            { t: "Withdrawal", d: "Minimum ₹300 • 5% TDS deducted • 0 admin charge • paid within 7 days of admin approval." },
+            { t: "Refund / Return", d: "15 days from purchase — only if the pair-matching income has not yet been distributed on your order." },
+            { t: "Product Exchange", d: "Product exchange is allowed within the same 15-day window." },
+            { t: "Rewards", d: "Level Income, Rank Rewards and Leadership Bonuses will be updated in future releases." },
+          ].map((r) => (
+            <div key={r.t} className="rounded-2xl bg-card border border-border p-6 shadow-soft">
+              <div className="text-xs uppercase tracking-widest text-gold font-semibold">{r.t}</div>
+              <div className="mt-2 text-sm text-primary leading-relaxed">{r.d}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="mx-auto max-w-4xl px-6 py-20 text-center">
         <h2 className="font-serif text-4xl text-primary">Ready to build your team?</h2>

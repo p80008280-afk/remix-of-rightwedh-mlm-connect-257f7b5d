@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Profile = { id: string; full_name: string; email: string; phone: string; referral_code: string; is_active: boolean; kyc_status: string; created_at: string };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
-type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; created_at: string };
+type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string };
 type Withdrawal = { id: string; user_id: string; amount: number; upi_id: string; status: string; created_at: string };
 
 function Admin() {
@@ -167,26 +167,38 @@ function Admin() {
         )}
 
         {tab === "orders" && (
-          <Card title={`Orders (${orders.length})`}>
-            <TableWrap cols={["Date","Member","Product","Amount","UPI Ref","Status","Action"]}>
+          <Card title={`Orders (${orders.length}) — ${pendingOrders.length} pending review`}>
+            <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the payment amount and receiver UPI (kartiktirgar@ybl) match, click <b>Approve</b> — the member gets activated and commissions are paid automatically. Otherwise click <b>Reject</b>.</p>
+            <TableWrap cols={["Date","Member","Product","Amount","UPI Ref","Proof","Status","Action"]}>
               {orders.map(o => {
                 const mem = memberMap.get(o.user_id);
                 const pr = prodMap.get(o.product_id);
                 return (
-                  <tr key={o.id} className="border-b border-border/50">
-                    <td className="py-2 px-2 text-xs">{new Date(o.created_at).toLocaleString()}</td>
-                    <td className="py-2 px-2">{mem?.full_name || o.user_id.slice(0, 8)}<div className="text-xs text-muted-foreground">{mem?.email}</div></td>
+                  <tr key={o.id} className="border-b border-border/50 align-top">
+                    <td className="py-2 px-2 text-xs whitespace-nowrap">{new Date(o.created_at).toLocaleString()}</td>
+                    <td className="py-2 px-2">
+                      <div className="font-medium">{mem?.full_name || o.user_id.slice(0, 8)}</div>
+                      <div className="text-xs text-muted-foreground">{mem?.email}</div>
+                      <div className="text-xs text-muted-foreground">{mem?.phone}</div>
+                    </td>
                     <td className="py-2 px-2">{pr?.name || "—"}</td>
                     <td className="py-2 px-2 font-semibold">₹{o.amount}</td>
-                    <td className="py-2 px-2 font-mono text-xs">{o.upi_reference}</td>
+                    <td className="py-2 px-2 font-mono text-xs">{o.upi_reference || "—"}</td>
+                    <td className="py-2 px-2">
+                      {o.payment_screenshot_url ? (
+                        <a href={o.payment_screenshot_url} target="_blank" rel="noreferrer" className="inline-block">
+                          <img src={o.payment_screenshot_url} alt="proof" className="h-16 w-16 object-cover rounded border border-border hover:ring-2 hover:ring-gold" />
+                        </a>
+                      ) : <span className="text-xs text-muted-foreground">No proof</span>}
+                    </td>
                     <td className="py-2 px-2"><StatusPill status={o.status} /></td>
                     <td className="py-2 px-2">
                       {o.status === "pending" ? (
-                        <div className="flex gap-1">
-                          <button onClick={async () => { await rvOrder({ data: { orderId: o.id, action: "approve" } }); loadAll(); }} className="rounded bg-green-600 text-white px-2 py-1 text-xs">Approve</button>
-                          <button onClick={async () => { await rvOrder({ data: { orderId: o.id, action: "reject" } }); loadAll(); }} className="rounded bg-red-600 text-white px-2 py-1 text-xs">Reject</button>
+                        <div className="flex flex-col gap-1">
+                          <button onClick={async () => { if (!confirm(`Approve ₹${o.amount} order for ${mem?.full_name || "member"}?`)) return; await rvOrder({ data: { orderId: o.id, action: "approve" } }); loadAll(); }} className="rounded bg-green-600 text-white px-3 py-1 text-xs font-semibold">✓ Approve</button>
+                          <button onClick={async () => { const note = prompt("Reason for rejection?") || ""; await rvOrder({ data: { orderId: o.id, action: "reject", note } }); loadAll(); }} className="rounded bg-red-600 text-white px-3 py-1 text-xs font-semibold">✗ Reject</button>
                         </div>
-                      ) : <span className="text-xs text-muted-foreground">—</span>}
+                      ) : <span className="text-xs text-muted-foreground">{o.admin_note || "—"}</span>}
                     </td>
                   </tr>
                 );
