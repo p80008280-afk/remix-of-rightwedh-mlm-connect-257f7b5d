@@ -284,25 +284,35 @@ function StatusPill({ status }: { status: string }) {
 function ShopTab({ products, profile, onDone }: { products: Product[]; profile: Profile; onDone: () => void }) {
   const [selected, setSelected] = useState<Product | null>(null);
   const [upiRef, setUpiRef] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function place() {
-    if (!selected) return;
+    if (!selected || !file) { setMsg("Please upload your payment screenshot."); return; }
     setBusy(true);
-    const { error } = await supabase.from("orders").insert({
-      user_id: profile.id,
-      product_id: selected.id,
-      amount: selected.mrp,
-      status: "pending",
-      upi_reference: upiRef.trim(),
-    });
-    setBusy(false);
-    if (error) { setMsg("Error: " + error.message); return; }
-    setMsg("Order placed! Admin will verify your UPI payment and activate your account within 24 hours.");
-    setSelected(null);
-    setUpiRef("");
-    onDone();
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${profile.id}/${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("payment-proofs").upload(path, file, { upsert: false });
+      if (up.error) throw up.error;
+      const signed = await supabase.storage.from("payment-proofs").createSignedUrl(path, 60 * 60 * 24 * 365);
+      const url = signed.data?.signedUrl || "";
+      const { error } = await supabase.from("orders").insert({
+        user_id: profile.id,
+        product_id: selected.id,
+        amount: selected.mrp,
+        status: "pending",
+        upi_reference: upiRef.trim(),
+        payment_screenshot_url: url,
+      });
+      if (error) throw error;
+      setMsg("Order submitted! Admin will verify your payment and activate your account. Check the 'My Orders' tab.");
+      setSelected(null); setUpiRef(""); setFile(null);
+      onDone();
+    } catch (e: any) {
+      setMsg("Error: " + (e.message || String(e)));
+    } finally { setBusy(false); }
   }
 
   return (
@@ -326,22 +336,27 @@ function ShopTab({ products, profile, onDone }: { products: Product[]; profile: 
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setSelected(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 overflow-y-auto" onClick={() => setSelected(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
             <h3 className="font-serif text-2xl text-primary">Pay ₹{selected.mrp}</h3>
             <p className="text-sm text-muted-foreground mt-1">for {selected.name}</p>
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
               <div className="mt-1 font-mono text-lg font-bold text-primary">kartiktirgar@ybl</div>
-              <p className="text-xs text-muted-foreground mt-2">Open PhonePe/Google Pay → Send ₹{selected.mrp} to above UPI ID → paste UTR/Reference below.</p>
+              <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → Send ₹{selected.mrp} to above UPI ID → upload the payment screenshot below.</p>
             </div>
             <label className="block mt-4 text-sm font-medium">
-              UPI Reference / UTR Number
-              <input value={upiRef} onChange={(e) => setUpiRef(e.target.value)} required placeholder="12 digit UTR" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
+              Payment Screenshot <span className="text-destructive">*</span>
+              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:px-3 file:py-1.5" />
+              {file && <div className="mt-1 text-xs text-muted-foreground">Selected: {file.name}</div>}
+            </label>
+            <label className="block mt-4 text-sm font-medium">
+              UPI Reference / UTR Number <span className="text-muted-foreground text-xs">(optional)</span>
+              <input value={upiRef} onChange={(e) => setUpiRef(e.target.value)} placeholder="12 digit UTR" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
             </label>
             <div className="mt-6 flex gap-3">
               <button onClick={() => setSelected(null)} className="flex-1 rounded-full border border-input py-2.5 text-sm">Cancel</button>
-              <button disabled={busy || !upiRef} onClick={place} className="flex-1 rounded-full bg-gradient-gold py-2.5 text-sm font-semibold text-gold-foreground disabled:opacity-60">
+              <button disabled={busy || !file} onClick={place} className="flex-1 rounded-full bg-gradient-gold py-2.5 text-sm font-semibold text-gold-foreground disabled:opacity-60">
                 {busy ? "Submitting..." : "I have paid, Submit"}
               </button>
             </div>
