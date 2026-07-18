@@ -42,6 +42,7 @@ function Dashboard() {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [settings, setSettings] = useState<PlanSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function loadAll() {
