@@ -62,6 +62,7 @@ export type Database = {
           created_at: string
           id: string
           payment_method: string | null
+          payment_screenshot_url: string | null
           processed_at: string | null
           product_id: string
           status: string
@@ -74,6 +75,7 @@ export type Database = {
           created_at?: string
           id?: string
           payment_method?: string | null
+          payment_screenshot_url?: string | null
           processed_at?: string | null
           product_id: string
           status?: string
@@ -86,6 +88,7 @@ export type Database = {
           created_at?: string
           id?: string
           payment_method?: string | null
+          payment_screenshot_url?: string | null
           processed_at?: string | null
           product_id?: string
           status?: string
@@ -101,6 +104,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_settings: {
+        Row: {
+          admin_charge: number
+          daily_pair_cap: number
+          id: number
+          min_withdrawal: number
+          monthly_repurchase: boolean
+          refund_days: number
+          tds_percent: number
+          updated_at: string
+          withdrawal_days: number
+        }
+        Insert: {
+          admin_charge?: number
+          daily_pair_cap?: number
+          id?: number
+          min_withdrawal?: number
+          monthly_repurchase?: boolean
+          refund_days?: number
+          tds_percent?: number
+          updated_at?: string
+          withdrawal_days?: number
+        }
+        Update: {
+          admin_charge?: number
+          daily_pair_cap?: number
+          id?: number
+          min_withdrawal?: number
+          monthly_repurchase?: boolean
+          refund_days?: number
+          tds_percent?: number
+          updated_at?: string
+          withdrawal_days?: number
+        }
+        Relationships: []
       }
       products: {
         Row: {
@@ -208,6 +247,8 @@ export type Database = {
         Row: {
           left_count: number
           matched_pairs: number
+          pairs_day: string
+          pairs_today: number
           right_count: number
           updated_at: string
           user_id: string
@@ -215,6 +256,8 @@ export type Database = {
         Insert: {
           left_count?: number
           matched_pairs?: number
+          pairs_day?: string
+          pairs_today?: number
           right_count?: number
           updated_at?: string
           user_id: string
@@ -222,6 +265,8 @@ export type Database = {
         Update: {
           left_count?: number
           matched_pairs?: number
+          pairs_day?: string
+          pairs_today?: number
           right_count?: number
           updated_at?: string
           user_id?: string
@@ -282,8 +327,10 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          net_amount: number
           processed_at: string | null
           status: string
+          tds_amount: number
           upi_id: string
           user_id: string
         }
@@ -292,8 +339,10 @@ export type Database = {
           amount: number
           created_at?: string
           id?: string
+          net_amount?: number
           processed_at?: string | null
           status?: string
+          tds_amount?: number
           upi_id: string
           user_id: string
         }
@@ -302,8 +351,10 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          net_amount?: number
           processed_at?: string | null
           status?: string
+          tds_amount?: number
           upi_id?: string
           user_id?: string
         }
