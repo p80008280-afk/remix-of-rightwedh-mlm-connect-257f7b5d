@@ -49,7 +49,7 @@ function Dashboard() {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return;
     const uid = userRes.user.id;
-    const [p, w, s, pr, o, c, wd, tm] = await Promise.all([
+    const [p, w, s, pr, o, c, wd, tm, ps] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
       supabase.from("tree_stats").select("*").eq("user_id", uid).maybeSingle(),
@@ -58,6 +58,7 @@ function Dashboard() {
       supabase.from("commissions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id,full_name,referral_code,position,created_at,is_active").eq("sponsor_id", uid),
+      supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
     ]);
     if (p.data) setProfile(p.data as Profile);
     if (w.data) setWallet(w.data as WalletRow);
