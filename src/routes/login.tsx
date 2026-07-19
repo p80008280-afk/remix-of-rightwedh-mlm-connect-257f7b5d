@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,10 +77,7 @@ function Login() {
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            New here?{" "}
-            <Link to="/register" className="text-primary font-semibold hover:text-primary-glow">
-              Create an account
-            </Link>
+            New members can register only through a sponsor referral link.
           </p>
         </div>
       </section>
