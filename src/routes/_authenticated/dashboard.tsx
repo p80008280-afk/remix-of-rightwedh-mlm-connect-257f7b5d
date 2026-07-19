@@ -16,7 +16,16 @@ type WalletRow = { balance: number; total_earned: number; direct_income: number;
 type TreeStats = { left_count: number; right_count: number; matched_pairs: number };
 type Product = { id: string; name: string; description: string; mrp: number; image_url: string; category: string };
 type Order = { id: string; product_id: string; amount: number; status: string; created_at: string; upi_reference: string; payment_screenshot_url: string | null };
-type PlanSettings = { min_withdrawal: number; tds_percent: number; admin_charge: number; withdrawal_days: number; daily_pair_cap: number };
+type PlanSettings = {
+  min_withdrawal: number;
+  tds_percent: number;
+  admin_charge: number;
+  withdrawal_days: number;
+  daily_pair_cap: number;
+  upi_id: string;
+  payment_account_name: string;
+  qr_image_url: string;
+};
 type Commission = { id: string; type: string; amount: number; note: string; created_at: string };
 type Withdrawal = { id: string; amount: number; upi_id: string; status: string; created_at: string };
 type TeamMember = { id: string; full_name: string; referral_code: string; position: string | null; created_at: string; is_active: boolean };
@@ -33,7 +42,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const nav = useNavigate();
-  const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "income" | "withdraw" | "profile">("overview");
+  const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "income" | "withdraw" | "profile">(() => {
+    if (typeof window === "undefined") return "overview";
+    return new URLSearchParams(window.location.search).get("tab") === "shop" ? "shop" : "overview";
+  });
   const [profile, setProfile] = useState<Profile | null>(null);
   const [wallet, setWallet] = useState<WalletRow | null>(null);
   const [stats, setStats] = useState<TreeStats | null>(null);
@@ -159,7 +171,7 @@ function Dashboard() {
         )}
 
         {tab === "shop" && (
-          <ShopTab products={products} profile={profile} onDone={loadAll} />
+          <ShopTab products={products} profile={profile} settings={settings} onDone={loadAll} />
         )}
 
         {tab === "orders" && (
@@ -281,7 +293,7 @@ function StatusPill({ status }: { status: string }) {
   return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[status] || "bg-muted"}`}>{status}</span>;
 }
 
-function ShopTab({ products, profile, onDone }: { products: Product[]; profile: Profile; onDone: () => void }) {
+function ShopTab({ products, profile, settings, onDone }: { products: Product[]; profile: Profile; settings: PlanSettings | null; onDone: () => void }) {
   const [selected, setSelected] = useState<Product | null>(null);
   const [upiRef, setUpiRef] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -307,7 +319,7 @@ function ShopTab({ products, profile, onDone }: { products: Product[]; profile: 
         payment_screenshot_url: url,
       });
       if (error) throw error;
-      setMsg("Order submitted! Admin will verify your payment and activate your account. Check the 'My Orders' tab.");
+      setMsg("Order submitted! Admin will verify your payment screenshot in Orders, then approve or reject it.");
       setSelected(null); setUpiRef(""); setFile(null);
       onDone();
     } catch (e: any) {
@@ -328,7 +340,7 @@ function ShopTab({ products, profile, onDone }: { products: Product[]; profile: 
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
               <div className="mt-3 flex items-center justify-between">
                 <div className="font-bold text-primary">₹{p.mrp}</div>
-                <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Buy Now</button>
+                <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Add to Cart</button>
               </div>
             </div>
           </div>
@@ -338,12 +350,14 @@ function ShopTab({ products, profile, onDone }: { products: Product[]; profile: 
       {selected && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 overflow-y-auto" onClick={() => setSelected(null)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
-            <h3 className="font-serif text-2xl text-primary">Pay ₹{selected.mrp}</h3>
-            <p className="text-sm text-muted-foreground mt-1">for {selected.name}</p>
+            <h3 className="font-serif text-2xl text-primary">Cart & Payment</h3>
+            <p className="text-sm text-muted-foreground mt-1">{selected.name} · ₹{selected.mrp}</p>
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
-              <div className="mt-1 font-mono text-lg font-bold text-primary">kartiktirgar@ybl</div>
-              <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → Send ₹{selected.mrp} to above UPI ID → upload the payment screenshot below.</p>
+              {settings?.qr_image_url && <img src={settings.qr_image_url} alt="Payment QR code" className="mx-auto mt-3 w-44 rounded-xl border border-border bg-white p-2" />}
+              <div className="mt-3 font-mono text-lg font-bold text-primary select-all">{settings?.upi_id || "kartiktirgar@ybl"}</div>
+              <div className="text-xs text-muted-foreground">{settings?.payment_account_name || "KARTIK TIRGAR"}</div>
+              <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → send ₹{selected.mrp} to this UPI / QR → upload the payment screenshot below.</p>
             </div>
             <label className="block mt-4 text-sm font-medium">
               Payment Screenshot <span className="text-destructive">*</span>

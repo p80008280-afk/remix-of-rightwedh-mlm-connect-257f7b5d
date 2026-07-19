@@ -1,8 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { Leaf, Star, ShieldCheck } from "lucide-react";
+import { Leaf, Star, ShieldCheck, ShoppingBag } from "lucide-react";
 import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
-import qrAsset from "@/assets/phonepe-qr.png.asset.json";
 
 export const Route = createFileRoute("/products")({
   head: () => ({
@@ -179,13 +178,13 @@ function Products() {
               <PriceBox label="Pair Matching" value={`₹ ${hero.pair}`} gold />
             </div>
 
-            <div className="mt-6 rounded-2xl border border-border bg-card p-5">
-              <div className="text-xs uppercase tracking-widest text-gold font-semibold">To Order</div>
-              <div className="mt-2 text-sm text-muted-foreground">
-                Pay <b>₹ {hero.mrp.toLocaleString()}</b> to UPI ID <span className="text-primary font-semibold select-all">kartiktirgar@ybl</span> or scan the QR below,
-                then share the payment screenshot on WhatsApp <a className="text-primary font-semibold" href="tel:+918619990944">+91 86199 90944</a> along with your Member ID and delivery address.
-              </div>
-            </div>
+            <Link
+              to={"/_authenticated/dashboard" as any}
+              search={{ tab: "shop" } as any}
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-7 py-3.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90"
+            >
+              <ShoppingBag className="h-4 w-4" /> Add to Cart / Buy Now
+            </Link>
           </div>
         </div>
       </section>
@@ -226,24 +225,15 @@ function Products() {
                     <div className="text-sm font-bold">₹{p.pair}</div>
                   </div>
                 </div>
+                <Link
+                  to={"/_authenticated/dashboard" as any}
+                  search={{ tab: "shop" } as any}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-glow"
+                >
+                  <ShoppingBag className="h-4 w-4" /> Buy Now
+                </Link>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* QR block */}
-      <section className="mx-auto max-w-4xl px-6 py-20">
-        <div className="rounded-3xl border border-border bg-card p-10 shadow-elegant flex flex-col md:flex-row gap-8 items-center">
-          <img src={qrAsset.url} alt="PhonePe QR" className="w-56 rounded-2xl" />
-          <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Payment</div>
-            <h3 className="mt-2 font-serif text-3xl text-primary">Scan & Pay</h3>
-            <p className="mt-2 text-muted-foreground">Use PhonePe, Google Pay, Paytm or any UPI app to place your order instantly.</p>
-            <div className="mt-4 rounded-xl bg-background border border-border px-4 py-3">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">UPI ID</div>
-              <div className="font-serif text-xl text-primary select-all">kartiktirgar@ybl</div>
-            </div>
           </div>
         </div>
       </section>

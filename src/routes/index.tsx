@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star } from "lucide-react";
+import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star, ShoppingBag, Upload, UserCheck } from "lucide-react";
 import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
-import qrAsset from "@/assets/phonepe-qr.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -205,36 +204,30 @@ function Home() {
         </div>
       </section>
 
-      {/* PAYMENT / UPI */}
+      {/* BUYING FLOW */}
       <section className="bg-gradient-leaf py-24">
-        <div className="mx-auto max-w-6xl px-6 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Accepted Payment</div>
-            <h2 className="mt-3 font-serif text-4xl text-primary">Pay easily with UPI</h2>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Secure Checkout</div>
+            <h2 className="mt-3 font-serif text-4xl text-primary">QR appears only during product checkout.</h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              Scan the PhonePe QR code or use our UPI ID to place your product order. After payment,
-              share the transaction screenshot with your sponsor or on WhatsApp to activate your order.
+              Members choose a product, pay from the dashboard checkout, upload the payment screenshot, and admin approves it from the Orders tab.
             </p>
-            <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
-              <div className="text-xs uppercase tracking-widest text-gold font-semibold">UPI ID</div>
-              <div className="mt-1 font-serif text-2xl text-primary select-all">kartiktirgar@ybl</div>
-              <div className="mt-1 text-xs text-muted-foreground">Account name: KARTIK TIRGAR</div>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <span className="rounded-full bg-card border border-border px-3 py-1">PhonePe</span>
-              <span className="rounded-full bg-card border border-border px-3 py-1">Google Pay</span>
-              <span className="rounded-full bg-card border border-border px-3 py-1">Paytm</span>
-              <span className="rounded-full bg-card border border-border px-3 py-1">Any UPI App</span>
-            </div>
           </div>
-          <div className="flex justify-center">
-            <div className="rounded-3xl bg-card border border-border shadow-elegant p-6 max-w-xs">
-              <img src={qrAsset.url} alt="PhonePe QR — Kartik Tirgar" className="w-full rounded-xl" />
-              <div className="mt-4 text-center">
-                <div className="font-serif text-lg text-primary">Scan & Pay</div>
-                <div className="text-xs text-muted-foreground">KARTIK TIRGAR</div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {[
+              { icon: ShoppingBag, title: "Add to cart", desc: "Member opens dashboard shop and selects the product." },
+              { icon: Upload, title: "Pay & upload", desc: "Checkout shows the current admin QR/UPI and asks for payment proof." },
+              { icon: UserCheck, title: "Admin approval", desc: "Admin verifies the screenshot, then approves or rejects the order." },
+            ].map((step) => (
+              <div key={step.title} className="rounded-2xl border border-border bg-card p-7 shadow-soft text-center">
+                <div className="mx-auto h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center shadow-gold">
+                  <step.icon className="h-7 w-7 text-gold-foreground" />
+                </div>
+                <h3 className="mt-5 font-serif text-xl text-primary">{step.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{step.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

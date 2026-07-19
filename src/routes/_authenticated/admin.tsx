@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet, LogOut,
-  IndianRupee, CheckCircle2, XCircle, Plus,
+  IndianRupee, CheckCircle2, XCircle, Plus, Settings,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { reviewOrder, reviewWithdrawal, upsertProduct, updateMemberStatus } from "@/lib/mlm.functions";
+import { reviewOrder, reviewWithdrawal, upsertProduct, updateMemberStatus, updatePlanSettings } from "@/lib/mlm.functions";
 import logoAsset from "@/assets/logo.png.asset.json";
+import qrAsset from "@/assets/phonepe-qr.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -23,32 +24,41 @@ type Profile = { id: string; full_name: string; email: string; phone: string; re
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
 type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string };
 type Withdrawal = { id: string; user_id: string; amount: number; upi_id: string; status: string; created_at: string };
+type PlanSettings = {
+  min_withdrawal: number; tds_percent: number; admin_charge: number; withdrawal_days: number;
+  daily_pair_cap: number; refund_days: number; monthly_repurchase: boolean;
+  upi_id: string; payment_account_name: string; qr_image_url: string; qr_image_path?: string;
+};
 
 function Admin() {
   const nav = useNavigate();
-  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals">("dash");
+  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals" | "settings">("dash");
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [settings, setSettings] = useState<PlanSettings | null>(null);
 
   const rvOrder = useServerFn(reviewOrder);
   const rvWd = useServerFn(reviewWithdrawal);
   const upProd = useServerFn(upsertProduct);
   const upMem = useServerFn(updateMemberStatus);
+  const upSettings = useServerFn(updatePlanSettings);
 
   async function loadAll() {
-    const [m, p, o, w] = await Promise.all([
+    const [m, p, o, w, ps] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("products").select("*").order("created_at"),
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
       supabase.from("withdrawals").select("*").order("created_at", { ascending: false }),
+      supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
     ]);
     setMembers((m.data || []) as Profile[]);
     setProducts((p.data || []) as Product[]);
     setOrders((o.data || []) as Order[]);
     setWithdrawals((w.data || []) as Withdrawal[]);
+    if (ps.data) setSettings(ps.data as PlanSettings);
   }
 
   useEffect(() => {
@@ -99,6 +109,7 @@ function Admin() {
           <SideBtn active={tab==="products"} onClick={() => setTab("products")} icon={Package} label="Products" />
           <SideBtn active={tab==="orders"} onClick={() => setTab("orders")} icon={ShoppingCart} label={`Orders${pendingOrders.length?` (${pendingOrders.length})`:""}`} />
           <SideBtn active={tab==="withdrawals"} onClick={() => setTab("withdrawals")} icon={Wallet} label={`Withdrawals${pendingWd.length?` (${pendingWd.length})`:""}`} />
+          <SideBtn active={tab==="settings"} onClick={() => setTab("settings")} icon={Settings} label="Payment Settings" />
         </nav>
         <button onClick={logout} className="m-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 text-sm">
           <LogOut className="h-4 w-4" /> Sign out
@@ -107,7 +118,7 @@ function Admin() {
 
       <main className="flex-1 p-6 md:p-10">
         <div className="md:hidden flex gap-1 mb-4 overflow-x-auto text-xs">
-          {(["dash","members","products","orders","withdrawals"] as const).map(t => (
+          {(["dash","members","products","orders","withdrawals","settings"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 rounded-lg whitespace-nowrap ${tab===t?"bg-primary text-primary-foreground":"bg-card"}`}>{t}</button>
           ))}
         </div>
@@ -125,6 +136,15 @@ function Admin() {
               <Stat icon={Wallet} label="Pending Withdrawals" value={String(pendingWd.length)} />
               <Stat icon={Package} label="Active Products" value={String(products.filter(p=>p.status==="active").length)} />
             </div>
+            {settings && (
+              <div className="rounded-2xl bg-card border border-border p-6 shadow-soft grid gap-4 md:grid-cols-[1fr_auto] items-center">
+                <div>
+                  <h2 className="font-serif text-2xl text-primary">Payment QR & UPI</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Current checkout UPI: <b className="text-primary">{settings.upi_id}</b> · {settings.payment_account_name}</p>
+                </div>
+                <button onClick={() => setTab("settings")} className="rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold">Edit Payment Settings</button>
+              </div>
+            )}
           </div>
         )}
 
@@ -168,7 +188,7 @@ function Admin() {
 
         {tab === "orders" && (
           <Card title={`Orders (${orders.length}) — ${pendingOrders.length} pending review`}>
-            <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the payment amount and receiver UPI (kartiktirgar@ybl) match, click <b>Approve</b> — the member gets activated and commissions are paid automatically. Otherwise click <b>Reject</b>.</p>
+            <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the amount and receiver UPI ({settings?.upi_id || "current admin UPI"}) match, click <b>Approve</b> — the member gets activated and commissions are paid automatically. Otherwise click <b>Reject</b>.</p>
             <TableWrap cols={["Date","Member","Product","Amount","UPI Ref","Proof","Status","Action"]}>
               {orders.map(o => {
                 const mem = memberMap.get(o.user_id);
@@ -232,6 +252,13 @@ function Admin() {
               })}
             </TableWrap>
           </Card>
+        )}
+
+        {tab === "settings" && settings && (
+          <SettingsTab
+            settings={settings}
+            onSave={async (next) => { await upSettings({ data: next }); await loadAll(); }}
+          />
         )}
       </main>
     </div>
@@ -348,6 +375,74 @@ function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Pa
         </div>
       )}
     </div>
+  );
+}
+
+function SettingsTab({ settings, onSave }: { settings: PlanSettings; onSave: (settings: PlanSettings) => Promise<void> }) {
+  const [form, setForm] = useState<PlanSettings>(settings);
+  const [file, setFile] = useState<File | null>(null);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg("");
+    try {
+      let next = { ...form };
+      if (file) {
+        const ext = file.name.split(".").pop() || "png";
+        const path = `qr/payment-qr-${Date.now()}.${ext}`;
+        const upload = await supabase.storage.from("payment-assets").upload(path, file, { upsert: false });
+        if (upload.error) throw upload.error;
+        const signed = await supabase.storage.from("payment-assets").createSignedUrl(path, 60 * 60 * 24 * 365);
+        next = { ...next, qr_image_path: path, qr_image_url: signed.data?.signedUrl || qrAsset.url };
+      }
+      await onSave(next);
+      setForm(next);
+      setFile(null);
+      setMsg("Payment settings updated.");
+    } catch (err: any) {
+      setMsg("Error: " + (err.message || String(err)));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card title="Payment & Plan Settings">
+      {msg && <div className="mb-4 rounded-lg bg-primary/10 text-primary text-sm p-3">{msg}</div>}
+      <form onSubmit={save} className="grid gap-6 lg:grid-cols-[1fr_260px]">
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <F label="Checkout UPI ID"><input required value={form.upi_id} onChange={e => setForm({ ...form, upi_id: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+            <F label="Payment Account Name"><input required value={form.payment_account_name} onChange={e => setForm({ ...form, payment_account_name: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+          </div>
+          <F label="QR Image URL"><input required value={form.qr_image_url} onChange={e => setForm({ ...form, qr_image_url: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+          <F label="Upload New QR Image"><input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full rounded border px-3 py-2 text-sm" /></F>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <F label="Minimum Withdrawal ₹"><input type="number" required value={form.min_withdrawal} onChange={e => setForm({ ...form, min_withdrawal: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
+            <F label="TDS %"><input type="number" required value={form.tds_percent} onChange={e => setForm({ ...form, tds_percent: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
+            <F label="Admin Charge ₹"><input type="number" required value={form.admin_charge} onChange={e => setForm({ ...form, admin_charge: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <F label="Withdrawal Days"><input type="number" required value={form.withdrawal_days} onChange={e => setForm({ ...form, withdrawal_days: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
+            <F label="Daily Pair Capping"><input type="number" required value={form.daily_pair_cap} onChange={e => setForm({ ...form, daily_pair_cap: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
+            <F label="Refund Days"><input type="number" required value={form.refund_days} onChange={e => setForm({ ...form, refund_days: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
+          </div>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" checked={form.monthly_repurchase} onChange={e => setForm({ ...form, monthly_repurchase: e.target.checked })} />
+            Monthly repurchase is compulsory
+          </label>
+          <button disabled={busy} className="rounded-full bg-gradient-gold text-gold-foreground px-8 py-3 text-sm font-semibold disabled:opacity-60">{busy ? "Saving..." : "Save Settings"}</button>
+        </div>
+        <div className="rounded-2xl border border-border bg-background p-4 text-center h-fit">
+          <img src={file ? URL.createObjectURL(file) : form.qr_image_url} alt="Current checkout QR" className="mx-auto w-52 rounded-xl bg-white p-2 border border-border" />
+          <div className="mt-3 font-mono text-sm text-primary break-all">{form.upi_id}</div>
+          <div className="text-xs text-muted-foreground">{form.payment_account_name}</div>
+        </div>
+      </form>
+    </Card>
   );
 }
 
