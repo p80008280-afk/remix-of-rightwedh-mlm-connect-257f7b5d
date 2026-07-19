@@ -113,6 +113,7 @@ export type Database = {
           min_withdrawal: number
           monthly_repurchase: boolean
           payment_account_name: string
+          qr_image_path: string
           qr_image_url: string
           refund_days: number
           tds_percent: number
@@ -127,6 +128,7 @@ export type Database = {
           min_withdrawal?: number
           monthly_repurchase?: boolean
           payment_account_name?: string
+          qr_image_path?: string
           qr_image_url?: string
           refund_days?: number
           tds_percent?: number
@@ -141,6 +143,7 @@ export type Database = {
           min_withdrawal?: number
           monthly_repurchase?: boolean
           payment_account_name?: string
+          qr_image_path?: string
           qr_image_url?: string
           refund_days?: number
           tds_percent?: number
