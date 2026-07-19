@@ -146,6 +146,7 @@ export const updatePlanSettings = createServerFn({ method: "POST" })
       upi_id: z.string().min(3),
       payment_account_name: z.string().min(1),
       qr_image_url: z.string().min(1),
+      qr_image_path: z.string().optional(),
     }).parse(d)
   )
   .handler(async ({ data, context }) => {

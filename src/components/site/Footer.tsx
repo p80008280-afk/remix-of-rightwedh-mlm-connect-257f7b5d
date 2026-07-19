@@ -39,7 +39,7 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-primary-foreground/80">
             <li><Link to="/login" className="hover:text-gold">Member Login</Link></li>
             <li><Link to="/register" className="hover:text-gold">Join Us</Link></li>
-            <li><Link to="/admin" className="hover:text-gold">Admin Panel</Link></li>
+            <li><Link to="/login" className="hover:text-gold">Admin Login</Link></li>
           </ul>
           <h4 className="font-serif text-gold text-lg mt-6 mb-4">Legal</h4>
           <ul className="space-y-2 text-sm text-primary-foreground/80">
