@@ -112,9 +112,12 @@ export type Database = {
           id: number
           min_withdrawal: number
           monthly_repurchase: boolean
+          payment_account_name: string
+          qr_image_url: string
           refund_days: number
           tds_percent: number
           updated_at: string
+          upi_id: string
           withdrawal_days: number
         }
         Insert: {
@@ -123,9 +126,12 @@ export type Database = {
           id?: number
           min_withdrawal?: number
           monthly_repurchase?: boolean
+          payment_account_name?: string
+          qr_image_url?: string
           refund_days?: number
           tds_percent?: number
           updated_at?: string
+          upi_id?: string
           withdrawal_days?: number
         }
         Update: {
@@ -134,9 +140,12 @@ export type Database = {
           id?: number
           min_withdrawal?: number
           monthly_repurchase?: boolean
+          payment_account_name?: string
+          qr_image_url?: string
           refund_days?: number
           tds_percent?: number
           updated_at?: string
+          upi_id?: string
           withdrawal_days?: number
         }
         Relationships: []
