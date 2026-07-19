@@ -130,3 +130,36 @@ export const updateMemberStatus = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+// Admin-only: update payment and plan settings shown during checkout.
+export const updatePlanSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      min_withdrawal: z.number().nonnegative(),
+      tds_percent: z.number().nonnegative(),
+      admin_charge: z.number().nonnegative(),
+      withdrawal_days: z.number().int().nonnegative(),
+      daily_pair_cap: z.number().int().nonnegative(),
+      refund_days: z.number().int().nonnegative(),
+      monthly_repurchase: z.boolean(),
+      upi_id: z.string().min(3),
+      payment_account_name: z.string().min(1),
+      qr_image_url: z.string().min(1),
+    }).parse(d)
+  )
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("plan_settings")
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq("id", 1);
+    if (error) throw error;
+    return { ok: true };
+  });
