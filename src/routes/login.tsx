@@ -14,9 +14,14 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
+// Usernames are converted to a synthetic email so many accounts can share one real email.
+function usernameToEmail(username: string) {
+  return `${username.trim().toLowerCase()}@rs.local`;
+}
+
 function Login() {
   const nav = useNavigate();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +30,8 @@ function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    // Admin still logs in with their real email; members use username.
+    const email = identifier.includes("@") ? identifier.trim() : usernameToEmail(identifier);
     const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err || !data.user) {
       setError(err?.message || "Login failed");
@@ -49,12 +56,14 @@ function Login() {
           </div>
           <form className="mt-8 space-y-4" onSubmit={submit}>
             <label className="block text-sm font-medium">
-              Email
+              Username
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="your username"
                 className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
               />
             </label>
@@ -63,6 +72,7 @@ function Login() {
               <input
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
