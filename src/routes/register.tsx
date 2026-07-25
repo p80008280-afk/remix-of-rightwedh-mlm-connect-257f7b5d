@@ -18,11 +18,16 @@ export const Route = createFileRoute("/register")({
   component: Register,
 });
 
+function usernameToEmail(username: string) {
+  return `${username.trim().toLowerCase()}@rs.local`;
+}
+
 function Register() {
   const nav = useNavigate();
   const s = useSearch({ from: "/register" });
   const [form, setForm] = useState({
     full_name: "",
+    username: "",
     email: "",
     phone: "",
     password: "",
@@ -39,22 +44,30 @@ function Register() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    const uname = form.username.trim().toLowerCase();
+    if (!/^[a-z0-9._-]{3,24}$/.test(uname)) {
+      setError("Username must be 3-24 chars: letters, numbers, . _ -");
+      return;
+    }
     setLoading(true);
+    // Same real email can be reused across accounts; auth uses synthetic email built from username.
     const { data, error: err } = await supabase.auth.signUp({
-      email: form.email,
+      email: usernameToEmail(uname),
       password: form.password,
       options: {
         emailRedirectTo: window.location.origin,
         data: {
           full_name: form.full_name,
           phone: form.phone,
+          username: uname,
+          real_email: form.email,
           sponsor_code: form.sponsor_code.trim().toUpperCase(),
           position: form.position,
         },
       },
     });
     if (err || !data.user) {
-      setError(err?.message || "Registration failed");
+      setError(err?.message?.includes("already") ? "Username already taken" : err?.message || "Registration failed");
       setLoading(false);
       return;
     }
@@ -71,12 +84,20 @@ function Register() {
             </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Join Our Family</h1>
             <p className="mt-1 text-sm text-muted-foreground text-center">
-              Register using your sponsor's referral code.
+              Register using your sponsor's referral code. Same email can be used for multiple accounts — each account needs its own unique username.
             </p>
           </div>
           <form className="mt-8 space-y-4" onSubmit={submit}>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Full Name" value={form.full_name} onChange={(v) => up("full_name", v)} />
+              <Field
+                label="Username (unique)"
+                value={form.username}
+                onChange={(v) => up("username", v.toLowerCase())}
+                placeholder="e.g. ramesh01"
+              />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
               <Field
                 label="Sponsor Code"
                 value={form.sponsor_code}
@@ -84,12 +105,10 @@ function Register() {
                 placeholder="e.g. RSABC123"
                 required={false}
               />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Phone" type="tel" value={form.phone} onChange={(v) => up("phone", v)} />
-              <Field label="Email" type="email" value={form.email} onChange={(v) => up("email", v)} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Email (optional, can repeat)" type="email" value={form.email} onChange={(v) => up("email", v)} required={false} />
               <label className="block text-sm font-medium">
                 Position
                 <select
@@ -101,8 +120,8 @@ function Register() {
                   <option value="right">Right</option>
                 </select>
               </label>
-              <Field label="Password" type="password" value={form.password} onChange={(v) => up("password", v)} />
             </div>
+            <Field label="Password" type="password" value={form.password} onChange={(v) => up("password", v)} />
             {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
             <button
               disabled={loading}
@@ -122,6 +141,7 @@ function Register() {
     </SiteLayout>
   );
 }
+
 
 function Field({
   label, value, onChange, type = "text", placeholder, required = true,
