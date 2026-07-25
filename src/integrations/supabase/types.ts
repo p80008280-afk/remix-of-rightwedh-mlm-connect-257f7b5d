@@ -209,6 +209,7 @@ export type Database = {
           referral_code: string
           sponsor_id: string | null
           upi_id: string | null
+          username: string | null
         }
         Insert: {
           created_at?: string
@@ -223,6 +224,7 @@ export type Database = {
           referral_code: string
           sponsor_id?: string | null
           upi_id?: string | null
+          username?: string | null
         }
         Update: {
           created_at?: string
@@ -237,6 +239,7 @@ export type Database = {
           referral_code?: string
           sponsor_id?: string | null
           upi_id?: string | null
+          username?: string | null
         }
         Relationships: [
           {
