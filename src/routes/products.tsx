@@ -179,7 +179,7 @@ function Products() {
             </div>
 
             <Link
-              to={"/_authenticated/dashboard" as any}
+              to="/dashboard"
               search={{ tab: "shop" } as any}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-7 py-3.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90"
             >
@@ -226,7 +226,7 @@ function Products() {
                   </div>
                 </div>
                 <Link
-                  to={"/_authenticated/dashboard" as any}
+                  to="/dashboard"
                   search={{ tab: "shop" } as any}
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-glow"
                 >

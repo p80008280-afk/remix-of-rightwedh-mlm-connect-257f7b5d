@@ -40,7 +40,7 @@ function Login() {
     }
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
     const isAdmin = roles?.some((r) => r.role === "admin");
-    await nav({ to: isAdmin ? "/_authenticated/admin" as any : "/_authenticated/dashboard" as any });
+    await nav({ to: isAdmin ? "/admin" : "/dashboard" });
   }
 
   return (
