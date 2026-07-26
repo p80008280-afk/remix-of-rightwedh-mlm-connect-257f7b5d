@@ -50,7 +50,7 @@ export function Header() {
 
         <div className="hidden lg:flex items-center gap-3">
           {authed ? (
-            <Link to={"/_authenticated/dashboard" as any} className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
+            <Link to="/dashboard" className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
               My Dashboard
             </Link>
           ) : (

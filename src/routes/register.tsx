@@ -71,7 +71,7 @@ function Register() {
       setLoading(false);
       return;
     }
-    await nav({ to: "/_authenticated/dashboard" as any });
+    await nav({ to: "/dashboard", search: { tab: "shop" } as any });
   }
 
   return (

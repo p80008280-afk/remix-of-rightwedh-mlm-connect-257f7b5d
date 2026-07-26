@@ -80,7 +80,7 @@ function Admin() {
       <XCircle className="h-12 w-12 text-destructive" />
       <h1 className="font-serif text-2xl text-primary">Access Denied</h1>
       <p className="text-sm text-muted-foreground">You must be an admin to view this page.</p>
-      <Link to="/_authenticated/dashboard" className="text-primary underline">Go to your dashboard</Link>
+      <Link to="/dashboard" className="text-primary underline">Go to your dashboard</Link>
     </div>
   );
 
