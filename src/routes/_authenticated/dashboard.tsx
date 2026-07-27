@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo.png.asset.json";
+import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
 
 type Profile = {
   id: string; full_name: string; email: string; phone: string;
