@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Profile = { id: string; full_name: string; email: string; phone: string; referral_code: string; is_active: boolean; kyc_status: string; created_at: string };
+type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; is_active: boolean; kyc_status: string; created_at: string };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
 type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string };
 type Withdrawal = { id: string; user_id: string; amount: number; upi_id: string; status: string; created_at: string };
@@ -150,10 +150,11 @@ function Admin() {
 
         {tab === "members" && (
           <Card title={`Members (${members.length})`}>
-            <TableWrap cols={["Name","Email","Phone","Ref Code","Status","KYC","Joined","Action"]}>
+            <TableWrap cols={["Name","Username","Email","Phone","Ref Code","Status","KYC","Joined","Action"]}>
               {members.map(m => (
                 <tr key={m.id} className="border-b border-border/50">
                   <td className="py-2 px-2">{m.full_name || "—"}</td>
+                  <td className="py-2 px-2 font-mono text-xs text-primary">{m.username || "—"}</td>
                   <td className="py-2 px-2">{m.email}</td>
                   <td className="py-2 px-2">{m.phone || "—"}</td>
                   <td className="py-2 px-2 font-mono text-xs">{m.referral_code}</td>

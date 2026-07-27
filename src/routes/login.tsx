@@ -34,7 +34,9 @@ function Login() {
     const email = identifier.includes("@") ? identifier.trim() : usernameToEmail(identifier);
     const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err || !data.user) {
-      setError(err?.message || "Login failed");
+      setError(
+        "Login failed. Members must enter their registered Username, not full name or email. Please check the username/password and try again."
+      );
       setLoading(false);
       return;
     }
@@ -52,7 +54,7 @@ function Login() {
               <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Login</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Welcome back to Righwedh Sanjivni</p>
+            <p className="mt-1 text-sm text-muted-foreground">Members login with username. Admin can use email.</p>
           </div>
           <form className="mt-8 space-y-4" onSubmit={submit}>
             <label className="block text-sm font-medium">
@@ -63,7 +65,7 @@ function Login() {
                 autoComplete="username"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="your username"
+                placeholder="registered username"
                 className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
               />
             </label>
@@ -87,7 +89,7 @@ function Login() {
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            New members can register only through a sponsor referral link.
+            Use the unique username created during registration; the same email can be reused for many accounts.
           </p>
         </div>
       </section>

@@ -84,14 +84,14 @@ function Register() {
             </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Join Our Family</h1>
             <p className="mt-1 text-sm text-muted-foreground text-center">
-              Register using your sponsor's referral code. Same email can be used for multiple accounts — each account needs its own unique username.
+              Register using your sponsor's referral code. Login will use the unique username, not the full name.
             </p>
           </div>
           <form className="mt-8 space-y-4" onSubmit={submit}>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Full Name" value={form.full_name} onChange={(v) => up("full_name", v)} />
               <Field
-                label="Username (unique)"
+                label="Login Username"
                 value={form.username}
                 onChange={(v) => up("username", v.toLowerCase())}
                 placeholder="e.g. ramesh01"
