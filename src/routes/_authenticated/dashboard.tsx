@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo.png.asset.json";
+import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
 
 type Profile = {
   id: string; full_name: string; email: string; phone: string;
@@ -333,7 +334,12 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.map(p => (
           <div key={p.id} className="rounded-2xl bg-card border border-border shadow-soft overflow-hidden">
-            {p.image_url && <img src={p.image_url} alt={p.name} className="w-full h-40 object-cover" />}
+            <img
+              src={p.image_url || capsuleAsset.url}
+              alt={p.name}
+              className="w-full h-40 object-cover bg-gradient-to-br from-primary/10 to-gold/20"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = capsuleAsset.url; }}
+            />
             <div className="p-5">
               <div className="text-xs uppercase tracking-wider text-gold font-semibold">{p.category}</div>
               <h3 className="font-serif text-lg text-primary mt-1">{p.name}</h3>

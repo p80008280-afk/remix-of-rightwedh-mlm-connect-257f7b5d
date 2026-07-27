@@ -108,7 +108,7 @@ function Register() {
               <Field label="Phone" type="tel" value={form.phone} onChange={(v) => up("phone", v)} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Email (optional, can repeat)" type="email" value={form.email} onChange={(v) => up("email", v)} required={false} />
+              <Field label="Email" type="email" value={form.email} onChange={(v) => up("email", v)} required={false} />
               <label className="block text-sm font-medium">
                 Position
                 <select
