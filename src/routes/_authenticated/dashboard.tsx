@@ -10,6 +10,7 @@ import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
 
 type Profile = {
   id: string; full_name: string; email: string; phone: string;
+  username: string | null;
   referral_code: string; sponsor_id: string | null; position: string | null;
   upi_id: string; kyc_status: string; is_active: boolean;
 };
@@ -133,7 +134,11 @@ function Dashboard() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div>
             <h1 className="font-serif text-3xl text-primary">Welcome, {profile.full_name || "Member"}</h1>
-            <p className="text-sm text-muted-foreground">Referral code: <span className="font-mono font-bold text-primary">{profile.referral_code}</span></p>
+              <p className="text-sm text-muted-foreground">
+                Login username: <span className="font-mono font-bold text-primary">{profile.username || "—"}</span>
+                <span className="mx-2">·</span>
+                Referral code: <span className="font-mono font-bold text-primary">{profile.referral_code}</span>
+              </p>
           </div>
           <Link to="/" className="text-sm text-primary hover:underline">← Back to website</Link>
         </div>
@@ -488,6 +493,9 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
     <Section title="My Profile">
       {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3 mb-4">{msg}</div>}
       <form onSubmit={save} className="space-y-4 max-w-md">
+        <label className="block text-sm font-medium">Login Username
+          <input disabled value={profile.username || ""} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm font-mono" />
+        </label>
         <label className="block text-sm font-medium">Email
           <input disabled value={profile.email} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm" />
         </label>
