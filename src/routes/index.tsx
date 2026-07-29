@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star, ShoppingBag, Upload, UserCheck } from "lucide-react";
-import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
+const capsuleAsset = { url: "/aaurva-capsule.png" };
 
 export const Route = createFileRoute("/")({
   head: () => ({

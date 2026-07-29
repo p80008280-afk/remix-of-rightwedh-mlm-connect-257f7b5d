@@ -5,8 +5,8 @@ import {
   GitBranch, ShoppingBag, Send, CheckCircle2, Clock, XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import logoAsset from "@/assets/logo.png.asset.json";
-import capsuleAsset from "@/assets/aaurva-capsule.png.asset.json";
+const logoAsset = { url: "/logo.png" };
+const capsuleAsset = { url: "/aaurva-capsule.png" };
 
 type Profile = {
   id: string; full_name: string; email: string; phone: string;

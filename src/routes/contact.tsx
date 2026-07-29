@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Mail, Phone, MapPin, Clock, User, Wallet } from "lucide-react";
-import qrAsset from "@/assets/phonepe-qr.png.asset.json";
+const qrAsset = { url: "/phonepe-qr.png" };
 
 export const Route = createFileRoute("/contact")({
   head: () => ({

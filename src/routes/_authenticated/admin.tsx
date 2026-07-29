@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewOrder, reviewWithdrawal, upsertProduct, updateMemberStatus, updatePlanSettings } from "@/lib/mlm.functions";
-import logoAsset from "@/assets/logo.png.asset.json";
-import qrAsset from "@/assets/phonepe-qr.png.asset.json";
+const logoAsset = { url: "/logo.png" };
+const qrAsset = { url: "/phonepe-qr.png" };
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
