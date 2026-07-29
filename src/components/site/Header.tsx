@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, X, Leaf } from "lucide-react";
-import logoAsset from "@/assets/logo.png.asset.json";
+const logoAsset = { url: "/logo.png" };
 
 const nav = [
   { to: "/", label: "Home" },

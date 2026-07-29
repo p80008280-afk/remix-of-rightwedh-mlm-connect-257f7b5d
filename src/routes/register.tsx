@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
-import logoAsset from "@/assets/logo.png.asset.json";
+const logoAsset = { url: "/logo.png" };
 
 const search = z.object({ ref: z.string().optional(), pos: z.enum(["left", "right"]).optional() });
 
