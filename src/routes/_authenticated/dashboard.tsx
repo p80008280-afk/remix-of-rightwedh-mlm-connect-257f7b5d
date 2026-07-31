@@ -30,7 +30,7 @@ type PlanSettings = {
 };
 type Commission = { id: string; type: string; amount: number; note: string; created_at: string };
 type Withdrawal = { id: string; amount: number; upi_id: string; status: string; created_at: string };
-type TeamMember = { id: string; full_name: string; referral_code: string; position: string | null; created_at: string; is_active: boolean };
+type TeamMember = { id: string; full_name: string; referral_code: string; member_position: string | null; created_at: string; is_active: boolean };
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -71,7 +71,7 @@ function Dashboard() {
       supabase.from("orders").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       supabase.from("commissions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,full_name,referral_code,position,created_at,is_active").eq("sponsor_id", uid),
+      supabase.rpc("get_my_direct_team"),
       supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
     ]);
     if (p.data) setProfile(p.data as Profile);
@@ -206,7 +206,7 @@ function Dashboard() {
               rows={team.map(t => [
                 t.full_name || "—",
                 t.referral_code,
-                t.position || "—",
+                 t.member_position || "—",
                 t.is_active ? "Active" : "Pending",
                 new Date(t.created_at).toLocaleDateString(),
               ])}
