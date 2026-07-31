@@ -189,7 +189,7 @@ function Admin() {
 
         {tab === "orders" && (
           <Card title={`Orders (${orders.length}) — ${pendingOrders.length} pending review`}>
-            <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the amount and receiver UPI ({settings?.upi_id || "current admin UPI"}) match, click <b>Approve</b> — the member gets activated and commissions are paid automatically. Otherwise click <b>Reject</b>.</p>
+            <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the amount and receiver UPI ({settings?.upi_id || "current admin UPI"}) match, click <b>Approve</b> — commissions are paid automatically and the member becomes active. Otherwise click <b>Reject</b>.</p>
             <TableWrap cols={["Date","Member","Product","Amount","UPI Ref","Proof","Status","Action"]}>
               {orders.map(o => {
                 const mem = memberMap.get(o.user_id);

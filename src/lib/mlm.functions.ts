@@ -84,6 +84,26 @@ export const registerMember = createServerFn({ method: "POST" })
     }
   });
 
+export const getMyDirectTeam = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id,full_name,referral_code,position,created_at,is_active")
+      .eq("sponsor_id", context.userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((member) => ({
+      id: member.id,
+      full_name: member.full_name,
+      referral_code: member.referral_code,
+      member_position: member.position,
+      created_at: member.created_at,
+      is_active: member.is_active,
+    }));
+  });
+
 // Admin-only: approve or reject a pending order. On approval, DB function
 // pays direct commission + walks up the tree to pay pair bonuses.
 export const reviewOrder = createServerFn({ method: "POST" })
@@ -103,21 +123,12 @@ export const reviewOrder = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Error("Forbidden");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const newStatus = data.action === "approve" ? "approved" : "rejected";
-    const processedAt = data.action === "reject" ? new Date().toISOString() : null;
-    const { error: upErr } = await supabaseAdmin
-      .from("orders")
-      .update({ status: newStatus, admin_note: data.note, processed_at: processedAt })
-      .eq("id", data.orderId)
-      .eq("status", "pending");
-    if (upErr) throw upErr;
-
-    if (data.action === "approve") {
-      const { error: rpcErr } = await supabaseAdmin.rpc("process_order_approval", {
-        _order_id: data.orderId,
-      });
-      if (rpcErr) throw rpcErr;
-    }
+    const { error } = await supabaseAdmin.rpc("admin_review_order", {
+      _order_id: data.orderId,
+      _action: data.action,
+      _note: data.note,
+    });
+    if (error) throw error;
     return { ok: true };
   });
 
@@ -139,21 +150,12 @@ export const reviewWithdrawal = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Error("Forbidden");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const newStatus = data.action === "approve" ? "approved" : "rejected";
-    const processedAt = data.action === "reject" ? new Date().toISOString() : null;
-    const { error: upErr } = await supabaseAdmin
-      .from("withdrawals")
-      .update({ status: newStatus, admin_note: data.note, processed_at: processedAt })
-      .eq("id", data.withdrawalId)
-      .eq("status", "pending");
-    if (upErr) throw upErr;
-
-    if (data.action === "approve") {
-      const { error: rpcErr } = await supabaseAdmin.rpc("process_withdrawal_approval", {
-        _withdrawal_id: data.withdrawalId,
-      });
-      if (rpcErr) throw rpcErr;
-    }
+    const { error } = await supabaseAdmin.rpc("admin_review_withdrawal", {
+      _withdrawal_id: data.withdrawalId,
+      _action: data.action,
+      _note: data.note,
+    });
+    if (error) throw error;
     return { ok: true };
   });
 

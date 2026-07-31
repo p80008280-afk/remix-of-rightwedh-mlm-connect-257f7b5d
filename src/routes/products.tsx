@@ -183,7 +183,7 @@ function Products() {
               search={{ tab: "shop" } as any}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-7 py-3.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90"
             >
-              <ShoppingBag className="h-4 w-4" /> Add to Cart / Buy Now
+              <ShoppingBag className="h-4 w-4" /> Buy Now
             </Link>
           </div>
         </div>

@@ -5,6 +5,8 @@ import {
   GitBranch, ShoppingBag, Send, CheckCircle2, Clock, XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyDirectTeam } from "@/lib/mlm.functions";
+import { useServerFn } from "@tanstack/react-start";
 const logoAsset = { url: "/logo.png" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
@@ -44,6 +46,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const nav = useNavigate();
+  const fetchDirectTeam = useServerFn(getMyDirectTeam);
   const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "income" | "withdraw" | "profile">(() => {
     if (typeof window === "undefined") return "overview";
     return new URLSearchParams(window.location.search).get("tab") === "shop" ? "shop" : "overview";
@@ -71,7 +74,7 @@ function Dashboard() {
       supabase.from("orders").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       supabase.from("commissions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.rpc("get_my_direct_team"),
+      fetchDirectTeam(),
       supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
     ]);
     if (p.data) setProfile(p.data as Profile);
@@ -81,7 +84,7 @@ function Dashboard() {
     setOrders((o.data || []) as Order[]);
     setCommissions((c.data || []) as Commission[]);
     setWithdrawals((wd.data || []) as Withdrawal[]);
-    setTeam((tm.data || []) as TeamMember[]);
+    setTeam((tm || []) as TeamMember[]);
     if (ps.data) setSettings(ps.data as PlanSettings);
     setLoading(false);
   }
@@ -194,7 +197,7 @@ function Dashboard() {
                   : <span key="ss" className="text-xs text-muted-foreground">—</span>,
                 <StatusPill key="s" status={o.status} />,
               ])}
-              empty="No orders yet. Buy a product from the Shop tab to activate your account."
+              empty="No orders yet. Buy a product from the Shop tab to place your first order."
             />
           </Section>
         )}
@@ -351,7 +354,7 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
               <div className="mt-3 flex items-center justify-between">
                 <div className="font-bold text-primary">₹{p.mrp}</div>
-                <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Add to Cart</button>
+                 <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Buy Now</button>
               </div>
             </div>
           </div>
@@ -361,7 +364,7 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
       {selected && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 overflow-y-auto" onClick={() => setSelected(null)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
-            <h3 className="font-serif text-2xl text-primary">Cart & Payment</h3>
+            <h3 className="font-serif text-2xl text-primary">Payment</h3>
             <p className="text-sm text-muted-foreground mt-1">{selected.name} · ₹{selected.mrp}</p>
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
