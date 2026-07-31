@@ -104,10 +104,12 @@ export const reviewOrder = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const newStatus = data.action === "approve" ? "approved" : "rejected";
+    const processedAt = data.action === "reject" ? new Date().toISOString() : null;
     const { error: upErr } = await supabaseAdmin
       .from("orders")
-      .update({ status: newStatus, admin_note: data.note, processed_at: new Date().toISOString() })
-      .eq("id", data.orderId);
+      .update({ status: newStatus, admin_note: data.note, processed_at: processedAt })
+      .eq("id", data.orderId)
+      .eq("status", "pending");
     if (upErr) throw upErr;
 
     if (data.action === "approve") {
@@ -138,10 +140,12 @@ export const reviewWithdrawal = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const newStatus = data.action === "approve" ? "approved" : "rejected";
+    const processedAt = data.action === "reject" ? new Date().toISOString() : null;
     const { error: upErr } = await supabaseAdmin
       .from("withdrawals")
-      .update({ status: newStatus, admin_note: data.note, processed_at: new Date().toISOString() })
-      .eq("id", data.withdrawalId);
+      .update({ status: newStatus, admin_note: data.note, processed_at: processedAt })
+      .eq("id", data.withdrawalId)
+      .eq("status", "pending");
     if (upErr) throw upErr;
 
     if (data.action === "approve") {
