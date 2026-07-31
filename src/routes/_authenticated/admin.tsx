@@ -14,6 +14,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
       { title: "Admin Panel — Righwedh Sanjivni" },
+      { name: "description", content: "Manage Righwedh Sanjivni members, products, orders, withdrawals, and payment settings." },
+      { property: "og:title", content: "Admin Panel — Righwedh Sanjivni" },
+      { property: "og:description", content: "Secure Righwedh Sanjivni administration panel." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -189,7 +194,7 @@ function Admin() {
 
         {tab === "orders" && (
           <Card title={`Orders (${orders.length}) — ${pendingOrders.length} pending review`}>
-            <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the amount and receiver UPI ({settings?.upi_id || "current admin UPI"}) match, click <b>Approve</b> — the member gets activated and commissions are paid automatically. Otherwise click <b>Reject</b>.</p>
+            <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the amount and receiver UPI ({settings?.upi_id || "current admin UPI"}) match, click <b>Approve</b> — commissions are paid automatically and the member becomes active. Otherwise click <b>Reject</b>.</p>
             <TableWrap cols={["Date","Member","Product","Amount","UPI Ref","Proof","Status","Action"]}>
               {orders.map(o => {
                 const mem = memberMap.get(o.user_id);
@@ -438,7 +443,7 @@ function SettingsTab({ settings, onSave }: { settings: PlanSettings; onSave: (se
           <button disabled={busy} className="rounded-full bg-gradient-gold text-gold-foreground px-8 py-3 text-sm font-semibold disabled:opacity-60">{busy ? "Saving..." : "Save Settings"}</button>
         </div>
         <div className="rounded-2xl border border-border bg-background p-4 text-center h-fit">
-          <img src={file ? URL.createObjectURL(file) : form.qr_image_url} alt="Current checkout QR" className="mx-auto w-52 rounded-xl bg-white p-2 border border-border" />
+          <img src={file ? URL.createObjectURL(file) : form.qr_image_url} onError={(event) => { event.currentTarget.src = qrAsset.url; }} alt="Current checkout QR" className="mx-auto w-52 rounded-xl bg-white p-2 border border-border" />
           <div className="mt-3 font-mono text-sm text-primary break-all">{form.upi_id}</div>
           <div className="text-xs text-muted-foreground">{form.payment_account_name}</div>
         </div>

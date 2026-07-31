@@ -15,9 +15,19 @@ const nav = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState(false);
+  const [dashboardPath, setDashboardPath] = useState<"/dashboard" | "/admin">("/dashboard");
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setAuthed(!!session));
+    async function syncSession(userId?: string) {
+      setAuthed(Boolean(userId));
+      if (!userId) {
+        setDashboardPath("/dashboard");
+        return;
+      }
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      setDashboardPath(roles?.some((role) => role.role === "admin") ? "/admin" : "/dashboard");
+    }
+    supabase.auth.getUser().then(({ data }) => syncSession(data.user?.id));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => { void syncSession(session?.user.id); });
     return () => sub.subscription.unsubscribe();
   }, []);
   return (
@@ -50,8 +60,8 @@ export function Header() {
 
         <div className="hidden lg:flex items-center gap-3">
           {authed ? (
-            <Link to="/dashboard" className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
-              My Dashboard
+            <Link to={dashboardPath} className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
+              {dashboardPath === "/admin" ? "Admin Panel" : "My Dashboard"}
             </Link>
           ) : (
             <>
@@ -77,12 +87,16 @@ export function Header() {
               </Link>
             ))}
             <div className="flex gap-3 pt-2">
-              <Link to="/login" className="flex-1 text-center py-2 rounded-full border border-primary text-primary">
-                Login
-              </Link>
-              <Link to="/register" className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground">
-                Join
-              </Link>
+              {authed ? (
+                <Link to={dashboardPath} className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground" onClick={() => setOpen(false)}>
+                  {dashboardPath === "/admin" ? "Admin Panel" : "My Dashboard"}
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="flex-1 text-center py-2 rounded-full border border-primary text-primary" onClick={() => setOpen(false)}>Login</Link>
+                  <Link to="/register" className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground" onClick={() => setOpen(false)}>Join</Link>
+                </>
+              )}
             </div>
           </div>
         </div>

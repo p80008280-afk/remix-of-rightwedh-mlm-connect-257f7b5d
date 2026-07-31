@@ -3,6 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { registerMember } from "@/lib/mlm.functions";
+import { useServerFn } from "@tanstack/react-start";
 const logoAsset = { url: "/logo.png" };
 
 const search = z.object({ ref: z.string().optional(), pos: z.enum(["left", "right"]).optional() });
@@ -13,6 +15,10 @@ export const Route = createFileRoute("/register")({
     meta: [
       { title: "Register — Righwedh Sanjivni" },
       { name: "description", content: "Join Righwedh Sanjivni. Register with your sponsor's referral code." },
+      { property: "og:title", content: "Register — Righwedh Sanjivni" },
+      { property: "og:description", content: "Create a Righwedh Sanjivni member account with a sponsor referral." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Register,
@@ -24,6 +30,7 @@ function usernameToEmail(username: string) {
 
 function Register() {
   const nav = useNavigate();
+  const createMember = useServerFn(registerMember);
   const s = useSearch({ from: "/register" });
   const [form, setForm] = useState({
     full_name: "",
@@ -50,28 +57,28 @@ function Register() {
       return;
     }
     setLoading(true);
-    // Same real email can be reused across accounts; auth uses synthetic email built from username.
-    const { data, error: err } = await supabase.auth.signUp({
-      email: usernameToEmail(uname),
-      password: form.password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: {
-          full_name: form.full_name,
-          phone: form.phone,
-          username: uname,
-          real_email: form.email,
-          sponsor_code: form.sponsor_code.trim().toUpperCase(),
-          position: form.position,
-        },
-      },
-    });
-    if (err || !data.user) {
-      setError(err?.message?.includes("already") ? "Username already taken" : err?.message || "Registration failed");
+    try {
+      await createMember({ data: {
+        fullName: form.full_name.trim(),
+        username: uname,
+        realEmail: form.email.trim(),
+        phone: form.phone.trim(),
+        password: form.password,
+        sponsorCode: form.sponsor_code.trim().toUpperCase(),
+        position: form.position,
+      } });
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: usernameToEmail(uname),
+        password: form.password,
+      });
+      if (loginError) throw loginError;
+      await nav({ to: "/dashboard", search: { tab: "shop" } as any, replace: true });
+    } catch (registrationError) {
+      const message = registrationError instanceof Error ? registrationError.message : "Registration failed";
+      setError(message.toLowerCase().includes("already") || message.toLowerCase().includes("unique") ? "Username already taken" : message);
+    } finally {
       setLoading(false);
-      return;
     }
-    await nav({ to: "/dashboard", search: { tab: "shop" } as any });
   }
 
   return (
@@ -108,7 +115,7 @@ function Register() {
               <Field label="Phone" type="tel" value={form.phone} onChange={(v) => up("phone", v)} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Email" type="email" value={form.email} onChange={(v) => up("email", v)} required={false} />
+              <Field label="Email" type="email" value={form.email} onChange={(v) => up("email", v)} />
               <label className="block text-sm font-medium">
                 Position
                 <select

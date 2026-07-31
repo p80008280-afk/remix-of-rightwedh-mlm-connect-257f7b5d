@@ -5,6 +5,8 @@ import {
   GitBranch, ShoppingBag, Send, CheckCircle2, Clock, XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyDirectTeam } from "@/lib/mlm.functions";
+import { useServerFn } from "@tanstack/react-start";
 const logoAsset = { url: "/logo.png" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
@@ -30,12 +32,17 @@ type PlanSettings = {
 };
 type Commission = { id: string; type: string; amount: number; note: string; created_at: string };
 type Withdrawal = { id: string; amount: number; upi_id: string; status: string; created_at: string };
-type TeamMember = { id: string; full_name: string; referral_code: string; position: string | null; created_at: string; is_active: boolean };
+type TeamMember = { id: string; full_name: string; referral_code: string; member_position: string | null; created_at: string; is_active: boolean };
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Member Dashboard — Righwedh Sanjivni" },
+      { name: "description", content: "Manage Righwedh Sanjivni orders, team, income, withdrawals, and profile." },
+      { property: "og:title", content: "Member Dashboard — Righwedh Sanjivni" },
+      { property: "og:description", content: "Righwedh Sanjivni member account dashboard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -44,6 +51,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const nav = useNavigate();
+  const fetchDirectTeam = useServerFn(getMyDirectTeam);
   const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "income" | "withdraw" | "profile">(() => {
     if (typeof window === "undefined") return "overview";
     return new URLSearchParams(window.location.search).get("tab") === "shop" ? "shop" : "overview";
@@ -71,7 +79,7 @@ function Dashboard() {
       supabase.from("orders").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       supabase.from("commissions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,full_name,referral_code,position,created_at,is_active").eq("sponsor_id", uid),
+      fetchDirectTeam(),
       supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
     ]);
     if (p.data) setProfile(p.data as Profile);
@@ -81,7 +89,7 @@ function Dashboard() {
     setOrders((o.data || []) as Order[]);
     setCommissions((c.data || []) as Commission[]);
     setWithdrawals((wd.data || []) as Withdrawal[]);
-    setTeam((tm.data || []) as TeamMember[]);
+    setTeam((tm || []) as TeamMember[]);
     if (ps.data) setSettings(ps.data as PlanSettings);
     setLoading(false);
   }
@@ -194,7 +202,7 @@ function Dashboard() {
                   : <span key="ss" className="text-xs text-muted-foreground">—</span>,
                 <StatusPill key="s" status={o.status} />,
               ])}
-              empty="No orders yet. Buy a product from the Shop tab to activate your account."
+              empty="No orders yet. Buy a product from the Shop tab to place your first order."
             />
           </Section>
         )}
@@ -206,7 +214,7 @@ function Dashboard() {
               rows={team.map(t => [
                 t.full_name || "—",
                 t.referral_code,
-                t.position || "—",
+                 t.member_position || "—",
                 t.is_active ? "Active" : "Pending",
                 new Date(t.created_at).toLocaleDateString(),
               ])}
@@ -351,7 +359,7 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
               <div className="mt-3 flex items-center justify-between">
                 <div className="font-bold text-primary">₹{p.mrp}</div>
-                <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Add to Cart</button>
+                 <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Buy Now</button>
               </div>
             </div>
           </div>
@@ -361,11 +369,16 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
       {selected && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 overflow-y-auto" onClick={() => setSelected(null)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
-            <h3 className="font-serif text-2xl text-primary">Cart & Payment</h3>
+            <h3 className="font-serif text-2xl text-primary">Payment</h3>
             <p className="text-sm text-muted-foreground mt-1">{selected.name} · ₹{selected.mrp}</p>
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
-              {settings?.qr_image_url && <img src={settings.qr_image_url} alt="Payment QR code" className="mx-auto mt-3 w-44 rounded-xl border border-border bg-white p-2" />}
+              <img
+                src={settings?.qr_image_url || "/phonepe-qr.png"}
+                onError={(event) => { event.currentTarget.src = "/phonepe-qr.png"; }}
+                alt="Payment QR code"
+                className="mx-auto mt-3 w-44 rounded-xl border border-border bg-white p-2"
+              />
               <div className="mt-3 font-mono text-lg font-bold text-primary select-all">{settings?.upi_id || "kartiktirgar@ybl"}</div>
               <div className="text-xs text-muted-foreground">{settings?.payment_account_name || "KARTIK TIRGAR"}</div>
               <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → send ₹{selected.mrp} to this UPI / QR → upload the payment screenshot below.</p>

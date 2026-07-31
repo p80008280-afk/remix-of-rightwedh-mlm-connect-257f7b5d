@@ -9,6 +9,10 @@ export const Route = createFileRoute("/login")({
     meta: [
       { title: "Login — Righwedh Sanjivni" },
       { name: "description", content: "Login to your Righwedh Sanjivni member or admin account." },
+      { property: "og:title", content: "Login — Righwedh Sanjivni" },
+      { property: "og:description", content: "Secure member and admin login for Righwedh Sanjivni." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Login,
@@ -31,18 +35,22 @@ function Login() {
     setError("");
     setLoading(true);
     // Admin still logs in with their real email; members use username.
-    const email = identifier.includes("@") ? identifier.trim() : usernameToEmail(identifier);
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
-    if (err || !data.user) {
-      setError(
-        "Login failed. Members must enter their registered Username, not full name or email. Please check the username/password and try again."
-      );
+    try {
+      const email = identifier.includes("@") ? identifier.trim().toLowerCase() : usernameToEmail(identifier);
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err || !data.user) {
+        setError("Login failed. Members must use their Login Username; the admin uses the admin email. Check the password and try again.");
+        return;
+      }
+      const { data: roles, error: roleError } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
+      if (roleError) throw roleError;
+      const isAdmin = roles?.some((r) => r.role === "admin");
+      await nav({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Login could not be completed. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
-    const isAdmin = roles?.some((r) => r.role === "admin");
-    await nav({ to: isAdmin ? "/admin" : "/dashboard" });
   }
 
   return (
@@ -58,14 +66,14 @@ function Login() {
           </div>
           <form className="mt-8 space-y-4" onSubmit={submit}>
             <label className="block text-sm font-medium">
-              Username
+              Username or Admin Email
               <input
                 type="text"
                 required
                 autoComplete="username"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="registered username"
+                placeholder="member username or admin email"
                 className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
               />
             </label>

@@ -380,6 +380,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_review_order: {
+        Args: { _action: string; _note?: string; _order_id: string }
+        Returns: undefined
+      }
+      admin_review_withdrawal: {
+        Args: { _action: string; _note?: string; _withdrawal_id: string }
+        Returns: undefined
+      }
       generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
