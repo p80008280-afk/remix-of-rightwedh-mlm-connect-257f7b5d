@@ -30,7 +30,7 @@ export const registerMember = createServerFn({ method: "POST" })
       sponsorId = sponsor.id;
       parentId = sponsor.id;
       while (parentId) {
-        const { data: child, error: childError } = await supabaseAdmin
+        const { data: child, error: childError }: { data: { id: string } | null; error: Error | null } = await supabaseAdmin
           .from("profiles").select("id").eq("parent_id", parentId).eq("position", data.position).maybeSingle();
         if (childError) throw childError;
         if (!child) break;
