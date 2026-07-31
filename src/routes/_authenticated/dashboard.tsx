@@ -365,7 +365,12 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
             <p className="text-sm text-muted-foreground mt-1">{selected.name} · ₹{selected.mrp}</p>
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
-              {settings?.qr_image_url && <img src={settings.qr_image_url} alt="Payment QR code" className="mx-auto mt-3 w-44 rounded-xl border border-border bg-white p-2" />}
+              <img
+                src={settings?.qr_image_url || "/phonepe-qr.png"}
+                onError={(event) => { event.currentTarget.src = "/phonepe-qr.png"; }}
+                alt="Payment QR code"
+                className="mx-auto mt-3 w-44 rounded-xl border border-border bg-white p-2"
+              />
               <div className="mt-3 font-mono text-lg font-bold text-primary select-all">{settings?.upi_id || "kartiktirgar@ybl"}</div>
               <div className="text-xs text-muted-foreground">{settings?.payment_account_name || "KARTIK TIRGAR"}</div>
               <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → send ₹{selected.mrp} to this UPI / QR → upload the payment screenshot below.</p>

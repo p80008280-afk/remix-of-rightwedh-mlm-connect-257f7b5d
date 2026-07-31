@@ -2,6 +2,88 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+export const registerMember = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({
+      fullName: z.string().min(2).max(100),
+      username: z.string().regex(/^[a-z0-9._-]{3,24}$/),
+      realEmail: z.string().email(),
+      phone: z.string().min(6).max(20),
+      password: z.string().min(6).max(72),
+      sponsorCode: z.string().max(20).default(""),
+      position: z.enum(["left", "right"]),
+    }).parse(d)
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const syntheticEmail = `${data.username}@rs.local`;
+    const { data: existing } = await supabaseAdmin.from("profiles").select("id").eq("username", data.username).maybeSingle();
+    if (existing) throw new Error("Username already taken");
+
+    let sponsorId: string | null = null;
+    let parentId: string | null = null;
+    if (data.sponsorCode) {
+      const { data: sponsor, error: sponsorError } = await supabaseAdmin
+        .from("profiles").select("id").eq("referral_code", data.sponsorCode).maybeSingle();
+      if (sponsorError) throw sponsorError;
+      if (!sponsor) throw new Error("Sponsor code is not valid");
+      sponsorId = sponsor.id;
+      parentId = sponsor.id;
+      while (parentId) {
+        const { data: child, error: childError } = await supabaseAdmin
+          .from("profiles").select("id").eq("parent_id", parentId).eq("position", data.position).maybeSingle();
+        if (childError) throw childError;
+        if (!child) break;
+        parentId = child.id;
+      }
+    }
+
+    const { data: created, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: syntheticEmail,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: data.fullName,
+        phone: data.phone,
+        username: data.username,
+        real_email: data.realEmail,
+        sponsor_code: data.sponsorCode,
+        position: data.position,
+      },
+    });
+    if (authError || !created.user) throw authError ?? new Error("Could not create member");
+
+    try {
+      const { data: referralCode, error: codeError } = await supabaseAdmin.rpc("generate_referral_code");
+      if (codeError || !referralCode) throw codeError ?? new Error("Could not generate referral code");
+      const userId = created.user.id;
+      const { error: profileError } = await supabaseAdmin.from("profiles").insert({
+        id: userId,
+        full_name: data.fullName,
+        phone: data.phone,
+        email: data.realEmail,
+        username: data.username,
+        referral_code: referralCode,
+        sponsor_id: sponsorId,
+        parent_id: parentId,
+        position: sponsorId ? data.position : null,
+        is_active: false,
+      });
+      if (profileError) throw profileError;
+      const [wallet, stats, role] = await Promise.all([
+        supabaseAdmin.from("wallets").insert({ user_id: userId }),
+        supabaseAdmin.from("tree_stats").insert({ user_id: userId }),
+        supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "member" }),
+      ]);
+      const setupError = wallet.error ?? stats.error ?? role.error;
+      if (setupError) throw setupError;
+      return { ok: true };
+    } catch (setupError) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw setupError;
+    }
+  });
+
 // Admin-only: approve or reject a pending order. On approval, DB function
 // pays direct commission + walks up the tree to pay pair bonuses.
 export const reviewOrder = createServerFn({ method: "POST" })

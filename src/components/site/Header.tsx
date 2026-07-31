@@ -77,12 +77,16 @@ export function Header() {
               </Link>
             ))}
             <div className="flex gap-3 pt-2">
-              <Link to="/login" className="flex-1 text-center py-2 rounded-full border border-primary text-primary">
-                Login
-              </Link>
-              <Link to="/register" className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground">
-                Join
-              </Link>
+              {authed ? (
+                <Link to="/dashboard" className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground" onClick={() => setOpen(false)}>
+                  My Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="flex-1 text-center py-2 rounded-full border border-primary text-primary" onClick={() => setOpen(false)}>Login</Link>
+                  <Link to="/register" className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground" onClick={() => setOpen(false)}>Join</Link>
+                </>
+              )}
             </div>
           </div>
         </div>

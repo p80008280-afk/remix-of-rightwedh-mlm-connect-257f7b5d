@@ -438,7 +438,7 @@ function SettingsTab({ settings, onSave }: { settings: PlanSettings; onSave: (se
           <button disabled={busy} className="rounded-full bg-gradient-gold text-gold-foreground px-8 py-3 text-sm font-semibold disabled:opacity-60">{busy ? "Saving..." : "Save Settings"}</button>
         </div>
         <div className="rounded-2xl border border-border bg-background p-4 text-center h-fit">
-          <img src={file ? URL.createObjectURL(file) : form.qr_image_url} alt="Current checkout QR" className="mx-auto w-52 rounded-xl bg-white p-2 border border-border" />
+          <img src={file ? URL.createObjectURL(file) : form.qr_image_url} onError={(event) => { event.currentTarget.src = qrAsset.url; }} alt="Current checkout QR" className="mx-auto w-52 rounded-xl bg-white p-2 border border-border" />
           <div className="mt-3 font-mono text-sm text-primary break-all">{form.upi_id}</div>
           <div className="text-xs text-muted-foreground">{form.payment_account_name}</div>
         </div>
