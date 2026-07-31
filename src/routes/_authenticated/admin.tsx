@@ -14,6 +14,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
       { title: "Admin Panel — Righwedh Sanjivni" },
+      { name: "description", content: "Manage Righwedh Sanjivni members, products, orders, withdrawals, and payment settings." },
+      { property: "og:title", content: "Admin Panel — Righwedh Sanjivni" },
+      { property: "og:description", content: "Secure Righwedh Sanjivni administration panel." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),

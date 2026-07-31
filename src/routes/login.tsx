@@ -9,6 +9,10 @@ export const Route = createFileRoute("/login")({
     meta: [
       { title: "Login — Righwedh Sanjivni" },
       { name: "description", content: "Login to your Righwedh Sanjivni member or admin account." },
+      { property: "og:title", content: "Login — Righwedh Sanjivni" },
+      { property: "og:description", content: "Secure member and admin login for Righwedh Sanjivni." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Login,

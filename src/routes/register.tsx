@@ -15,6 +15,10 @@ export const Route = createFileRoute("/register")({
     meta: [
       { title: "Register — Righwedh Sanjivni" },
       { name: "description", content: "Join Righwedh Sanjivni. Register with your sponsor's referral code." },
+      { property: "og:title", content: "Register — Righwedh Sanjivni" },
+      { property: "og:description", content: "Create a Righwedh Sanjivni member account with a sponsor referral." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Register,

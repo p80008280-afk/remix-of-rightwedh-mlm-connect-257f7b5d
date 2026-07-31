@@ -38,6 +38,11 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Member Dashboard — Righwedh Sanjivni" },
+      { name: "description", content: "Manage Righwedh Sanjivni orders, team, income, withdrawals, and profile." },
+      { property: "og:title", content: "Member Dashboard — Righwedh Sanjivni" },
+      { property: "og:description", content: "Righwedh Sanjivni member account dashboard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
