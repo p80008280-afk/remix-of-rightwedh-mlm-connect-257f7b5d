@@ -381,6 +381,17 @@ export type Database = {
     }
     Functions: {
       generate_referral_code: { Args: never; Returns: string }
+      get_my_direct_team: {
+        Args: never
+        Returns: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          member_position: string
+          referral_code: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
