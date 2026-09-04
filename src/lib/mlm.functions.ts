@@ -48,8 +48,8 @@ export const registerMember = createServerFn({ method: "POST" })
       email_confirm: true,
       user_metadata: {
         full_name: data.fullName,
-        phone: data.phone,
-        username: data.username,
+        phone: data.mobile,
+        username: data.mobile,
         real_email: data.realEmail,
         sponsor_code: data.sponsorCode,
         position: data.position,
@@ -58,30 +58,32 @@ export const registerMember = createServerFn({ method: "POST" })
     if (authError || !created.user) throw authError ?? new Error("Could not create member");
 
     try {
+      const userId = created.user.id;
       const { data: referralCode, error: codeError } = await supabaseAdmin.rpc("generate_referral_code");
       if (codeError || !referralCode) throw codeError ?? new Error("Could not generate referral code");
-      const userId = created.user.id;
-      const { error: profileError } = await supabaseAdmin.from("profiles").insert({
+      const { data: memberCode, error: memberCodeError } = await supabaseAdmin.rpc("generate_member_code");
+      if (memberCodeError || !memberCode) throw memberCodeError ?? new Error("Could not generate member ID");
+      const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
         id: userId,
         full_name: data.fullName,
-        phone: data.phone,
+        phone: data.mobile,
         email: data.realEmail,
-        username: data.username,
+        username: data.mobile,
+        dob: data.dob,
+        member_code: memberCode,
         referral_code: referralCode,
         sponsor_id: sponsorId,
         parent_id: parentId,
         position: sponsorId ? data.position : null,
         is_active: false,
-      });
+      }, { onConflict: "id" });
       if (profileError) throw profileError;
-      const [wallet, stats, role] = await Promise.all([
-        supabaseAdmin.from("wallets").insert({ user_id: userId }),
-        supabaseAdmin.from("tree_stats").insert({ user_id: userId }),
-        supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "member" }),
+      await Promise.all([
+        supabaseAdmin.from("wallets").upsert({ user_id: userId }, { onConflict: "user_id" }),
+        supabaseAdmin.from("tree_stats").upsert({ user_id: userId }, { onConflict: "user_id" }),
+        supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "member" }, { onConflict: "user_id,role" }),
       ]);
-      const setupError = wallet.error ?? stats.error ?? role.error;
-      if (setupError) throw setupError;
-      return { ok: true };
+      return { ok: true, memberCode, referralCode };
     } catch (setupError) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
       throw setupError;
