@@ -8,6 +8,13 @@
       "when": 1788510992149,
       "tag": "0000_phase1_mobile_login_member_code_rewards",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788511022929,
+      "tag": "0001_rewards_in_order_approval",
+      "breakpoints": true
     }
   ]
 }
