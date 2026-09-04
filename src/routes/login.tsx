@@ -18,9 +18,10 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
-// Usernames are converted to a synthetic email so many accounts can share one real email.
-function usernameToEmail(username: string) {
-  return `${username.trim().toLowerCase()}@rs.local`;
+// Mobile numbers (and legacy usernames) are converted to a synthetic email so
+// many accounts can share one real email address.
+function identifierToEmail(identifier: string) {
+  return `${identifier.trim().toLowerCase().replace(/\s/g, "")}@rs.local`;
 }
 
 function Login() {

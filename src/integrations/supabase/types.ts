@@ -59,12 +59,20 @@ export type Database = {
         Row: {
           admin_note: string | null
           amount: number
+          cart_group: string | null
           created_at: string
           id: string
           payment_method: string | null
           payment_screenshot_url: string | null
           processed_at: string | null
           product_id: string
+          quantity: number
+          ship_address: string | null
+          ship_city: string | null
+          ship_name: string | null
+          ship_phone: string | null
+          ship_pincode: string | null
+          ship_state: string | null
           status: string
           upi_reference: string | null
           user_id: string
@@ -72,12 +80,20 @@ export type Database = {
         Insert: {
           admin_note?: string | null
           amount: number
+          cart_group?: string | null
           created_at?: string
           id?: string
           payment_method?: string | null
           payment_screenshot_url?: string | null
           processed_at?: string | null
           product_id: string
+          quantity?: number
+          ship_address?: string | null
+          ship_city?: string | null
+          ship_name?: string | null
+          ship_phone?: string | null
+          ship_pincode?: string | null
+          ship_state?: string | null
           status?: string
           upi_reference?: string | null
           user_id: string
@@ -85,12 +101,20 @@ export type Database = {
         Update: {
           admin_note?: string | null
           amount?: number
+          cart_group?: string | null
           created_at?: string
           id?: string
           payment_method?: string | null
           payment_screenshot_url?: string | null
           processed_at?: string | null
           product_id?: string
+          quantity?: number
+          ship_address?: string | null
+          ship_city?: string | null
+          ship_name?: string | null
+          ship_phone?: string | null
+          ship_pincode?: string | null
+          ship_state?: string | null
           status?: string
           upi_reference?: string | null
           user_id?: string
@@ -197,47 +221,68 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_line: string | null
+          city: string | null
           created_at: string
+          dob: string | null
           email: string | null
           full_name: string
           id: string
           is_active: boolean
           kyc_status: string
+          member_code: string
           parent_id: string | null
           phone: string | null
+          photo_url: string | null
+          pincode: string | null
           position: string | null
           referral_code: string
           sponsor_id: string | null
+          state: string | null
           upi_id: string | null
           username: string | null
         }
         Insert: {
+          address_line?: string | null
+          city?: string | null
           created_at?: string
+          dob?: string | null
           email?: string | null
           full_name?: string
           id: string
           is_active?: boolean
           kyc_status?: string
+          member_code?: string
           parent_id?: string | null
           phone?: string | null
+          photo_url?: string | null
+          pincode?: string | null
           position?: string | null
           referral_code: string
           sponsor_id?: string | null
+          state?: string | null
           upi_id?: string | null
           username?: string | null
         }
         Update: {
+          address_line?: string | null
+          city?: string | null
           created_at?: string
+          dob?: string | null
           email?: string | null
           full_name?: string
           id?: string
           is_active?: boolean
           kyc_status?: string
+          member_code?: string
           parent_id?: string | null
           phone?: string | null
+          photo_url?: string | null
+          pincode?: string | null
           position?: string | null
           referral_code?: string
           sponsor_id?: string | null
+          state?: string | null
           upi_id?: string | null
           username?: string | null
         }
@@ -257,6 +302,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reward_levels: {
+        Row: {
+          amount: number
+          level: number
+          pairs_required: number
+        }
+        Insert: {
+          amount: number
+          level: number
+          pairs_required: number
+        }
+        Update: {
+          amount?: number
+          level?: number
+          pairs_required?: number
+        }
+        Relationships: []
       }
       tree_stats: {
         Row: {
@@ -284,6 +347,30 @@ export type Database = {
           pairs_today?: number
           right_count?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_rewards: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          level: number
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          level: number
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          level?: number
           user_id?: string
         }
         Relationships: []
@@ -388,6 +475,8 @@ export type Database = {
         Args: { _action: string; _note?: string; _withdrawal_id: string }
         Returns: undefined
       }
+      credit_rewards: { Args: { _user_id: string }; Returns: undefined }
+      generate_member_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {

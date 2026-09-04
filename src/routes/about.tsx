@@ -6,7 +6,7 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About Us — Righwedh Sanjivni" },
-      { name: "description", content: "The story of Righwedh Sanjivni — where the tradition of Ayurveda meets a fair business opportunity. Founded by Kartik Tirgar." },
+      { name: "description", content: "The story of Righwedh Sanjivni — where the tradition of Ayurveda meets a fair business opportunity." },
       { property: "og:title", content: "About Righwedh Sanjivni" },
       { property: "og:description", content: "Ayurvedic tradition meets a modern income opportunity." },
     ],
@@ -32,9 +32,9 @@ function About() {
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Vision</div>
           <h2 className="mt-3 font-serif text-4xl text-primary">Ayurveda in every home, livelihood in every hand.</h2>
           <p className="mt-5 text-muted-foreground leading-relaxed">
-            Righwedh Sanjivni was founded by Shri <b>Kartik Tirgar</b> with a simple belief: good
-            health and a better livelihood can go hand in hand. We operate from Pratapgarh, Chhoti
-            Sadri in Rajasthan and are growing our family across India.
+            Righwedh Sanjivni is built on a simple belief: good health and a better livelihood can
+            go hand in hand. We operate from Scheme No. 136-A, Indore, MP and are growing our family
+            across India.
           </p>
           <p className="mt-4 text-muted-foreground leading-relaxed">
             Every product is certified, every member gets a fair opportunity, and every payout is
@@ -61,12 +61,12 @@ function About() {
 
       <section className="bg-gradient-leaf py-20">
         <div className="mx-auto max-w-4xl px-6 text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Founder</div>
-          <h2 className="mt-3 font-serif text-4xl text-primary">Kartik Tirgar</h2>
-          <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-            A firm believer in Ayurveda and the power of network marketing, Kartik's dream is to
-            build a platform where good health and a good income are accessible to everyone.
-          </p>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Reach Us</div>
+          <h2 className="mt-3 font-serif text-4xl text-primary">Righwedh Sanjivni</h2>
+          <p className="mt-4 text-muted-foreground">Scheme No. 136-A, Indore, MP, India</p>
+          <a href="mailto:righvedhsanjivni@gmail.com" className="mt-2 inline-block text-primary font-semibold hover:text-primary-glow">
+            righvedhsanjivni@gmail.com
+          </a>
         </div>
       </section>
     </SiteLayout>

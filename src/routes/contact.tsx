@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { Mail, Phone, MapPin, Clock, User, Wallet } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Wallet } from "lucide-react";
 const qrAsset = { url: "/phonepe-qr.png" };
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact — Righwedh Sanjivni" },
-      { name: "description", content: "Get in touch with Righwedh Sanjivni — Pratapgarh, Chhoti Sadri. Phone: +91 86199 90944. 24 hour support available." },
+      { name: "description", content: "Get in touch with Righwedh Sanjivni — Scheme No. 136-A, Indore, MP. Email righvedhsanjivni@gmail.com. 24 hour support." },
       { property: "og:title", content: "Contact Righwedh Sanjivni" },
       { property: "og:description", content: "24 hour Ayurveda & business support." },
     ],
@@ -31,10 +31,8 @@ function Contact() {
       <section className="mx-auto max-w-6xl px-6 py-20 grid lg:grid-cols-2 gap-10">
         <div className="space-y-5">
           {[
-            { icon: User, t: "Founder", d: "Kartik Tirgar" },
-            { icon: Phone, t: "Phone", d: "+91 86199 90944", href: "tel:+918619990944" },
-            { icon: Mail, t: "Email", d: "kartik.tirgar14@gmail.com", href: "mailto:kartik.tirgar14@gmail.com" },
-            { icon: MapPin, t: "Address", d: "Pratapgarh, Chhoti Sadri, Rajasthan, India" },
+            { icon: Mail, t: "Email", d: "righvedhsanjivni@gmail.com", href: "mailto:righvedhsanjivni@gmail.com" },
+            { icon: MapPin, t: "Address", d: "Scheme No. 136-A, Indore, MP, India" },
             { icon: Clock, t: "Support Hours", d: "24 hours, 7 days a week" },
             { icon: Wallet, t: "UPI ID", d: "kartiktirgar@ybl" },
           ].map((i) => (
