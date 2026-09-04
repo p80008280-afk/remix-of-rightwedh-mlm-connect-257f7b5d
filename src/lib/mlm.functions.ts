@@ -2,23 +2,27 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+// Mobile number is the login credential. It is mapped to a synthetic auth email
+// (<mobile>@rs.local) so one real Gmail can be reused across many member accounts.
 export const registerMember = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z.object({
-      fullName: z.string().min(2).max(100),
-      username: z.string().regex(/^[a-z0-9._-]{3,24}$/),
-      realEmail: z.string().email(),
-      phone: z.string().min(6).max(20),
+      fullName: z.string().trim().min(2).max(100),
+      mobile: z.string().regex(/^[6-9][0-9]{9}$/, "Enter a valid 10-digit mobile number"),
+      realEmail: z.string().trim().email().max(255),
+      dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid date of birth"),
       password: z.string().min(6).max(72),
-      sponsorCode: z.string().max(20).default(""),
+      sponsorCode: z.string().trim().max(20).default(""),
       position: z.enum(["left", "right"]),
     }).parse(d)
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const syntheticEmail = `${data.username}@rs.local`;
-    const { data: existing } = await supabaseAdmin.from("profiles").select("id").eq("username", data.username).maybeSingle();
-    if (existing) throw new Error("Username already taken");
+    const syntheticEmail = `${data.mobile}@rs.local`;
+    const { data: existing } = await supabaseAdmin
+      .from("profiles").select("id").eq("username", data.mobile).maybeSingle();
+    if (existing) throw new Error("This mobile number is already registered");
+
 
     let sponsorId: string | null = null;
     let parentId: string | null = null;
