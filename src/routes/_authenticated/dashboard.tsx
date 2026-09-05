@@ -250,13 +250,28 @@ function Dashboard() {
           </Section>
         )}
 
+        {tab === "tree" && (
+          <Section title="Binary Tree View">
+            <p className="text-sm text-muted-foreground mb-4">
+              Your downline placement, left and right leg, up to 10 levels deep.
+            </p>
+            <div className="overflow-x-auto pb-4">
+              {tree ? <TreeBranch node={tree} root /> : <p className="text-sm text-muted-foreground">Tree is not available yet.</p>}
+            </div>
+          </Section>
+        )}
+
+        {tab === "rewards" && (
+          <RewardsTab levels={rewardLevels} earned={myRewards} pairs={stats?.matched_pairs ?? 0} />
+        )}
+
         {tab === "income" && (
           <Section title="Commission History">
             <SimpleTable
               cols={["Date", "Type", "Amount", "Note"]}
               rows={commissions.map(c => [
                 new Date(c.created_at).toLocaleDateString(),
-                c.type === "direct" ? "Direct Sale" : "Pair Match",
+                c.type === "direct" ? "Direct Sale" : c.type === "reward" ? "Level Reward" : "Pair Match",
                 `₹${c.amount}`,
                 c.note,
               ])}
@@ -269,9 +284,14 @@ function Dashboard() {
           <WithdrawTab wallet={wallet} profile={profile} withdrawals={withdrawals} settings={settings} onDone={loadAll} />
         )}
 
+        {tab === "idcard" && (
+          <IdCardTab profile={profile} onDone={loadAll} />
+        )}
+
         {tab === "profile" && (
           <ProfileTab profile={profile} onDone={loadAll} />
         )}
+
       </main>
     </div>
   );
