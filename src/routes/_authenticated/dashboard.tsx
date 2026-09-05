@@ -57,7 +57,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const nav = useNavigate();
   const fetchDirectTeam = useServerFn(getMyDirectTeam);
-  const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "income" | "withdraw" | "profile">(() => {
+  const fetchTree = useServerFn(getMyTree);
+  const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "tree" | "rewards" | "income" | "withdraw" | "idcard" | "profile">(() => {
     if (typeof window === "undefined") return "overview";
     return new URLSearchParams(window.location.search).get("tab") === "shop" ? "shop" : "overview";
   });
@@ -69,6 +70,9 @@ function Dashboard() {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [tree, setTree] = useState<TreeNode | null>(null);
+  const [rewardLevels, setRewardLevels] = useState<RewardLevel[]>([]);
+  const [myRewards, setMyRewards] = useState<UserReward[]>([]);
   const [settings, setSettings] = useState<PlanSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -76,7 +80,7 @@ function Dashboard() {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return;
     const uid = userRes.user.id;
-    const [p, w, s, pr, o, c, wd, tm, ps] = await Promise.all([
+    const [p, w, s, pr, o, c, wd, tm, ps, rl, ur, tr] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
       supabase.from("tree_stats").select("*").eq("user_id", uid).maybeSingle(),
@@ -86,6 +90,9 @@ function Dashboard() {
       supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       fetchDirectTeam(),
       supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("reward_levels").select("*").order("level"),
+      supabase.from("user_rewards").select("level,amount,created_at").eq("user_id", uid),
+      fetchTree(),
     ]);
     if (p.data) setProfile(p.data as Profile);
     if (w.data) setWallet(w.data as WalletRow);
@@ -95,9 +102,13 @@ function Dashboard() {
     setCommissions((c.data || []) as Commission[]);
     setWithdrawals((wd.data || []) as Withdrawal[]);
     setTeam((tm || []) as TeamMember[]);
+    setRewardLevels((rl.data || []) as RewardLevel[]);
+    setMyRewards((ur.data || []) as UserReward[]);
+    setTree((tr as TreeNode | null) ?? null);
     if (ps.data) setSettings(ps.data as PlanSettings);
     setLoading(false);
   }
+
 
   useEffect(() => { loadAll(); }, []);
 
