@@ -15,6 +15,13 @@
       "when": 1788511022929,
       "tag": "0001_rewards_in_order_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788579261134,
+      "tag": "0002_member_photos_storage_policies",
+      "breakpoints": true
     }
   ]
 }
