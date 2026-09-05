@@ -64,18 +64,18 @@ function Login() {
               <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Login</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Members login with username. Admin can use email.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Members login with mobile number. Admin can use email.</p>
           </div>
           <form className="mt-8 space-y-4" onSubmit={submit}>
             <label className="block text-sm font-medium">
-              Username or Admin Email
+              Mobile Number or Admin Email
               <input
                 type="text"
                 required
                 autoComplete="username"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="member username or admin email"
+                placeholder="10-digit mobile number or admin email"
                 className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
               />
             </label>
@@ -98,9 +98,13 @@ function Login() {
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Use the unique username created during registration; the same email can be reused for many accounts.
+          <div className="mt-4 text-center">
+            <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link>
+          </div>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Use the mobile number given at registration; the same email can be reused for many accounts.
           </p>
+
         </div>
       </section>
     </SiteLayout>
