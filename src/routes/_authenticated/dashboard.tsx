@@ -140,17 +140,20 @@ function Dashboard() {
             <div className="text-[10px] uppercase tracking-widest text-gold">Member</div>
           </div>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <NavBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={LayoutDashboard} label="Overview" />
-          <NavBtn active={tab === "shop"} onClick={() => setTab("shop")} icon={ShoppingBag} label="Shop / Buy" />
+          <NavBtn active={tab === "shop"} onClick={() => setTab("shop")} icon={ShoppingBag} label="Shop / Cart" />
           <NavBtn active={tab === "orders"} onClick={() => setTab("orders")} icon={Clock} label="My Orders" />
           <NavBtn active={tab === "team"} onClick={() => setTab("team")} icon={Users} label="My Team" />
+          <NavBtn active={tab === "tree"} onClick={() => setTab("tree")} icon={Network} label="Tree View" />
+          <NavBtn active={tab === "rewards"} onClick={() => setTab("rewards")} icon={Gift} label="Reward Levels" />
           <NavBtn active={tab === "income"} onClick={() => setTab("income")} icon={TrendingUp} label="Income History" />
           <NavBtn active={tab === "withdraw"} onClick={() => setTab("withdraw")} icon={Send} label="Withdraw" />
-          <NavBtn active={tab === "profile"} onClick={() => setTab("profile")} icon={GitBranch} label="Profile & KYC" />
+          <NavBtn active={tab === "idcard"} onClick={() => setTab("idcard")} icon={IdCard} label="ID Card" />
+          <NavBtn active={tab === "profile"} onClick={() => setTab("profile")} icon={User} label="Profile & KYC" />
         </nav>
         <button onClick={logout} className="m-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 text-sm">
-          <LogOut className="h-4 w-4" /> Sign out
+          <LogOut className="h-4 w-4" /> Logout
         </button>
       </aside>
 
@@ -159,19 +162,27 @@ function Dashboard() {
           <div>
             <h1 className="font-serif text-3xl text-primary">Welcome, {profile.full_name || "Member"}</h1>
               <p className="text-sm text-muted-foreground">
-                Login username: <span className="font-mono font-bold text-primary">{profile.username || "—"}</span>
+                User ID: <span className="font-mono font-bold text-primary">{profile.member_code}</span>
+                <span className="mx-2">·</span>
+                Login mobile: <span className="font-mono font-bold text-primary">{profile.username || profile.phone || "—"}</span>
                 <span className="mx-2">·</span>
                 Referral code: <span className="font-mono font-bold text-primary">{profile.referral_code}</span>
               </p>
           </div>
-          <Link to="/" className="text-sm text-primary hover:underline">← Back to website</Link>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-sm text-primary hover:underline">← Back to website</Link>
+            <button onClick={logout} className="md:hidden inline-flex items-center gap-1 rounded-full border border-primary px-3 py-1.5 text-xs text-primary">
+              <LogOut className="h-3.5 w-3.5" /> Logout
+            </button>
+          </div>
         </div>
 
-        <div className="md:hidden mb-4 grid grid-cols-4 gap-1 text-xs">
-          {(["overview","shop","orders","team","income","withdraw","profile"] as const).map(t => (
+        <div className="md:hidden mb-4 grid grid-cols-4 gap-1 text-[11px]">
+          {(["overview","shop","orders","team","tree","rewards","income","withdraw","idcard","profile"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} className={`py-2 rounded-lg ${tab===t?"bg-primary text-primary-foreground":"bg-card"}`}>{t}</button>
           ))}
         </div>
+
 
         {tab === "overview" && (
           <div className="space-y-6">
