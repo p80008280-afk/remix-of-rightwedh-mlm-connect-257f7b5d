@@ -1,25 +1,26 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard, Users, Wallet, TrendingUp, Copy, LogOut, IndianRupee,
-  GitBranch, ShoppingBag, Send, CheckCircle2, Clock, XCircle,
+  GitBranch, ShoppingBag, Send, Clock, Gift, IdCard, Trash2, Network, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyDirectTeam } from "@/lib/mlm.functions";
+import { getMyDirectTeam, getMyTree, type TreeNode } from "@/lib/mlm.functions";
 import { useServerFn } from "@tanstack/react-start";
 const logoAsset = { url: "/logo.png" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
 type Profile = {
   id: string; full_name: string; email: string; phone: string;
-  username: string | null;
+  username: string | null; member_code: string; dob: string | null; photo_url: string | null;
+  address_line: string | null; city: string | null; state: string | null; pincode: string | null;
   referral_code: string; sponsor_id: string | null; position: string | null;
   upi_id: string; kyc_status: string; is_active: boolean;
 };
 type WalletRow = { balance: number; total_earned: number; direct_income: number; pair_income: number };
 type TreeStats = { left_count: number; right_count: number; matched_pairs: number };
 type Product = { id: string; name: string; description: string; mrp: number; image_url: string; category: string };
-type Order = { id: string; product_id: string; amount: number; status: string; created_at: string; upi_reference: string; payment_screenshot_url: string | null };
+type Order = { id: string; product_id: string; amount: number; status: string; created_at: string; upi_reference: string; payment_screenshot_url: string | null; quantity: number };
 type PlanSettings = {
   min_withdrawal: number;
   tds_percent: number;
@@ -33,6 +34,10 @@ type PlanSettings = {
 type Commission = { id: string; type: string; amount: number; note: string; created_at: string };
 type Withdrawal = { id: string; amount: number; upi_id: string; status: string; created_at: string };
 type TeamMember = { id: string; full_name: string; referral_code: string; member_position: string | null; created_at: string; is_active: boolean };
+type RewardLevel = { level: number; pairs_required: number; amount: number };
+type UserReward = { level: number; amount: number; created_at: string };
+type CartLine = { product: Product; qty: number };
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
