@@ -1,25 +1,26 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard, Users, Wallet, TrendingUp, Copy, LogOut, IndianRupee,
-  GitBranch, ShoppingBag, Send, CheckCircle2, Clock, XCircle,
+  GitBranch, ShoppingBag, Send, Clock, Gift, IdCard, Trash2, Network, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyDirectTeam } from "@/lib/mlm.functions";
+import { getMyDirectTeam, getMyTree, type TreeNode } from "@/lib/mlm.functions";
 import { useServerFn } from "@tanstack/react-start";
 const logoAsset = { url: "/logo.png" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
 type Profile = {
   id: string; full_name: string; email: string; phone: string;
-  username: string | null;
+  username: string | null; member_code: string; dob: string | null; photo_url: string | null;
+  address_line: string | null; city: string | null; state: string | null; pincode: string | null;
   referral_code: string; sponsor_id: string | null; position: string | null;
   upi_id: string; kyc_status: string; is_active: boolean;
 };
 type WalletRow = { balance: number; total_earned: number; direct_income: number; pair_income: number };
 type TreeStats = { left_count: number; right_count: number; matched_pairs: number };
 type Product = { id: string; name: string; description: string; mrp: number; image_url: string; category: string };
-type Order = { id: string; product_id: string; amount: number; status: string; created_at: string; upi_reference: string; payment_screenshot_url: string | null };
+type Order = { id: string; product_id: string; amount: number; status: string; created_at: string; upi_reference: string; payment_screenshot_url: string | null; quantity: number };
 type PlanSettings = {
   min_withdrawal: number;
   tds_percent: number;
@@ -33,6 +34,10 @@ type PlanSettings = {
 type Commission = { id: string; type: string; amount: number; note: string; created_at: string };
 type Withdrawal = { id: string; amount: number; upi_id: string; status: string; created_at: string };
 type TeamMember = { id: string; full_name: string; referral_code: string; member_position: string | null; created_at: string; is_active: boolean };
+type RewardLevel = { level: number; pairs_required: number; amount: number };
+type UserReward = { level: number; amount: number; created_at: string };
+type CartLine = { product: Product; qty: number };
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -52,7 +57,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const nav = useNavigate();
   const fetchDirectTeam = useServerFn(getMyDirectTeam);
-  const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "income" | "withdraw" | "profile">(() => {
+  const fetchTree = useServerFn(getMyTree);
+  const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "tree" | "rewards" | "income" | "withdraw" | "idcard" | "profile">(() => {
     if (typeof window === "undefined") return "overview";
     return new URLSearchParams(window.location.search).get("tab") === "shop" ? "shop" : "overview";
   });
@@ -64,6 +70,9 @@ function Dashboard() {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [tree, setTree] = useState<TreeNode | null>(null);
+  const [rewardLevels, setRewardLevels] = useState<RewardLevel[]>([]);
+  const [myRewards, setMyRewards] = useState<UserReward[]>([]);
   const [settings, setSettings] = useState<PlanSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -71,7 +80,7 @@ function Dashboard() {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return;
     const uid = userRes.user.id;
-    const [p, w, s, pr, o, c, wd, tm, ps] = await Promise.all([
+    const [p, w, s, pr, o, c, wd, tm, ps, rl, ur, tr] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
       supabase.from("tree_stats").select("*").eq("user_id", uid).maybeSingle(),
@@ -81,6 +90,9 @@ function Dashboard() {
       supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       fetchDirectTeam(),
       supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("reward_levels").select("*").order("level"),
+      supabase.from("user_rewards").select("level,amount,created_at").eq("user_id", uid),
+      fetchTree(),
     ]);
     if (p.data) setProfile(p.data as Profile);
     if (w.data) setWallet(w.data as WalletRow);
@@ -90,9 +102,13 @@ function Dashboard() {
     setCommissions((c.data || []) as Commission[]);
     setWithdrawals((wd.data || []) as Withdrawal[]);
     setTeam((tm || []) as TeamMember[]);
+    setRewardLevels((rl.data || []) as RewardLevel[]);
+    setMyRewards((ur.data || []) as UserReward[]);
+    setTree((tr as TreeNode | null) ?? null);
     if (ps.data) setSettings(ps.data as PlanSettings);
     setLoading(false);
   }
+
 
   useEffect(() => { loadAll(); }, []);
 
@@ -124,17 +140,20 @@ function Dashboard() {
             <div className="text-[10px] uppercase tracking-widest text-gold">Member</div>
           </div>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <NavBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={LayoutDashboard} label="Overview" />
-          <NavBtn active={tab === "shop"} onClick={() => setTab("shop")} icon={ShoppingBag} label="Shop / Buy" />
+          <NavBtn active={tab === "shop"} onClick={() => setTab("shop")} icon={ShoppingBag} label="Shop / Cart" />
           <NavBtn active={tab === "orders"} onClick={() => setTab("orders")} icon={Clock} label="My Orders" />
           <NavBtn active={tab === "team"} onClick={() => setTab("team")} icon={Users} label="My Team" />
+          <NavBtn active={tab === "tree"} onClick={() => setTab("tree")} icon={Network} label="Tree View" />
+          <NavBtn active={tab === "rewards"} onClick={() => setTab("rewards")} icon={Gift} label="Reward Levels" />
           <NavBtn active={tab === "income"} onClick={() => setTab("income")} icon={TrendingUp} label="Income History" />
           <NavBtn active={tab === "withdraw"} onClick={() => setTab("withdraw")} icon={Send} label="Withdraw" />
-          <NavBtn active={tab === "profile"} onClick={() => setTab("profile")} icon={GitBranch} label="Profile & KYC" />
+          <NavBtn active={tab === "idcard"} onClick={() => setTab("idcard")} icon={IdCard} label="ID Card" />
+          <NavBtn active={tab === "profile"} onClick={() => setTab("profile")} icon={User} label="Profile & KYC" />
         </nav>
         <button onClick={logout} className="m-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 text-sm">
-          <LogOut className="h-4 w-4" /> Sign out
+          <LogOut className="h-4 w-4" /> Logout
         </button>
       </aside>
 
@@ -143,19 +162,27 @@ function Dashboard() {
           <div>
             <h1 className="font-serif text-3xl text-primary">Welcome, {profile.full_name || "Member"}</h1>
               <p className="text-sm text-muted-foreground">
-                Login username: <span className="font-mono font-bold text-primary">{profile.username || "—"}</span>
+                User ID: <span className="font-mono font-bold text-primary">{profile.member_code}</span>
+                <span className="mx-2">·</span>
+                Login mobile: <span className="font-mono font-bold text-primary">{profile.username || profile.phone || "—"}</span>
                 <span className="mx-2">·</span>
                 Referral code: <span className="font-mono font-bold text-primary">{profile.referral_code}</span>
               </p>
           </div>
-          <Link to="/" className="text-sm text-primary hover:underline">← Back to website</Link>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-sm text-primary hover:underline">← Back to website</Link>
+            <button onClick={logout} className="md:hidden inline-flex items-center gap-1 rounded-full border border-primary px-3 py-1.5 text-xs text-primary">
+              <LogOut className="h-3.5 w-3.5" /> Logout
+            </button>
+          </div>
         </div>
 
-        <div className="md:hidden mb-4 grid grid-cols-4 gap-1 text-xs">
-          {(["overview","shop","orders","team","income","withdraw","profile"] as const).map(t => (
+        <div className="md:hidden mb-4 grid grid-cols-4 gap-1 text-[11px]">
+          {(["overview","shop","orders","team","tree","rewards","income","withdraw","idcard","profile"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} className={`py-2 rounded-lg ${tab===t?"bg-primary text-primary-foreground":"bg-card"}`}>{t}</button>
           ))}
         </div>
+
 
         {tab === "overview" && (
           <div className="space-y-6">
@@ -223,13 +250,28 @@ function Dashboard() {
           </Section>
         )}
 
+        {tab === "tree" && (
+          <Section title="Binary Tree View">
+            <p className="text-sm text-muted-foreground mb-4">
+              Your downline placement, left and right leg, up to 10 levels deep.
+            </p>
+            <div className="overflow-x-auto pb-4">
+              {tree ? <TreeBranch node={tree} root /> : <p className="text-sm text-muted-foreground">Tree is not available yet.</p>}
+            </div>
+          </Section>
+        )}
+
+        {tab === "rewards" && (
+          <RewardsTab levels={rewardLevels} earned={myRewards} pairs={stats?.matched_pairs ?? 0} />
+        )}
+
         {tab === "income" && (
           <Section title="Commission History">
             <SimpleTable
               cols={["Date", "Type", "Amount", "Note"]}
               rows={commissions.map(c => [
                 new Date(c.created_at).toLocaleDateString(),
-                c.type === "direct" ? "Direct Sale" : "Pair Match",
+                c.type === "direct" ? "Direct Sale" : c.type === "reward" ? "Level Reward" : "Pair Match",
                 `₹${c.amount}`,
                 c.note,
               ])}
@@ -242,9 +284,14 @@ function Dashboard() {
           <WithdrawTab wallet={wallet} profile={profile} withdrawals={withdrawals} settings={settings} onDone={loadAll} />
         )}
 
+        {tab === "idcard" && (
+          <IdCardTab profile={profile} onDone={loadAll} />
+        )}
+
         {tab === "profile" && (
           <ProfileTab profile={profile} onDone={loadAll} />
         )}
+
       </main>
     </div>
   );
