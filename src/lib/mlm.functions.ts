@@ -258,3 +258,83 @@ export const updatePlanSettings = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+// Self-service password reset for members. Member accounts use a synthetic
+// login email, so instead of a mail link we verify identity with the details
+// captured at registration (registered email + date of birth).
+export const resetMemberPassword = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({
+      mobile: z.string().regex(/^[6-9][0-9]{9}$/, "Enter a valid 10-digit mobile number"),
+      email: z.string().trim().email(),
+      dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      newPassword: z.string().min(6).max(72),
+    }).parse(d)
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id,email,dob")
+      .eq("username", data.mobile)
+      .maybeSingle();
+    if (error) throw error;
+    if (
+      !profile ||
+      (profile.email ?? "").trim().toLowerCase() !== data.email.trim().toLowerCase() ||
+      profile.dob !== data.dob
+    ) {
+      throw new Error("Details do not match our records. Please contact support.");
+    }
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(profile.id, {
+      password: data.newPassword,
+    });
+    if (updateError) throw updateError;
+    return { ok: true };
+  });
+
+// Deep binary downline for the tree view (both legs, up to 10 levels).
+export type TreeNode = {
+  id: string;
+  full_name: string;
+  member_code: string;
+  position: string | null;
+  is_active: boolean;
+  left: TreeNode | null;
+  right: TreeNode | null;
+};
+
+export const getMyTree = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<TreeNode | null> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id,full_name,member_code,parent_id,position,is_active");
+    if (error) throw error;
+    const rows = data ?? [];
+    const byParent = new Map<string, typeof rows>();
+    for (const row of rows) {
+      if (!row.parent_id) continue;
+      const list = byParent.get(row.parent_id) ?? [];
+      list.push(row);
+      byParent.set(row.parent_id, list);
+    }
+    function build(id: string, depth: number): TreeNode | null {
+      const self = rows.find((r) => r.id === id);
+      if (!self) return null;
+      const kids = depth >= 10 ? [] : byParent.get(id) ?? [];
+      const leftKid = kids.find((k) => k.position === "left");
+      const rightKid = kids.find((k) => k.position === "right");
+      return {
+        id: self.id,
+        full_name: self.full_name,
+        member_code: self.member_code,
+        position: self.position,
+        is_active: self.is_active,
+        left: leftKid ? build(leftKid.id, depth + 1) : null,
+        right: rightKid ? build(rightKid.id, depth + 1) : null,
+      };
+    }
+    return build(context.userId, 0);
+  });
