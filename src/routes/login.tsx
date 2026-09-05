@@ -35,12 +35,12 @@ function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    // Admin still logs in with their real email; members use username.
+    // Admin logs in with their real email; members use their mobile number.
     try {
-      const email = identifier.includes("@") ? identifier.trim().toLowerCase() : usernameToEmail(identifier);
+      const email = identifier.includes("@") ? identifier.trim().toLowerCase() : identifierToEmail(identifier);
       const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err || !data.user) {
-        setError("Login failed. Members must use their Login Username; the admin uses the admin email. Check the password and try again.");
+        setError("Login failed. Members must use their registered mobile number; the admin uses the admin email. Check the password and try again.");
         return;
       }
       const { data: roles, error: roleError } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
@@ -53,6 +53,7 @@ function Login() {
       setLoading(false);
     }
   }
+
 
   return (
     <SiteLayout>
