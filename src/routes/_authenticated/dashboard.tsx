@@ -541,7 +541,15 @@ function WithdrawTab({ wallet, profile, withdrawals, settings, onDone }: { walle
 }
 
 function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void }) {
-  const [f, setF] = useState({ full_name: profile.full_name, phone: profile.phone, upi_id: profile.upi_id });
+  const [f, setF] = useState({
+    full_name: profile.full_name,
+    phone: profile.phone,
+    upi_id: profile.upi_id,
+    address_line: profile.address_line || "",
+    city: profile.city || "",
+    state: profile.state || "",
+    pincode: profile.pincode || "",
+  });
   const [msg, setMsg] = useState("");
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -552,9 +560,14 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
   return (
     <Section title="My Profile">
       {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3 mb-4">{msg}</div>}
+      <div className="mb-6 grid gap-3 sm:grid-cols-3 text-sm">
+        <div className="rounded-xl bg-cream p-4"><div className="text-xs uppercase text-muted-foreground">User ID</div><div className="font-mono font-bold text-primary">{profile.member_code}</div></div>
+        <div className="rounded-xl bg-cream p-4"><div className="text-xs uppercase text-muted-foreground">Date of Birth</div><div className="font-bold text-primary">{profile.dob || "—"}</div></div>
+        <div className="rounded-xl bg-cream p-4"><div className="text-xs uppercase text-muted-foreground">Referral Code</div><div className="font-mono font-bold text-primary">{profile.referral_code}</div></div>
+      </div>
       <form onSubmit={save} className="space-y-4 max-w-md">
-        <label className="block text-sm font-medium">Login Username
-          <input disabled value={profile.username || ""} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm font-mono" />
+        <label className="block text-sm font-medium">Login Mobile Number
+          <input disabled value={profile.username || profile.phone || ""} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm font-mono" />
         </label>
         <label className="block text-sm font-medium">Email
           <input disabled value={profile.email} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm" />
@@ -565,6 +578,20 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
         <label className="block text-sm font-medium">Phone
           <input value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
         </label>
+        <label className="block text-sm font-medium">Address
+          <input value={f.address_line} onChange={e => setF({ ...f, address_line: e.target.value })} placeholder="House / Street / Area" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
+        </label>
+        <div className="grid grid-cols-3 gap-3">
+          <label className="block text-sm font-medium">City
+            <input value={f.city} onChange={e => setF({ ...f, city: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 text-sm" />
+          </label>
+          <label className="block text-sm font-medium">State
+            <input value={f.state} onChange={e => setF({ ...f, state: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 text-sm" />
+          </label>
+          <label className="block text-sm font-medium">Pincode
+            <input value={f.pincode} onChange={e => setF({ ...f, pincode: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 text-sm" />
+          </label>
+        </div>
         <label className="block text-sm font-medium">UPI ID (for withdrawals)
           <input value={f.upi_id} onChange={e => setF({ ...f, upi_id: e.target.value })} placeholder="yourname@ybl" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
         </label>
@@ -572,5 +599,198 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
         <button className="rounded-full bg-primary text-primary-foreground px-8 py-3 text-sm font-semibold">Save</button>
       </form>
     </Section>
+  );
+}
+
+function TreeBranch({ node, root }: { node: TreeNode; root?: boolean }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`rounded-xl border px-3 py-2 text-center min-w-[140px] shadow-soft ${root ? "bg-gradient-gold text-gold-foreground border-gold/50" : node.is_active ? "bg-card border-primary/30" : "bg-card border-border"}`}>
+        <div className="text-sm font-semibold truncate max-w-[160px]">{node.full_name || "Member"}</div>
+        <div className="font-mono text-[11px] opacity-80">{node.member_code}</div>
+        <div className="text-[10px] uppercase tracking-wide">{root ? "You" : node.is_active ? "Active" : "Pending"}</div>
+      </div>
+      {(node.left || node.right) && (
+        <>
+          <div className="h-5 w-px bg-border" />
+          <div className="flex items-start gap-6">
+            <TreeLeg label="Left" child={node.left} />
+            <TreeLeg label="Right" child={node.right} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TreeLeg({ label, child }: { label: string; child: TreeNode | null }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{label}</div>
+      {child
+        ? <TreeBranch node={child} />
+        : <div className="rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground min-w-[140px] text-center">Empty</div>}
+    </div>
+  );
+}
+
+function RewardsTab({ levels, earned, pairs }: { levels: RewardLevel[]; earned: UserReward[]; pairs: number }) {
+  const earnedSet = new Set(earned.map(e => e.level));
+  const total = earned.reduce((s, e) => s + Number(e.amount), 0);
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Stat icon={GitBranch} label="Matched Pairs" value={String(pairs)} />
+        <Stat icon={Gift} label="Rewards Achieved" value={`${earned.length} / ${levels.length}`} />
+        <Stat icon={IndianRupee} label="Reward Income" value={`₹${total}`} accent="gold" />
+      </div>
+      <Section title="Reward Levels">
+        <p className="text-sm text-muted-foreground mb-4">Rewards are credited to your wallet automatically as soon as the required pairs are matched. Scroll sideways to see all levels.</p>
+        <div className="overflow-x-auto pb-3">
+          <div className="flex gap-3 min-w-max">
+            {levels.map(l => {
+              const done = earnedSet.has(l.level);
+              const progress = Math.min(100, Math.round((pairs / l.pairs_required) * 100));
+              return (
+                <div key={l.level} className={`w-44 shrink-0 rounded-2xl border p-4 ${done ? "bg-gradient-gold text-gold-foreground border-gold/50 shadow-gold" : "bg-card border-border"}`}>
+                  <div className="text-xs uppercase tracking-widest">Level {l.level}</div>
+                  <div className="font-serif text-xl font-bold mt-1">₹{Number(l.amount).toLocaleString("en-IN")}</div>
+                  <div className="text-xs mt-1 opacity-80">{l.pairs_required.toLocaleString("en-IN")} pairs</div>
+                  <div className="mt-3 h-1.5 rounded-full bg-black/10 overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
+                  </div>
+                  <div className="mt-2 text-[11px] font-semibold">{done ? "Achieved ✓" : `${progress}%`}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function IdCardTab({ profile, onDone }: { profile: Profile; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  async function uploadPhoto(file: File) {
+    setBusy(true); setMsg("");
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${profile.id}/photo-${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("member-photos").upload(path, file, { upsert: true });
+      if (up.error) throw up.error;
+      const { data } = supabase.storage.from("member-photos").getPublicUrl(path);
+      const { error } = await supabase.from("profiles").update({ photo_url: data.publicUrl }).eq("id", profile.id);
+      if (error) throw error;
+      setMsg("Photo updated on your ID card.");
+      onDone();
+    } catch (e: any) {
+      setMsg("Error: " + (e.message || String(e)));
+    } finally { setBusy(false); }
+  }
+
+  async function download() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1012; canvas.height = 638;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#0f2e1d"; ctx.fillRect(0, 0, 1012, 638);
+    ctx.fillStyle = "#fdfaf1"; ctx.fillRect(24, 140, 964, 474);
+    ctx.fillStyle = "#c9a227"; ctx.fillRect(24, 128, 964, 12);
+    ctx.fillStyle = "#fdfaf1";
+    ctx.font = "bold 42px Georgia, serif";
+    ctx.fillText("RIGHVEDH SANJIVNI", 40, 70);
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "#c9a227";
+    ctx.fillText("MEMBER IDENTITY CARD", 42, 104);
+
+    const loadImg = (src: string) => new Promise<HTMLImageElement | null>(res => {
+      const i = new Image(); i.crossOrigin = "anonymous";
+      i.onload = () => res(i); i.onerror = () => res(null); i.src = src;
+    });
+    const photo = profile.photo_url ? await loadImg(profile.photo_url) : null;
+    ctx.strokeStyle = "#0f2e1d"; ctx.lineWidth = 4;
+    ctx.strokeRect(60, 190, 220, 260);
+    if (photo) ctx.drawImage(photo, 60, 190, 220, 260);
+    else { ctx.fillStyle = "#e6e1d3"; ctx.fillRect(62, 192, 216, 256); ctx.fillStyle = "#8a8778"; ctx.font = "18px Arial"; ctx.fillText("No Photo", 130, 325); }
+
+    const rows: [string, string][] = [
+      ["Name", profile.full_name || "—"],
+      ["User ID", profile.member_code],
+      ["Mobile", profile.username || profile.phone || "—"],
+      ["Date of Birth", profile.dob || "—"],
+      ["Referral Code", profile.referral_code],
+      ["City", [profile.city, profile.state].filter(Boolean).join(", ") || "—"],
+    ];
+    let y = 220;
+    rows.forEach(([k, v]) => {
+      ctx.fillStyle = "#6b6b5f"; ctx.font = "18px Arial"; ctx.fillText(k.toUpperCase(), 330, y);
+      ctx.fillStyle = "#0f2e1d"; ctx.font = "bold 26px Arial"; ctx.fillText(v, 330, y + 30);
+      y += 70;
+    });
+    ctx.fillStyle = "#6b6b5f"; ctx.font = "16px Arial";
+    ctx.fillText("This card is the property of Righvedh Sanjivni. Valid with active membership.", 60, 590);
+
+    const link = document.createElement("a");
+    link.download = `${profile.member_code}-id-card.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
+
+  return (
+    <div className="space-y-6">
+      <Section title="Employee / Member ID Card">
+        {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3 mb-4">{msg}</div>}
+        <div ref={cardRef} className="max-w-xl rounded-2xl overflow-hidden border border-border shadow-elegant">
+          <div className="bg-primary text-primary-foreground px-6 py-4 flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full overflow-hidden bg-white ring-2 ring-gold/60">
+              <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
+            </div>
+            <div>
+              <div className="font-serif text-xl font-bold">RIGHVEDH SANJIVNI</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Member Identity Card</div>
+            </div>
+          </div>
+          <div className="bg-cream p-6 flex gap-6">
+            <div className="h-36 w-28 shrink-0 rounded-lg border-2 border-primary overflow-hidden bg-white flex items-center justify-center">
+              {profile.photo_url
+                ? <img src={profile.photo_url} alt="Member" className="h-full w-full object-cover" />
+                : <span className="text-[11px] text-muted-foreground text-center px-2">No photo uploaded</span>}
+            </div>
+            <div className="text-sm space-y-1.5">
+              <CardRow k="Name" v={profile.full_name || "—"} />
+              <CardRow k="User ID" v={profile.member_code} mono />
+              <CardRow k="Mobile" v={profile.username || profile.phone || "—"} mono />
+              <CardRow k="Date of Birth" v={profile.dob || "—"} />
+              <CardRow k="Referral Code" v={profile.referral_code} mono />
+              <CardRow k="City" v={[profile.city, profile.state].filter(Boolean).join(", ") || "—"} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3 items-center">
+          <label className="rounded-full border border-input px-5 py-2.5 text-sm cursor-pointer">
+            {busy ? "Uploading..." : "Upload Photo"}
+            <input type="file" accept="image/*" className="hidden" disabled={busy}
+              onChange={(e) => { const fl = e.target.files?.[0]; if (fl) uploadPhoto(fl); }} />
+          </label>
+          <button onClick={download} className="rounded-full bg-gradient-gold px-6 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold">
+            Download ID Card
+          </button>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function CardRow({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
+  return (
+    <div className="flex gap-2">
+      <span className="w-28 text-xs uppercase tracking-wide text-muted-foreground pt-0.5">{k}</span>
+      <span className={`font-semibold text-primary ${mono ? "font-mono" : ""}`}>{v}</span>
+    </div>
   );
 }
