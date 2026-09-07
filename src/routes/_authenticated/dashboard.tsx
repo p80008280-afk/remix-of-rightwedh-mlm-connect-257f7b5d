@@ -114,7 +114,7 @@ function Dashboard() {
 
   async function logout() {
     await supabase.auth.signOut();
-    await nav({ to: "/" });
+    await nav({ to: "/login", replace: true });
   }
 
   if (loading) {
@@ -355,14 +355,39 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function ShopTab({ products, profile, settings, onDone }: { products: Product[]; profile: Profile; settings: PlanSettings | null; onDone: () => void }) {
-  const [selected, setSelected] = useState<Product | null>(null);
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [checkout, setCheckout] = useState(false);
   const [upiRef, setUpiRef] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ship, setShip] = useState({
+    name: profile.full_name || "",
+    phone: profile.username || profile.phone || "",
+    address: profile.address_line || "",
+    city: profile.city || "",
+    state: profile.state || "",
+    pincode: profile.pincode || "",
+  });
+
+  const total = cart.reduce((s, l) => s + Number(l.product.mrp) * l.qty, 0);
+
+  function add(p: Product) {
+    setCart(c => c.some(l => l.product.id === p.id)
+      ? c.map(l => l.product.id === p.id ? { ...l, qty: l.qty + 1 } : l)
+      : [...c, { product: p, qty: 1 }]);
+    setMsg("");
+  }
+  function setQty(id: string, qty: number) {
+    setCart(c => qty <= 0 ? c.filter(l => l.product.id !== id) : c.map(l => l.product.id === id ? { ...l, qty } : l));
+  }
 
   async function place() {
-    if (!selected || !file) { setMsg("Please upload your payment screenshot."); return; }
+    if (cart.length === 0) { setMsg("Your cart is empty."); return; }
+    if (!file) { setMsg("Please upload your payment screenshot."); return; }
+    if (!ship.name.trim() || !ship.phone.trim() || !ship.address.trim() || !ship.city.trim() || !ship.state.trim() || !/^\d{6}$/.test(ship.pincode.trim())) {
+      setMsg("Please fill the complete delivery address with a valid 6-digit pincode."); return;
+    }
     setBusy(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -371,17 +396,27 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
       if (up.error) throw up.error;
       const signed = await supabase.storage.from("payment-proofs").createSignedUrl(path, 60 * 60 * 24 * 365);
       const url = signed.data?.signedUrl || "";
-      const { error } = await supabase.from("orders").insert({
+      const cartGroup = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`) as string;
+      const rows = cart.map(l => ({
         user_id: profile.id,
-        product_id: selected.id,
-        amount: selected.mrp,
+        product_id: l.product.id,
+        quantity: l.qty,
+        amount: Number(l.product.mrp) * l.qty,
         status: "pending",
         upi_reference: upiRef.trim(),
         payment_screenshot_url: url,
-      });
+        cart_group: cartGroup,
+        ship_name: ship.name.trim(),
+        ship_phone: ship.phone.trim(),
+        ship_address: ship.address.trim(),
+        ship_city: ship.city.trim(),
+        ship_state: ship.state.trim(),
+        ship_pincode: ship.pincode.trim(),
+      }));
+      const { error } = await supabase.from("orders").insert(rows);
       if (error) throw error;
-      setMsg("Order submitted! Admin will verify your payment screenshot in Orders, then approve or reject it.");
-      setSelected(null); setUpiRef(""); setFile(null);
+      setMsg("Order submitted! Admin will verify your payment screenshot and approve or reject it.");
+      setCart([]); setCheckout(false); setUpiRef(""); setFile(null);
       onDone();
     } catch (e: any) {
       setMsg("Error: " + (e.message || String(e)));
@@ -406,20 +441,61 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
               <div className="mt-3 flex items-center justify-between">
                 <div className="font-bold text-primary">₹{p.mrp}</div>
-                 <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Buy Now</button>
+                <button onClick={() => add(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Add to Cart</button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {selected && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 overflow-y-auto" onClick={() => setSelected(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
-            <h3 className="font-serif text-2xl text-primary">Payment</h3>
-            <p className="text-sm text-muted-foreground mt-1">{selected.name} · ₹{selected.mrp}</p>
+      <Section title={`My Cart (${cart.length} item${cart.length === 1 ? "" : "s"})`}>
+        {cart.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">Cart is empty. Add one or more products, then pay once for the whole cart.</p>
+        ) : (
+          <div className="space-y-3">
+            {cart.map(l => (
+              <div key={l.product.id} className="flex items-center gap-3 border-b border-border/60 pb-3">
+                <div className="flex-1">
+                  <div className="font-semibold text-primary text-sm">{l.product.name}</div>
+                  <div className="text-xs text-muted-foreground">₹{l.product.mrp} each</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setQty(l.product.id, l.qty - 1)} className="h-7 w-7 rounded-full border border-input">−</button>
+                  <span className="w-6 text-center text-sm">{l.qty}</span>
+                  <button onClick={() => setQty(l.product.id, l.qty + 1)} className="h-7 w-7 rounded-full border border-input">+</button>
+                </div>
+                <div className="w-20 text-right font-bold text-primary text-sm">₹{Number(l.product.mrp) * l.qty}</div>
+                <button onClick={() => setQty(l.product.id, 0)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            ))}
+            <div className="flex items-center justify-between pt-2">
+              <div className="font-serif text-xl text-primary">Total: ₹{total}</div>
+              <button onClick={() => { setCheckout(true); setMsg(""); }} className="rounded-full bg-gradient-gold px-6 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold">
+                Checkout & Pay
+              </button>
+            </div>
+          </div>
+        )}
+      </Section>
+
+      {checkout && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-6 overflow-y-auto" onClick={() => setCheckout(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-lg w-full shadow-elegant my-8">
+            <h3 className="font-serif text-2xl text-primary">Checkout</h3>
+            <p className="text-sm text-muted-foreground mt-1">{cart.length} item(s) · Total ₹{total}</p>
+
+            <h4 className="mt-5 font-semibold text-sm text-primary">Delivery Address</h4>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <input value={ship.name} onChange={e => setShip({ ...ship, name: e.target.value })} placeholder="Full name" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.phone} onChange={e => setShip({ ...ship, phone: e.target.value })} placeholder="Mobile number" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.address} onChange={e => setShip({ ...ship, address: e.target.value })} placeholder="House / Street / Area" className="sm:col-span-2 rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.city} onChange={e => setShip({ ...ship, city: e.target.value })} placeholder="City" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.state} onChange={e => setShip({ ...ship, state: e.target.value })} placeholder="State" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.pincode} onChange={e => setShip({ ...ship, pincode: e.target.value })} placeholder="Pincode" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+            </div>
+
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay ₹{total} via UPI</div>
               <img
                 src={settings?.qr_image_url || "/phonepe-qr.png"}
                 onError={(event) => { event.currentTarget.src = "/phonepe-qr.png"; }}
@@ -428,8 +504,8 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               />
               <div className="mt-3 font-mono text-lg font-bold text-primary select-all">{settings?.upi_id || "kartiktirgar@ybl"}</div>
               <div className="text-xs text-muted-foreground">{settings?.payment_account_name || "KARTIK TIRGAR"}</div>
-              <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → send ₹{selected.mrp} to this UPI / QR → upload the payment screenshot below.</p>
             </div>
+
             <label className="block mt-4 text-sm font-medium">
               Payment Screenshot <span className="text-destructive">*</span>
               <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:px-3 file:py-1.5" />
@@ -439,8 +515,9 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               UPI Reference / UTR Number <span className="text-muted-foreground text-xs">(optional)</span>
               <input value={upiRef} onChange={(e) => setUpiRef(e.target.value)} placeholder="12 digit UTR" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
             </label>
+            {msg && <div className="mt-3 rounded-lg bg-destructive/10 text-destructive text-sm p-3">{msg}</div>}
             <div className="mt-6 flex gap-3">
-              <button onClick={() => setSelected(null)} className="flex-1 rounded-full border border-input py-2.5 text-sm">Cancel</button>
+              <button onClick={() => setCheckout(false)} className="flex-1 rounded-full border border-input py-2.5 text-sm">Cancel</button>
               <button disabled={busy || !file} onClick={place} className="flex-1 rounded-full bg-gradient-gold py-2.5 text-sm font-semibold text-gold-foreground disabled:opacity-60">
                 {busy ? "Submitting..." : "I have paid, Submit"}
               </button>
@@ -541,7 +618,15 @@ function WithdrawTab({ wallet, profile, withdrawals, settings, onDone }: { walle
 }
 
 function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void }) {
-  const [f, setF] = useState({ full_name: profile.full_name, phone: profile.phone, upi_id: profile.upi_id });
+  const [f, setF] = useState({
+    full_name: profile.full_name,
+    phone: profile.phone,
+    upi_id: profile.upi_id,
+    address_line: profile.address_line || "",
+    city: profile.city || "",
+    state: profile.state || "",
+    pincode: profile.pincode || "",
+  });
   const [msg, setMsg] = useState("");
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -552,9 +637,14 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
   return (
     <Section title="My Profile">
       {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3 mb-4">{msg}</div>}
+      <div className="mb-6 grid gap-3 sm:grid-cols-3 text-sm">
+        <div className="rounded-xl bg-cream p-4"><div className="text-xs uppercase text-muted-foreground">User ID</div><div className="font-mono font-bold text-primary">{profile.member_code}</div></div>
+        <div className="rounded-xl bg-cream p-4"><div className="text-xs uppercase text-muted-foreground">Date of Birth</div><div className="font-bold text-primary">{profile.dob || "—"}</div></div>
+        <div className="rounded-xl bg-cream p-4"><div className="text-xs uppercase text-muted-foreground">Referral Code</div><div className="font-mono font-bold text-primary">{profile.referral_code}</div></div>
+      </div>
       <form onSubmit={save} className="space-y-4 max-w-md">
-        <label className="block text-sm font-medium">Login Username
-          <input disabled value={profile.username || ""} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm font-mono" />
+        <label className="block text-sm font-medium">Login Mobile Number
+          <input disabled value={profile.username || profile.phone || ""} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm font-mono" />
         </label>
         <label className="block text-sm font-medium">Email
           <input disabled value={profile.email} className="mt-1 w-full rounded-xl border border-input bg-muted px-4 py-3 text-sm" />
@@ -565,6 +655,20 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
         <label className="block text-sm font-medium">Phone
           <input value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
         </label>
+        <label className="block text-sm font-medium">Address
+          <input value={f.address_line} onChange={e => setF({ ...f, address_line: e.target.value })} placeholder="House / Street / Area" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
+        </label>
+        <div className="grid grid-cols-3 gap-3">
+          <label className="block text-sm font-medium">City
+            <input value={f.city} onChange={e => setF({ ...f, city: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 text-sm" />
+          </label>
+          <label className="block text-sm font-medium">State
+            <input value={f.state} onChange={e => setF({ ...f, state: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 text-sm" />
+          </label>
+          <label className="block text-sm font-medium">Pincode
+            <input value={f.pincode} onChange={e => setF({ ...f, pincode: e.target.value })} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-3 text-sm" />
+          </label>
+        </div>
         <label className="block text-sm font-medium">UPI ID (for withdrawals)
           <input value={f.upi_id} onChange={e => setF({ ...f, upi_id: e.target.value })} placeholder="yourname@ybl" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
         </label>
@@ -572,5 +676,198 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
         <button className="rounded-full bg-primary text-primary-foreground px-8 py-3 text-sm font-semibold">Save</button>
       </form>
     </Section>
+  );
+}
+
+function TreeBranch({ node, root }: { node: TreeNode; root?: boolean }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`rounded-xl border px-3 py-2 text-center min-w-[140px] shadow-soft ${root ? "bg-gradient-gold text-gold-foreground border-gold/50" : node.is_active ? "bg-card border-primary/30" : "bg-card border-border"}`}>
+        <div className="text-sm font-semibold truncate max-w-[160px]">{node.full_name || "Member"}</div>
+        <div className="font-mono text-[11px] opacity-80">{node.member_code}</div>
+        <div className="text-[10px] uppercase tracking-wide">{root ? "You" : node.is_active ? "Active" : "Pending"}</div>
+      </div>
+      {(node.left || node.right) && (
+        <>
+          <div className="h-5 w-px bg-border" />
+          <div className="flex items-start gap-6">
+            <TreeLeg label="Left" child={node.left} />
+            <TreeLeg label="Right" child={node.right} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TreeLeg({ label, child }: { label: string; child: TreeNode | null }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{label}</div>
+      {child
+        ? <TreeBranch node={child} />
+        : <div className="rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground min-w-[140px] text-center">Empty</div>}
+    </div>
+  );
+}
+
+function RewardsTab({ levels, earned, pairs }: { levels: RewardLevel[]; earned: UserReward[]; pairs: number }) {
+  const earnedSet = new Set(earned.map(e => e.level));
+  const total = earned.reduce((s, e) => s + Number(e.amount), 0);
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Stat icon={GitBranch} label="Matched Pairs" value={String(pairs)} />
+        <Stat icon={Gift} label="Rewards Achieved" value={`${earned.length} / ${levels.length}`} />
+        <Stat icon={IndianRupee} label="Reward Income" value={`₹${total}`} accent="gold" />
+      </div>
+      <Section title="Reward Levels">
+        <p className="text-sm text-muted-foreground mb-4">Rewards are credited to your wallet automatically as soon as the required pairs are matched. Scroll sideways to see all levels.</p>
+        <div className="overflow-x-auto pb-3">
+          <div className="flex gap-3 min-w-max">
+            {levels.map(l => {
+              const done = earnedSet.has(l.level);
+              const progress = Math.min(100, Math.round((pairs / l.pairs_required) * 100));
+              return (
+                <div key={l.level} className={`w-44 shrink-0 rounded-2xl border p-4 ${done ? "bg-gradient-gold text-gold-foreground border-gold/50 shadow-gold" : "bg-card border-border"}`}>
+                  <div className="text-xs uppercase tracking-widest">Level {l.level}</div>
+                  <div className="font-serif text-xl font-bold mt-1">₹{Number(l.amount).toLocaleString("en-IN")}</div>
+                  <div className="text-xs mt-1 opacity-80">{l.pairs_required.toLocaleString("en-IN")} pairs</div>
+                  <div className="mt-3 h-1.5 rounded-full bg-black/10 overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
+                  </div>
+                  <div className="mt-2 text-[11px] font-semibold">{done ? "Achieved ✓" : `${progress}%`}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function IdCardTab({ profile, onDone }: { profile: Profile; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  async function uploadPhoto(file: File) {
+    setBusy(true); setMsg("");
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${profile.id}/photo-${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("member-photos").upload(path, file, { upsert: true });
+      if (up.error) throw up.error;
+      const { data } = supabase.storage.from("member-photos").getPublicUrl(path);
+      const { error } = await supabase.from("profiles").update({ photo_url: data.publicUrl }).eq("id", profile.id);
+      if (error) throw error;
+      setMsg("Photo updated on your ID card.");
+      onDone();
+    } catch (e: any) {
+      setMsg("Error: " + (e.message || String(e)));
+    } finally { setBusy(false); }
+  }
+
+  async function download() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1012; canvas.height = 638;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#0f2e1d"; ctx.fillRect(0, 0, 1012, 638);
+    ctx.fillStyle = "#fdfaf1"; ctx.fillRect(24, 140, 964, 474);
+    ctx.fillStyle = "#c9a227"; ctx.fillRect(24, 128, 964, 12);
+    ctx.fillStyle = "#fdfaf1";
+    ctx.font = "bold 42px Georgia, serif";
+    ctx.fillText("RIGHVEDH SANJIVNI", 40, 70);
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "#c9a227";
+    ctx.fillText("MEMBER IDENTITY CARD", 42, 104);
+
+    const loadImg = (src: string) => new Promise<HTMLImageElement | null>(res => {
+      const i = new Image(); i.crossOrigin = "anonymous";
+      i.onload = () => res(i); i.onerror = () => res(null); i.src = src;
+    });
+    const photo = profile.photo_url ? await loadImg(profile.photo_url) : null;
+    ctx.strokeStyle = "#0f2e1d"; ctx.lineWidth = 4;
+    ctx.strokeRect(60, 190, 220, 260);
+    if (photo) ctx.drawImage(photo, 60, 190, 220, 260);
+    else { ctx.fillStyle = "#e6e1d3"; ctx.fillRect(62, 192, 216, 256); ctx.fillStyle = "#8a8778"; ctx.font = "18px Arial"; ctx.fillText("No Photo", 130, 325); }
+
+    const rows: [string, string][] = [
+      ["Name", profile.full_name || "—"],
+      ["User ID", profile.member_code],
+      ["Mobile", profile.username || profile.phone || "—"],
+      ["Date of Birth", profile.dob || "—"],
+      ["Referral Code", profile.referral_code],
+      ["City", [profile.city, profile.state].filter(Boolean).join(", ") || "—"],
+    ];
+    let y = 220;
+    rows.forEach(([k, v]) => {
+      ctx.fillStyle = "#6b6b5f"; ctx.font = "18px Arial"; ctx.fillText(k.toUpperCase(), 330, y);
+      ctx.fillStyle = "#0f2e1d"; ctx.font = "bold 26px Arial"; ctx.fillText(v, 330, y + 30);
+      y += 70;
+    });
+    ctx.fillStyle = "#6b6b5f"; ctx.font = "16px Arial";
+    ctx.fillText("This card is the property of Righvedh Sanjivni. Valid with active membership.", 60, 590);
+
+    const link = document.createElement("a");
+    link.download = `${profile.member_code}-id-card.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
+
+  return (
+    <div className="space-y-6">
+      <Section title="Employee / Member ID Card">
+        {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3 mb-4">{msg}</div>}
+        <div ref={cardRef} className="max-w-xl rounded-2xl overflow-hidden border border-border shadow-elegant">
+          <div className="bg-primary text-primary-foreground px-6 py-4 flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full overflow-hidden bg-white ring-2 ring-gold/60">
+              <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
+            </div>
+            <div>
+              <div className="font-serif text-xl font-bold">RIGHVEDH SANJIVNI</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Member Identity Card</div>
+            </div>
+          </div>
+          <div className="bg-cream p-6 flex gap-6">
+            <div className="h-36 w-28 shrink-0 rounded-lg border-2 border-primary overflow-hidden bg-white flex items-center justify-center">
+              {profile.photo_url
+                ? <img src={profile.photo_url} alt="Member" className="h-full w-full object-cover" />
+                : <span className="text-[11px] text-muted-foreground text-center px-2">No photo uploaded</span>}
+            </div>
+            <div className="text-sm space-y-1.5">
+              <CardRow k="Name" v={profile.full_name || "—"} />
+              <CardRow k="User ID" v={profile.member_code} mono />
+              <CardRow k="Mobile" v={profile.username || profile.phone || "—"} mono />
+              <CardRow k="Date of Birth" v={profile.dob || "—"} />
+              <CardRow k="Referral Code" v={profile.referral_code} mono />
+              <CardRow k="City" v={[profile.city, profile.state].filter(Boolean).join(", ") || "—"} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3 items-center">
+          <label className="rounded-full border border-input px-5 py-2.5 text-sm cursor-pointer">
+            {busy ? "Uploading..." : "Upload Photo"}
+            <input type="file" accept="image/*" className="hidden" disabled={busy}
+              onChange={(e) => { const fl = e.target.files?.[0]; if (fl) uploadPhoto(fl); }} />
+          </label>
+          <button onClick={download} className="rounded-full bg-gradient-gold px-6 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold">
+            Download ID Card
+          </button>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function CardRow({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
+  return (
+    <div className="flex gap-2">
+      <span className="w-28 text-xs uppercase tracking-wide text-muted-foreground pt-0.5">{k}</span>
+      <span className={`font-semibold text-primary ${mono ? "font-mono" : ""}`}>{v}</span>
+    </div>
   );
 }
