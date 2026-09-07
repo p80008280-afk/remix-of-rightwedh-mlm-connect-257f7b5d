@@ -355,14 +355,39 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function ShopTab({ products, profile, settings, onDone }: { products: Product[]; profile: Profile; settings: PlanSettings | null; onDone: () => void }) {
-  const [selected, setSelected] = useState<Product | null>(null);
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [checkout, setCheckout] = useState(false);
   const [upiRef, setUpiRef] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ship, setShip] = useState({
+    name: profile.full_name || "",
+    phone: profile.username || profile.phone || "",
+    address: profile.address_line || "",
+    city: profile.city || "",
+    state: profile.state || "",
+    pincode: profile.pincode || "",
+  });
+
+  const total = cart.reduce((s, l) => s + Number(l.product.mrp) * l.qty, 0);
+
+  function add(p: Product) {
+    setCart(c => c.some(l => l.product.id === p.id)
+      ? c.map(l => l.product.id === p.id ? { ...l, qty: l.qty + 1 } : l)
+      : [...c, { product: p, qty: 1 }]);
+    setMsg("");
+  }
+  function setQty(id: string, qty: number) {
+    setCart(c => qty <= 0 ? c.filter(l => l.product.id !== id) : c.map(l => l.product.id === id ? { ...l, qty } : l));
+  }
 
   async function place() {
-    if (!selected || !file) { setMsg("Please upload your payment screenshot."); return; }
+    if (cart.length === 0) { setMsg("Your cart is empty."); return; }
+    if (!file) { setMsg("Please upload your payment screenshot."); return; }
+    if (!ship.name.trim() || !ship.phone.trim() || !ship.address.trim() || !ship.city.trim() || !ship.state.trim() || !/^\d{6}$/.test(ship.pincode.trim())) {
+      setMsg("Please fill the complete delivery address with a valid 6-digit pincode."); return;
+    }
     setBusy(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -371,17 +396,27 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
       if (up.error) throw up.error;
       const signed = await supabase.storage.from("payment-proofs").createSignedUrl(path, 60 * 60 * 24 * 365);
       const url = signed.data?.signedUrl || "";
-      const { error } = await supabase.from("orders").insert({
+      const cartGroup = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`) as string;
+      const rows = cart.map(l => ({
         user_id: profile.id,
-        product_id: selected.id,
-        amount: selected.mrp,
+        product_id: l.product.id,
+        quantity: l.qty,
+        amount: Number(l.product.mrp) * l.qty,
         status: "pending",
         upi_reference: upiRef.trim(),
         payment_screenshot_url: url,
-      });
+        cart_group: cartGroup,
+        ship_name: ship.name.trim(),
+        ship_phone: ship.phone.trim(),
+        ship_address: ship.address.trim(),
+        ship_city: ship.city.trim(),
+        ship_state: ship.state.trim(),
+        ship_pincode: ship.pincode.trim(),
+      }));
+      const { error } = await supabase.from("orders").insert(rows);
       if (error) throw error;
-      setMsg("Order submitted! Admin will verify your payment screenshot in Orders, then approve or reject it.");
-      setSelected(null); setUpiRef(""); setFile(null);
+      setMsg("Order submitted! Admin will verify your payment screenshot and approve or reject it.");
+      setCart([]); setCheckout(false); setUpiRef(""); setFile(null);
       onDone();
     } catch (e: any) {
       setMsg("Error: " + (e.message || String(e)));
@@ -406,20 +441,61 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
               <div className="mt-3 flex items-center justify-between">
                 <div className="font-bold text-primary">₹{p.mrp}</div>
-                 <button onClick={() => setSelected(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Buy Now</button>
+                <button onClick={() => add(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Add to Cart</button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {selected && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 overflow-y-auto" onClick={() => setSelected(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant my-8">
-            <h3 className="font-serif text-2xl text-primary">Payment</h3>
-            <p className="text-sm text-muted-foreground mt-1">{selected.name} · ₹{selected.mrp}</p>
+      <Section title={`My Cart (${cart.length} item${cart.length === 1 ? "" : "s"})`}>
+        {cart.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">Cart is empty. Add one or more products, then pay once for the whole cart.</p>
+        ) : (
+          <div className="space-y-3">
+            {cart.map(l => (
+              <div key={l.product.id} className="flex items-center gap-3 border-b border-border/60 pb-3">
+                <div className="flex-1">
+                  <div className="font-semibold text-primary text-sm">{l.product.name}</div>
+                  <div className="text-xs text-muted-foreground">₹{l.product.mrp} each</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setQty(l.product.id, l.qty - 1)} className="h-7 w-7 rounded-full border border-input">−</button>
+                  <span className="w-6 text-center text-sm">{l.qty}</span>
+                  <button onClick={() => setQty(l.product.id, l.qty + 1)} className="h-7 w-7 rounded-full border border-input">+</button>
+                </div>
+                <div className="w-20 text-right font-bold text-primary text-sm">₹{Number(l.product.mrp) * l.qty}</div>
+                <button onClick={() => setQty(l.product.id, 0)} className="text-destructive"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            ))}
+            <div className="flex items-center justify-between pt-2">
+              <div className="font-serif text-xl text-primary">Total: ₹{total}</div>
+              <button onClick={() => { setCheckout(true); setMsg(""); }} className="rounded-full bg-gradient-gold px-6 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold">
+                Checkout & Pay
+              </button>
+            </div>
+          </div>
+        )}
+      </Section>
+
+      {checkout && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-6 overflow-y-auto" onClick={() => setCheckout(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-lg w-full shadow-elegant my-8">
+            <h3 className="font-serif text-2xl text-primary">Checkout</h3>
+            <p className="text-sm text-muted-foreground mt-1">{cart.length} item(s) · Total ₹{total}</p>
+
+            <h4 className="mt-5 font-semibold text-sm text-primary">Delivery Address</h4>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <input value={ship.name} onChange={e => setShip({ ...ship, name: e.target.value })} placeholder="Full name" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.phone} onChange={e => setShip({ ...ship, phone: e.target.value })} placeholder="Mobile number" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.address} onChange={e => setShip({ ...ship, address: e.target.value })} placeholder="House / Street / Area" className="sm:col-span-2 rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.city} onChange={e => setShip({ ...ship, city: e.target.value })} placeholder="City" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.state} onChange={e => setShip({ ...ship, state: e.target.value })} placeholder="State" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+              <input value={ship.pincode} onChange={e => setShip({ ...ship, pincode: e.target.value })} placeholder="Pincode" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm" />
+            </div>
+
             <div className="mt-6 rounded-xl bg-cream p-4 text-center">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay via UPI</div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Pay ₹{total} via UPI</div>
               <img
                 src={settings?.qr_image_url || "/phonepe-qr.png"}
                 onError={(event) => { event.currentTarget.src = "/phonepe-qr.png"; }}
@@ -428,8 +504,8 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               />
               <div className="mt-3 font-mono text-lg font-bold text-primary select-all">{settings?.upi_id || "kartiktirgar@ybl"}</div>
               <div className="text-xs text-muted-foreground">{settings?.payment_account_name || "KARTIK TIRGAR"}</div>
-              <p className="text-xs text-muted-foreground mt-2">Open PhonePe / Google Pay → send ₹{selected.mrp} to this UPI / QR → upload the payment screenshot below.</p>
             </div>
+
             <label className="block mt-4 text-sm font-medium">
               Payment Screenshot <span className="text-destructive">*</span>
               <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:px-3 file:py-1.5" />
@@ -439,8 +515,9 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
               UPI Reference / UTR Number <span className="text-muted-foreground text-xs">(optional)</span>
               <input value={upiRef} onChange={(e) => setUpiRef(e.target.value)} placeholder="12 digit UTR" className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm" />
             </label>
+            {msg && <div className="mt-3 rounded-lg bg-destructive/10 text-destructive text-sm p-3">{msg}</div>}
             <div className="mt-6 flex gap-3">
-              <button onClick={() => setSelected(null)} className="flex-1 rounded-full border border-input py-2.5 text-sm">Cancel</button>
+              <button onClick={() => setCheckout(false)} className="flex-1 rounded-full border border-input py-2.5 text-sm">Cancel</button>
               <button disabled={busy || !file} onClick={place} className="flex-1 rounded-full bg-gradient-gold py-2.5 text-sm font-semibold text-gold-foreground disabled:opacity-60">
                 {busy ? "Submitting..." : "I have paid, Submit"}
               </button>
