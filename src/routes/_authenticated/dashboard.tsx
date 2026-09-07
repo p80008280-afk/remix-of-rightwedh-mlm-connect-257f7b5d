@@ -114,7 +114,7 @@ function Dashboard() {
 
   async function logout() {
     await supabase.auth.signOut();
-    await nav({ to: "/" });
+    await nav({ to: "/login", replace: true });
   }
 
   if (loading) {
