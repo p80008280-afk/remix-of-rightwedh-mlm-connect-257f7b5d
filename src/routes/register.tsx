@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
@@ -14,13 +15,15 @@ export const Route = createFileRoute("/register")({
   validateSearch: search,
   head: () => ({
     meta: [
-      { title: "Register — Righwedh Sanjivni" },
-      { name: "description", content: "Join Righwedh Sanjivni. Register with your mobile number and your sponsor's referral code." },
-      { property: "og:title", content: "Register — Righwedh Sanjivni" },
-      { property: "og:description", content: "Create a Righwedh Sanjivni member account with a sponsor referral." },
+      { title: "Register — Righvedh Sanjivni" },
+      { name: "description", content: "Join Righvedh Sanjivni. Register with your mobile number and your sponsor's referral code." },
+      { property: "og:title", content: "Register — Righvedh Sanjivni" },
+      { property: "og:description", content: "Create a Righvedh Sanjivni member account with a sponsor referral." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://righvedhsanjivni.in/register" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/register" }],
   }),
   component: Register,
 });
@@ -200,6 +203,14 @@ function Row({ label, value }: { label: string; value: string }) {
 function Field({
   label, value, onChange, type = "text", placeholder, required = true,
 }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; required?: boolean; }) {
+  if (type === "password") {
+    return (
+      <label className="block text-sm font-medium">
+        {label}
+        <PasswordInput value={value} onChange={onChange} required={required} placeholder={placeholder} autoComplete="new-password" />
+      </label>
+    );
+  }
   return (
     <label className="block text-sm font-medium">
       {label}

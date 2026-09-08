@@ -6,11 +6,13 @@ const qrAsset = { url: "/phonepe-qr.png" };
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact — Righwedh Sanjivni" },
-      { name: "description", content: "Get in touch with Righwedh Sanjivni — Scheme No. 136-A, Indore, MP. Email righvedhsanjivni@gmail.com. 24 hour support." },
-      { property: "og:title", content: "Contact Righwedh Sanjivni" },
+      { title: "Contact — Righvedh Sanjivni" },
+      { name: "description", content: "Get in touch with Righvedh Sanjivni — Scheme No. 136-A, Indore, MP. Email righvedhsanjivni@gmail.com. 24 hour support." },
+      { property: "og:title", content: "Contact Righvedh Sanjivni" },
       { property: "og:description", content: "24 hour Ayurveda & business support." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/contact" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/contact" }],
   }),
   component: Contact,
 });

@@ -35,10 +35,10 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="relative h-14 w-14 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-soft ring-2 ring-gold/50">
-            <img src={logoAsset.url} alt="Righwedh Sanjivni" className="h-full w-full object-cover" />
+            <img src={logoAsset.url} alt="Righvedh Sanjivni" className="h-full w-full object-cover" />
           </div>
           <div className="hidden sm:block leading-tight">
-            <div className="font-serif text-lg font-bold text-primary tracking-tight">Righwedh Sanjivni</div>
+            <div className="font-serif text-lg font-bold text-primary tracking-tight">Righvedh Sanjivni</div>
             <div className="flex items-center gap-1.5 text-[10px] tracking-[0.28em] uppercase text-gold font-semibold">
               <Leaf className="h-2.5 w-2.5" /> Pure Ayurveda
             </div>

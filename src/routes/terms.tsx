@@ -4,11 +4,13 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms & Conditions — Righwedh Sanjivni" },
-      { name: "description", content: "The terms and conditions that govern membership, purchases and commissions on Righwedh Sanjivni." },
-      { property: "og:title", content: "Terms & Conditions — Righwedh Sanjivni" },
+      { title: "Terms & Conditions — Righvedh Sanjivni" },
+      { name: "description", content: "The terms and conditions that govern membership, purchases and commissions on Righvedh Sanjivni." },
+      { property: "og:title", content: "Terms & Conditions — Righvedh Sanjivni" },
       { property: "og:description", content: "Membership, purchase and commission terms." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/terms" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/terms" }],
   }),
   component: Terms,
 });
@@ -47,7 +49,7 @@ function Terms() {
           Fake registrations, fraudulent payments, misleading claims about income, and misuse of the referral system may result in account suspension and forfeiture of pending income.
         </Block>
         <Block title="8. Modifications">
-          Righwedh Sanjivni reserves the right to update these terms, product prices, commission structures and rewards at any time. Continued use of the platform after changes indicates acceptance.
+          Righvedh Sanjivni reserves the right to update these terms, product prices, commission structures and rewards at any time. Continued use of the platform after changes indicates acceptance.
         </Block>
         <Block title="9. Contact">
           For any query please write to <a className="text-primary underline" href="mailto:righvedhsanjivni@gmail.com">righvedhsanjivni@gmail.com</a> or call +91 86199 90944.

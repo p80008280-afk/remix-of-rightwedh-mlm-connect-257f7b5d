@@ -4,11 +4,13 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Righwedh Sanjivni" },
-      { name: "description", content: "How Righwedh Sanjivni collects, uses and protects your personal information." },
-      { property: "og:title", content: "Privacy Policy — Righwedh Sanjivni" },
+      { title: "Privacy Policy — Righvedh Sanjivni" },
+      { name: "description", content: "How Righvedh Sanjivni collects, uses and protects your personal information." },
+      { property: "og:title", content: "Privacy Policy — Righvedh Sanjivni" },
       { property: "og:description", content: "How we handle your data." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/privacy" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/privacy" }],
   }),
   component: Privacy,
 });

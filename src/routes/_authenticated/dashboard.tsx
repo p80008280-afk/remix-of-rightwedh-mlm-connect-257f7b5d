@@ -42,10 +42,10 @@ type CartLine = { product: Product; qty: number };
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Member Dashboard — Righwedh Sanjivni" },
-      { name: "description", content: "Manage Righwedh Sanjivni orders, team, income, withdrawals, and profile." },
-      { property: "og:title", content: "Member Dashboard — Righwedh Sanjivni" },
-      { property: "og:description", content: "Righwedh Sanjivni member account dashboard." },
+      { title: "Member Dashboard — Righvedh Sanjivni" },
+      { name: "description", content: "Manage Righvedh Sanjivni orders, team, income, withdrawals, and profile." },
+      { property: "og:title", content: "Member Dashboard — Righvedh Sanjivni" },
+      { property: "og:description", content: "Righvedh Sanjivni member account dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
@@ -136,7 +136,7 @@ function Dashboard() {
             <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
-            <div className="font-serif font-bold">Righwedh</div>
+            <div className="font-serif font-bold">Righvedh</div>
             <div className="text-[10px] uppercase tracking-widest text-gold">Member</div>
           </div>
         </div>

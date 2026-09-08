@@ -77,18 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Righwedh Sanjivni — Ayurveda Wellness & Business Opportunity" },
+      { title: "Righvedh Sanjivni — Ayurveda Wellness & Business Opportunity" },
       {
         name: "description",
         content:
-          "Righwedh Sanjivni is a premium Ayurveda wellness company offering pure herbal products and a rewarding binary MLM business opportunity across India.",
+          "Righvedh Sanjivni is a premium Ayurveda wellness company offering pure herbal products and a rewarding binary MLM business opportunity across India.",
       },
-      { name: "author", content: "Righwedh Sanjivni" },
-      { property: "og:title", content: "Righwedh Sanjivni — Ayurveda Wellness" },
+      { name: "author", content: "Righvedh Sanjivni" },
+      { property: "og:title", content: "Righvedh Sanjivni — Ayurveda Wellness" },
       {
         property: "og:description",
         content:
-          "Pure Ayurveda products and a rewarding direct-selling opportunity. Join Righwedh Sanjivni today.",
+          "Pure Ayurveda products and a rewarding direct-selling opportunity. Join Righvedh Sanjivni today.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
