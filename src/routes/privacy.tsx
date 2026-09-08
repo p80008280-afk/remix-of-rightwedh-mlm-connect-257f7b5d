@@ -41,7 +41,7 @@ function Privacy() {
           Your data is stored on encrypted infrastructure. Payment screenshots are stored in a private bucket accessible only to you and the admin. Withdrawal UPI is only visible to you and the admin.
         </Block>
         <Block title="6. Your Rights">
-          You may request access to, correction of, or deletion of your personal data at any time by writing to <a className="text-primary underline" href="mailto:kartik.tirgar14@gmail.com">kartik.tirgar14@gmail.com</a>. Deletion of an active MLM account will result in forfeiture of un-withdrawn income.
+          You may request access to, correction of, or deletion of your personal data at any time by writing to <a className="text-primary underline" href="mailto:righvedhsanjivni@gmail.com">righvedhsanjivni@gmail.com</a>. Deletion of an active MLM account will result in forfeiture of un-withdrawn income.
         </Block>
         <Block title="7. Cookies">
           We use only essential cookies required to keep you signed in. We do not use third-party advertising cookies.

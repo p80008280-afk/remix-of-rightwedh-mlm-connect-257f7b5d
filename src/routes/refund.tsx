@@ -35,7 +35,7 @@ function Refund() {
           Within the 15-day window you may exchange the product for another Righwedh Sanjivni product of equal value at no extra cost. Difference in price (if any) is payable / refundable.
         </Block>
         <Block title="4. How To Request">
-          Write to <a className="text-primary underline" href="mailto:kartik.tirgar14@gmail.com">kartik.tirgar14@gmail.com</a> with your order date, member ID and reason. Our team will respond within 48 hours with return instructions.
+          Write to <a className="text-primary underline" href="mailto:righvedhsanjivni@gmail.com">righvedhsanjivni@gmail.com</a> with your order date, member ID and reason. Our team will respond within 48 hours with return instructions.
         </Block>
         <Block title="5. Refund Method">
           Approved refunds are paid to your registered UPI ID within 7 working days after we receive and inspect the returned product.

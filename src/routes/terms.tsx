@@ -50,7 +50,7 @@ function Terms() {
           Righwedh Sanjivni reserves the right to update these terms, product prices, commission structures and rewards at any time. Continued use of the platform after changes indicates acceptance.
         </Block>
         <Block title="9. Contact">
-          For any query please write to <a className="text-primary underline" href="mailto:kartik.tirgar14@gmail.com">kartik.tirgar14@gmail.com</a> or call +91 86199 90944.
+          For any query please write to <a className="text-primary underline" href="mailto:righvedhsanjivni@gmail.com">righvedhsanjivni@gmail.com</a> or call +91 86199 90944.
         </Block>
         <p className="text-xs text-muted-foreground pt-4 border-t border-border">A downloadable PDF version of these terms will be provided by the company on request.</p>
       </article>
