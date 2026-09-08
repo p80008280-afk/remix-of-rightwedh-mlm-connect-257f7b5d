@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -7,13 +8,15 @@ const logoAsset = { url: "/logo.png" };
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Login — Righwedh Sanjivni" },
-      { name: "description", content: "Login to your Righwedh Sanjivni member or admin account." },
-      { property: "og:title", content: "Login — Righwedh Sanjivni" },
-      { property: "og:description", content: "Secure member and admin login for Righwedh Sanjivni." },
+      { title: "Login — Righvedh Sanjivni" },
+      { name: "description", content: "Login to your Righvedh Sanjivni member or admin account." },
+      { property: "og:title", content: "Login — Righvedh Sanjivni" },
+      { property: "og:description", content: "Secure member and admin login for Righvedh Sanjivni." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://righvedhsanjivni.in/login" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/login" }],
   }),
   component: Login,
 });
@@ -81,14 +84,7 @@ function Login() {
             </label>
             <label className="block text-sm font-medium">
               Password
-              <input
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
-              />
+              <PasswordInput value={password} onChange={setPassword} />
             </label>
             {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
             <button

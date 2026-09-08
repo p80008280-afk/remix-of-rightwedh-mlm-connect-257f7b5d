@@ -6,11 +6,13 @@ const capsuleAsset = { url: "/aaurva-capsule.png" };
 export const Route = createFileRoute("/products")({
   head: () => ({
     meta: [
-      { title: "Products — Righwedh Sanjivni Ayurveda Range" },
-      { name: "description", content: "Pure Ayurvedic products by Righwedh Sanjivni — Aaurva capsule, immunity, detox and wellness. Every product earns you commission." },
-      { property: "og:title", content: "Products — Righwedh Sanjivni" },
+      { title: "Products — Righvedh Sanjivni Ayurveda Range" },
+      { name: "description", content: "Pure Ayurvedic products by Righvedh Sanjivni — Aaurva capsule, immunity, detox and wellness. Every product earns you commission." },
+      { property: "og:title", content: "Products — Righvedh Sanjivni" },
       { property: "og:description", content: "Premium Ayurveda products with business volume rewards." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/products" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/products" }],
   }),
   component: Products,
 });

@@ -12,7 +12,7 @@ export function Footer() {
               <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
             </div>
             <div>
-              <div className="font-serif text-lg font-bold">Righwedh Sanjivni</div>
+              <div className="font-serif text-lg font-bold">Righvedh Sanjivni</div>
               <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] text-gold">
                 <Leaf className="h-2.5 w-2.5" /> Pure Ayurveda
               </div>
@@ -20,7 +20,7 @@ export function Footer() {
           </div>
           <p className="mt-4 text-sm text-primary-foreground/70 leading-relaxed">
             Ancient Ayurveda wisdom meets a modern income opportunity. Build health, wealth and a
-            trusted community with Righwedh Sanjivni.
+            trusted community with Righvedh Sanjivni.
           </p>
         </div>
 
@@ -62,7 +62,7 @@ export function Footer() {
       </div>
       <div className="border-t border-primary-foreground/10">
         <div className="mx-auto max-w-7xl px-6 py-5 text-xs text-primary-foreground/60 flex flex-col md:flex-row justify-between gap-2">
-          <div>© {new Date().getFullYear()} Righwedh Sanjivni. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} Righvedh Sanjivni. All rights reserved.</div>
           <div>righvedhsanjivni@gmail.com</div>
         </div>
       </div>

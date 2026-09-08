@@ -4,11 +4,13 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 export const Route = createFileRoute("/disclaimer")({
   head: () => ({
     meta: [
-      { title: "Income Disclaimer — Righwedh Sanjivni" },
-      { name: "description", content: "Income earned through Righwedh Sanjivni depends entirely on individual effort. No income is guaranteed." },
-      { property: "og:title", content: "Income Disclaimer — Righwedh Sanjivni" },
+      { title: "Income Disclaimer — Righvedh Sanjivni" },
+      { name: "description", content: "Income earned through Righvedh Sanjivni depends entirely on individual effort. No income is guaranteed." },
+      { property: "og:title", content: "Income Disclaimer — Righvedh Sanjivni" },
       { property: "og:description", content: "No income is guaranteed." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/disclaimer" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/disclaimer" }],
   }),
   component: Disclaimer,
 });
@@ -26,16 +28,16 @@ function Disclaimer() {
 
       <article className="mx-auto max-w-3xl px-6 py-16 space-y-8 text-[15px] leading-relaxed text-primary">
         <Block title="1. No Guaranteed Income">
-          Righwedh Sanjivni is a direct-selling / MLM opportunity. Any income figure or example shown on this website, in printed material, or during training sessions is for illustration only. Actual income depends entirely on the member's own selling effort, team building activity and market conditions.
+          Righvedh Sanjivni is a direct-selling / MLM opportunity. Any income figure or example shown on this website, in printed material, or during training sessions is for illustration only. Actual income depends entirely on the member's own selling effort, team building activity and market conditions.
         </Block>
         <Block title="2. Not an Investment Scheme">
-          Righwedh Sanjivni is <b>not</b> a money-circulation, chit-fund, deposit-taking or investment scheme. Income is earned only through genuine product sales and team building. No income is generated merely by signing up or by paying money to the company.
+          Righvedh Sanjivni is <b>not</b> a money-circulation, chit-fund, deposit-taking or investment scheme. Income is earned only through genuine product sales and team building. No income is generated merely by signing up or by paying money to the company.
         </Block>
         <Block title="3. Individual Results Vary">
           Some members earn substantially, many earn modest amounts, and some may earn nothing at all. Past results of any individual member are not a guarantee of future performance.
         </Block>
         <Block title="4. Tax Responsibility">
-          Members are solely responsible for reporting their MLM income to tax authorities and paying all applicable taxes. Righwedh Sanjivni will deduct 5% TDS on withdrawals as required by law and issue relevant statements.
+          Members are solely responsible for reporting their MLM income to tax authorities and paying all applicable taxes. Righvedh Sanjivni will deduct 5% TDS on withdrawals as required by law and issue relevant statements.
         </Block>
         <Block title="5. No Employment">
           Membership does not create an employer-employee relationship. Members act as independent distributors.

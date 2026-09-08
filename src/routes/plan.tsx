@@ -5,11 +5,13 @@ import { Users, DollarSign, TrendingUp, Trophy, Plus, ArrowRight } from "lucide-
 export const Route = createFileRoute("/plan")({
   head: () => ({
     meta: [
-      { title: "Business Plan — Righwedh Sanjivni Binary MLM" },
-      { name: "description", content: "The Righwedh Sanjivni binary MLM plan — direct sale commission, pair matching bonus, level income and rank rewards. Simple and fair." },
-      { property: "og:title", content: "Business Plan — Righwedh Sanjivni" },
+      { title: "Business Plan — Righvedh Sanjivni Binary MLM" },
+      { name: "description", content: "The Righvedh Sanjivni binary MLM plan — direct sale commission, pair matching bonus, level income and rank rewards. Simple and fair." },
+      { property: "og:title", content: "Business Plan — Righvedh Sanjivni" },
       { property: "og:description", content: "Fair binary plan: direct + pair + rank income." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/plan" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/plan" }],
   }),
   component: Plan,
 });
@@ -20,7 +22,7 @@ function Plan() {
       <section className="bg-gradient-hero text-primary-foreground py-20">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Business Plan</div>
-          <h1 className="mt-4 font-serif text-5xl md:text-6xl">Righwedh Binary Plan</h1>
+          <h1 className="mt-4 font-serif text-5xl md:text-6xl">Righvedh Binary Plan</h1>
           <p className="mt-6 text-primary-foreground/80 max-w-2xl mx-auto">
             A simple binary structure — two legs (Left & Right). Earn a direct commission on every
             sale and a pair bonus on every match. Grow your team at your own pace.

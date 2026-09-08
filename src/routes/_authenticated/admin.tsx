@@ -13,10 +13,10 @@ const qrAsset = { url: "/phonepe-qr.png" };
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Panel — Righwedh Sanjivni" },
-      { name: "description", content: "Manage Righwedh Sanjivni members, products, orders, withdrawals, and payment settings." },
-      { property: "og:title", content: "Admin Panel — Righwedh Sanjivni" },
-      { property: "og:description", content: "Secure Righwedh Sanjivni administration panel." },
+      { title: "Admin Panel — Righvedh Sanjivni" },
+      { name: "description", content: "Manage Righvedh Sanjivni members, products, orders, withdrawals, and payment settings." },
+      { property: "og:title", content: "Admin Panel — Righvedh Sanjivni" },
+      { property: "og:description", content: "Secure Righvedh Sanjivni administration panel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
@@ -104,7 +104,7 @@ function Admin() {
             <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
-            <div className="font-serif font-bold">Righwedh</div>
+            <div className="font-serif font-bold">Righvedh</div>
             <div className="text-[10px] uppercase tracking-widest text-gold">Admin</div>
           </div>
         </div>

@@ -6,11 +6,13 @@ const capsuleAsset = { url: "/aaurva-capsule.png" };
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Righwedh Sanjivni — Pure Ayurveda & Binary Business Opportunity" },
-      { name: "description", content: "Righwedh Sanjivni offers 100% pure Ayurvedic wellness products and a transparent binary MLM plan. Earn direct sale commission and pair matching bonus." },
-      { property: "og:title", content: "Righwedh Sanjivni — Ayurveda & Income Opportunity" },
+      { title: "Righvedh Sanjivni — Pure Ayurveda & Binary Business Opportunity" },
+      { name: "description", content: "Righvedh Sanjivni offers 100% pure Ayurvedic wellness products and a transparent binary MLM plan. Earn direct sale commission and pair matching bonus." },
+      { property: "og:title", content: "Righvedh Sanjivni — Ayurveda & Income Opportunity" },
       { property: "og:description", content: "Pure Ayurveda products with a fair binary income plan." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/" }],
   }),
   component: Home,
 });
@@ -33,7 +35,7 @@ function Home() {
               <span className="text-gold">in your life.</span>
             </h1>
             <p className="mt-6 text-lg text-primary-foreground/80 max-w-xl leading-relaxed">
-              Righwedh Sanjivni brings you pure Ayurvedic products and a rewarding business
+              Righvedh Sanjivni brings you pure Ayurvedic products and a rewarding business
               opportunity — where every sale and every pair builds real income and recognition.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
@@ -96,7 +98,7 @@ function Home() {
       {/* FEATURES */}
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="text-center max-w-2xl mx-auto">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Why Righwedh Sanjivni</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Why Righvedh Sanjivni</div>
           <h2 className="mt-3 font-serif text-4xl md:text-5xl text-primary">One platform, endless opportunity.</h2>
           <p className="mt-4 text-muted-foreground">
             The purity of Ayurveda, the transparency of technology, and a fair binary income plan — all in one place.
@@ -239,7 +241,7 @@ function Home() {
           <div className="relative">
             <h2 className="font-serif text-4xl md:text-5xl">Start your journey today.</h2>
             <p className="mt-4 text-primary-foreground/80 max-w-xl mx-auto">
-              Join the Righwedh Sanjivni family through your sponsor's referral link.
+              Join the Righvedh Sanjivni family through your sponsor's referral link.
             </p>
             <Link
               to="/register"

@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,13 +8,15 @@ import { resetMemberPassword } from "@/lib/mlm.functions";
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Reset Password — Righwedh Sanjivni" },
-      { name: "description", content: "Reset your Righwedh Sanjivni member account password using your registered mobile number, email and date of birth." },
-      { property: "og:title", content: "Reset Password — Righwedh Sanjivni" },
-      { property: "og:description", content: "Recover access to your Righwedh Sanjivni member account." },
+      { title: "Reset Password — Righvedh Sanjivni" },
+      { name: "description", content: "Reset your Righvedh Sanjivni member account password using your registered mobile number, email and date of birth." },
+      { property: "og:title", content: "Reset Password — Righvedh Sanjivni" },
+      { property: "og:description", content: "Recover access to your Righvedh Sanjivni member account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://righvedhsanjivni.in/forgot-password" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/forgot-password" }],
   }),
   component: ForgotPassword,
 });
@@ -70,6 +73,14 @@ function ForgotPassword() {
 }
 
 function Field({ label, value, onChange, type = "text", placeholder }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+  if (type === "password") {
+    return (
+      <label className="block text-sm font-medium">
+        {label}
+        <PasswordInput value={value} onChange={onChange} placeholder={placeholder} autoComplete="new-password" />
+      </label>
+    );
+  }
   return (
     <label className="block text-sm font-medium">
       {label}

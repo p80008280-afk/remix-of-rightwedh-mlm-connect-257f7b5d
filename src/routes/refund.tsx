@@ -4,11 +4,13 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 export const Route = createFileRoute("/refund")({
   head: () => ({
     meta: [
-      { title: "Refund & Return Policy — Righwedh Sanjivni" },
-      { name: "description", content: "15-day product return and exchange window at Righwedh Sanjivni." },
-      { property: "og:title", content: "Refund & Return Policy — Righwedh Sanjivni" },
+      { title: "Refund & Return Policy — Righvedh Sanjivni" },
+      { name: "description", content: "15-day product return and exchange window at Righvedh Sanjivni." },
+      { property: "og:title", content: "Refund & Return Policy — Righvedh Sanjivni" },
       { property: "og:description", content: "15-day return / exchange window." },
+      { property: "og:url", content: "https://righvedhsanjivni.in/refund" },
     ],
+    links: [{ rel: "canonical", href: "https://righvedhsanjivni.in/refund" }],
   }),
   component: Refund,
 });
@@ -26,13 +28,13 @@ function Refund() {
 
       <article className="mx-auto max-w-3xl px-6 py-16 space-y-8 text-[15px] leading-relaxed text-primary">
         <Block title="1. 15-Day Window">
-          Products purchased on Righwedh Sanjivni may be returned within 15 days from the date of purchase, provided the item is unused, in its original packaging and in re-sellable condition.
+          Products purchased on Righvedh Sanjivni may be returned within 15 days from the date of purchase, provided the item is unused, in its original packaging and in re-sellable condition.
         </Block>
         <Block title="2. Income-Distributed Orders Are Final">
           If the pair-matching income or direct commission on your order has already been distributed to the upline, that order is no longer eligible for refund. Product exchange may still be offered at the company's discretion.
         </Block>
         <Block title="3. Product Exchange">
-          Within the 15-day window you may exchange the product for another Righwedh Sanjivni product of equal value at no extra cost. Difference in price (if any) is payable / refundable.
+          Within the 15-day window you may exchange the product for another Righvedh Sanjivni product of equal value at no extra cost. Difference in price (if any) is payable / refundable.
         </Block>
         <Block title="4. How To Request">
           Write to <a className="text-primary underline" href="mailto:righvedhsanjivni@gmail.com">righvedhsanjivni@gmail.com</a> with your order date, member ID and reason. Our team will respond within 48 hours with return instructions.
