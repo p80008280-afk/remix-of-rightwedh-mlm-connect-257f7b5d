@@ -175,10 +175,11 @@ function Register() {
             <Field label="Password" type="password" value={form.password} onChange={(v) => up("password", v)} />
             {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
             <button
-              disabled={loading}
+              type="submit"
+              disabled={loading || !ready}
               className="w-full rounded-full bg-gradient-gold py-3.5 font-semibold text-gold-foreground shadow-gold hover:opacity-90 disabled:opacity-60"
             >
-              {loading ? "Creating..." : "Register"}
+              {loading ? "Creating..." : !ready ? "Please wait..." : "Register"}
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">
