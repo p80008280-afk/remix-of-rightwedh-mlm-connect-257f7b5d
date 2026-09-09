@@ -1,6 +1,6 @@
 import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +47,8 @@ function Register() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const [success, setSuccess] = useState<{ memberCode: string; mobile: string; password: string } | null>(null);
 
   function up<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
@@ -173,10 +175,11 @@ function Register() {
             <Field label="Password" type="password" value={form.password} onChange={(v) => up("password", v)} />
             {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
             <button
-              disabled={loading}
+              type="submit"
+              disabled={loading || !ready}
               className="w-full rounded-full bg-gradient-gold py-3.5 font-semibold text-gold-foreground shadow-gold hover:opacity-90 disabled:opacity-60"
             >
-              {loading ? "Creating..." : "Register"}
+              {loading ? "Creating..." : !ready ? "Please wait..." : "Register"}
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">

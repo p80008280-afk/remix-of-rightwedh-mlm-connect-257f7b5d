@@ -252,14 +252,23 @@ function Dashboard() {
 
         {tab === "tree" && (
           <Section title="Binary Tree View">
+            <div className="grid gap-4 sm:grid-cols-3 mb-6">
+              <Stat icon={Users} label="Left Leg Members" value={String(countLeg(tree?.left ?? null))} />
+              <Stat icon={Users} label="Right Leg Members" value={String(countLeg(tree?.right ?? null))} />
+              <Stat icon={GitBranch} label="Matched Pairs (paid)" value={String(stats?.matched_pairs ?? 0)} />
+            </div>
+
             <p className="text-sm text-muted-foreground mb-4">
-              Your downline placement, left and right leg, up to 10 levels deep.
+              Every member has two positions — Left and Right. New joinings under your referral fill these
+              positions top to bottom. One left member + one right member makes a pair, and each matched pair
+              pays your pair bonus. Tree shows up to 10 levels deep.
             </p>
             <div className="overflow-x-auto pb-4">
               {tree ? <TreeBranch node={tree} root /> : <p className="text-sm text-muted-foreground">Tree is not available yet.</p>}
             </div>
           </Section>
         )}
+
 
         {tab === "rewards" && (
           <RewardsTab levels={rewardLevels} earned={myRewards} pairs={stats?.matched_pairs ?? 0} />
@@ -679,20 +688,50 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
   );
 }
 
-function TreeBranch({ node, root }: { node: TreeNode; root?: boolean }) {
+function countLeg(node: TreeNode | null): number {
+  if (!node) return 0;
+  return 1 + countLeg(node.left) + countLeg(node.right);
+}
+
+function NodeCard({ node, root }: { node: TreeNode | null; root?: boolean }) {
+  if (!node) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-4 min-w-[150px] text-center">
+        <div className="mx-auto h-9 w-9 rounded-full border border-dashed border-border" />
+        <div className="mt-2 text-xs text-muted-foreground">Empty position</div>
+      </div>
+    );
+  }
+  const initials = (node.full_name || "M").trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  return (
+    <div className={`rounded-2xl border px-4 py-3 min-w-[150px] text-center shadow-soft ${root
+      ? "bg-gradient-gold text-gold-foreground border-gold/50"
+      : node.is_active ? "bg-card border-primary/40" : "bg-card border-border"}`}>
+      <div className={`mx-auto h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold ${root ? "bg-gold-foreground/15" : node.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+        {initials}
+      </div>
+      <div className="mt-2 text-sm font-semibold truncate max-w-[150px] mx-auto">{node.full_name || "Member"}</div>
+      <div className="font-mono text-[11px] opacity-80">{node.member_code}</div>
+      <div className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${root ? "bg-gold-foreground/15" : node.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+        {root ? "You" : node.is_active ? "Active" : "Pending"}
+      </div>
+    </div>
+  );
+}
+
+function TreeBranch({ node, root, depth = 0 }: { node: TreeNode; root?: boolean; depth?: number }) {
+  // Show empty slots for the first few levels so the binary structure is visible.
+  const showSlots = depth < 2 || !!(node.left || node.right);
+  const expand = depth < 10 && showSlots;
   return (
     <div className="flex flex-col items-center">
-      <div className={`rounded-xl border px-3 py-2 text-center min-w-[140px] shadow-soft ${root ? "bg-gradient-gold text-gold-foreground border-gold/50" : node.is_active ? "bg-card border-primary/30" : "bg-card border-border"}`}>
-        <div className="text-sm font-semibold truncate max-w-[160px]">{node.full_name || "Member"}</div>
-        <div className="font-mono text-[11px] opacity-80">{node.member_code}</div>
-        <div className="text-[10px] uppercase tracking-wide">{root ? "You" : node.is_active ? "Active" : "Pending"}</div>
-      </div>
-      {(node.left || node.right) && (
+      <NodeCard node={node} root={root} />
+      {expand && (
         <>
-          <div className="h-5 w-px bg-border" />
-          <div className="flex items-start gap-6">
-            <TreeLeg label="Left" child={node.left} />
-            <TreeLeg label="Right" child={node.right} />
+          <div className="h-6 w-px bg-border" />
+          <div className="flex">
+            <TreeLeg label="Left" child={node.left} depth={depth} side="left" />
+            <TreeLeg label="Right" child={node.right} depth={depth} side="right" />
           </div>
         </>
       )}
@@ -700,16 +739,23 @@ function TreeBranch({ node, root }: { node: TreeNode; root?: boolean }) {
   );
 }
 
-function TreeLeg({ label, child }: { label: string; child: TreeNode | null }) {
+function TreeLeg({ label, child, depth, side }: { label: string; child: TreeNode | null; depth: number; side: "left" | "right" }) {
   return (
-    <div className="flex flex-col items-center">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{label}</div>
+    <div className="flex flex-col items-center px-3 sm:px-5">
+      {/* horizontal connector: half-width line towards the parent stem */}
+      <div className="flex w-full h-4">
+        <div className={`flex-1 ${side === "right" ? "border-t border-border" : ""}`} />
+        <div className={`flex-1 ${side === "left" ? "border-t border-border" : ""}`} />
+      </div>
+      <div className="h-4 w-px bg-border" />
+      <div className={`mb-2 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest ${side === "left" ? "bg-primary/10 text-primary" : "bg-gold/15 text-gold"}`}>{label}</div>
       {child
-        ? <TreeBranch node={child} />
-        : <div className="rounded-xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground min-w-[140px] text-center">Empty</div>}
+        ? <TreeBranch node={child} depth={depth + 1} />
+        : <NodeCard node={null} />}
     </div>
   );
 }
+
 
 function RewardsTab({ levels, earned, pairs }: { levels: RewardLevel[]; earned: UserReward[]; pairs: number }) {
   const earnedSet = new Set(earned.map(e => e.level));
