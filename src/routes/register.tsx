@@ -1,6 +1,6 @@
 import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +47,8 @@ function Register() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const [success, setSuccess] = useState<{ memberCode: string; mobile: string; password: string } | null>(null);
 
   function up<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
