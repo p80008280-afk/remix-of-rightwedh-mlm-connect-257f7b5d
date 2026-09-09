@@ -253,10 +253,11 @@ function Dashboard() {
         {tab === "tree" && (
           <Section title="Binary Tree View">
             <div className="grid gap-4 sm:grid-cols-3 mb-6">
-              <Stat icon={Users} label="Left Leg Members" value={String(stats?.left_count ?? 0)} />
-              <Stat icon={Users} label="Right Leg Members" value={String(stats?.right_count ?? 0)} />
-              <Stat icon={GitBranch} label="Matched Pairs" value={String(stats?.matched_pairs ?? 0)} />
+              <Stat icon={Users} label="Left Leg Members" value={String(countLeg(tree?.left ?? null))} />
+              <Stat icon={Users} label="Right Leg Members" value={String(countLeg(tree?.right ?? null))} />
+              <Stat icon={GitBranch} label="Matched Pairs (paid)" value={String(stats?.matched_pairs ?? 0)} />
             </div>
+
             <p className="text-sm text-muted-foreground mb-4">
               Every member has two positions — Left and Right. New joinings under your referral fill these
               positions top to bottom. One left member + one right member makes a pair, and each matched pair
@@ -685,6 +686,11 @@ function ProfileTab({ profile, onDone }: { profile: Profile; onDone: () => void 
       </form>
     </Section>
   );
+}
+
+function countLeg(node: TreeNode | null): number {
+  if (!node) return 0;
+  return 1 + countLeg(node.left) + countLeg(node.right);
 }
 
 function NodeCard({ node, root }: { node: TreeNode | null; root?: boolean }) {
