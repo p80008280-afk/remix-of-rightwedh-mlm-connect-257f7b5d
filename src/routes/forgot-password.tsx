@@ -1,6 +1,6 @@
 import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { resetMemberPassword } from "@/lib/mlm.functions";
@@ -28,6 +28,8 @@ function ForgotPassword() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,8 +61,8 @@ function ForgotPassword() {
             <Field label="Confirm New Password" type="password" value={f.confirm} onChange={(v) => setF({ ...f, confirm: v })} />
             {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
             {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-3">{msg}</div>}
-            <button disabled={busy} className="w-full rounded-full bg-gradient-gold py-3.5 font-semibold text-gold-foreground shadow-gold disabled:opacity-60">
-              {busy ? "Updating..." : "Reset Password"}
+            <button type="submit" disabled={busy || !ready} className="w-full rounded-full bg-gradient-gold py-3.5 font-semibold text-gold-foreground shadow-gold disabled:opacity-60">
+              {busy ? "Updating..." : !ready ? "Please wait..." : "Reset Password"}
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">
