@@ -1,6 +1,6 @@
 import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 const logoAsset = { url: "/logo.png" };
@@ -33,6 +33,8 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -88,10 +90,11 @@ function Login() {
             </label>
             {error && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>}
             <button
-              disabled={loading}
+              type="submit"
+              disabled={loading || !ready}
               className="w-full rounded-full bg-gradient-gold py-3.5 font-semibold text-gold-foreground shadow-gold hover:opacity-90 disabled:opacity-60"
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Logging in..." : !ready ? "Please wait..." : "Login"}
             </button>
           </form>
           <div className="mt-4 text-center">
