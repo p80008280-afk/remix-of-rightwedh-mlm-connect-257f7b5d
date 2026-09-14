@@ -48,6 +48,8 @@ function Admin() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [settings, setSettings] = useState<PlanSettings | null>(null);
+  const [ask, setAsk] = useState<AskState>(null);
+  const [notice, setNotice] = useState("");
 
   const rvOrder = useServerFn(reviewOrder);
   const rvWd = useServerFn(reviewWithdrawal);
