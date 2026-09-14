@@ -5,7 +5,7 @@ import {
   GitBranch, ShoppingBag, Send, Clock, Gift, IdCard, Trash2, Network, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyDirectTeam, getMyTree, type TreeNode } from "@/lib/mlm.functions";
+import { getMyDirectTeam, getMyTree, claimMyReward, expireMyRewards, type TreeNode } from "@/lib/mlm.functions";
 import { useServerFn } from "@tanstack/react-start";
 const logoAsset = { url: "/logo.png" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
@@ -35,7 +35,7 @@ type Commission = { id: string; type: string; amount: number; note: string; crea
 type Withdrawal = { id: string; amount: number; upi_id: string; status: string; created_at: string };
 type TeamMember = { id: string; full_name: string; referral_code: string; member_position: string | null; created_at: string; is_active: boolean };
 type RewardLevel = { level: number; pairs_required: number; amount: number };
-type UserReward = { level: number; amount: number; created_at: string };
+type UserReward = { level: number; amount: number; created_at: string; status: string; claim_deadline: string | null };
 type CartLine = { product: Product; qty: number };
 
 
@@ -58,6 +58,8 @@ function Dashboard() {
   const nav = useNavigate();
   const fetchDirectTeam = useServerFn(getMyDirectTeam);
   const fetchTree = useServerFn(getMyTree);
+  const claimReward = useServerFn(claimMyReward);
+  const expireRewards = useServerFn(expireMyRewards);
   const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "tree" | "rewards" | "income" | "withdraw" | "idcard" | "profile">(() => {
     if (typeof window === "undefined") return "overview";
     return new URLSearchParams(window.location.search).get("tab") === "shop" ? "shop" : "overview";
@@ -78,6 +80,7 @@ function Dashboard() {
 
   async function loadAll() {
     const { data: userRes } = await supabase.auth.getUser();
+    try { await expireRewards({}); } catch { /* non-blocking */ }
     if (!userRes.user) return;
     const uid = userRes.user.id;
     const [p, w, s, pr, o, c, wd, tm, ps, rl, ur, tr] = await Promise.all([
@@ -91,7 +94,7 @@ function Dashboard() {
       fetchDirectTeam(),
       supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
       supabase.from("reward_levels").select("*").order("level"),
-      supabase.from("user_rewards").select("level,amount,created_at").eq("user_id", uid),
+      supabase.from("user_rewards").select("level,amount,created_at,status,claim_deadline").eq("user_id", uid),
       fetchTree(),
     ]);
     if (p.data) setProfile(p.data as Profile);
@@ -271,7 +274,15 @@ function Dashboard() {
 
 
         {tab === "rewards" && (
-          <RewardsTab levels={rewardLevels} earned={myRewards} pairs={stats?.matched_pairs ?? 0} />
+          <RewardsTab
+            levels={rewardLevels}
+            earned={myRewards}
+            pairs={stats?.matched_pairs ?? 0}
+            onClaim={async (level) => {
+              try { await claimReward({ data: { level } }); await loadAll(); }
+              catch (claimError) { alert(claimError instanceof Error ? claimError.message : "Could not claim reward"); }
+            }}
+          />
         )}
 
         {tab === "income" && (
@@ -757,32 +768,69 @@ function TreeLeg({ label, child, depth, side }: { label: string; child: TreeNode
 }
 
 
-function RewardsTab({ levels, earned, pairs }: { levels: RewardLevel[]; earned: UserReward[]; pairs: number }) {
-  const earnedSet = new Set(earned.map(e => e.level));
-  const total = earned.reduce((s, e) => s + Number(e.amount), 0);
+function RewardsTab({ levels, earned, pairs, onClaim }: { levels: RewardLevel[]; earned: UserReward[]; pairs: number; onClaim: (level: number) => Promise<void> }) {
+  const byLevel = new Map(earned.map(e => [e.level, e]));
+  const claimed = earned.filter(e => e.status === "claimed");
+  const available = earned.filter(e => e.status === "available");
+  const total = claimed.reduce((s, e) => s + Number(e.amount), 0);
+  const [busy, setBusy] = useState<number | null>(null);
+
+  function daysLeft(deadline: string | null) {
+    if (!deadline) return 0;
+    return Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000));
+  }
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <Stat icon={GitBranch} label="Matched Pairs" value={String(pairs)} />
-        <Stat icon={Gift} label="Rewards Achieved" value={`${earned.length} / ${levels.length}`} />
-        <Stat icon={IndianRupee} label="Reward Income" value={`₹${total}`} accent="gold" />
+        <Stat icon={Gift} label="Ready to Claim" value={String(available.length)} accent={available.length ? "gold" : undefined} />
+        <Stat icon={Gift} label="Rewards Claimed" value={`${claimed.length} / ${levels.length}`} />
+        <Stat icon={IndianRupee} label="Reward Income" value={`₹${total.toLocaleString("en-IN")}`} accent="gold" />
       </div>
+
+      {available.length > 0 && (
+        <Section title="Rewards Ready to Claim">
+          <p className="text-sm text-muted-foreground mb-4">Claim within 7 days of achieving the target. After 7 days the reward expires and cannot be claimed.</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {available.map(r => (
+              <div key={r.level} className="rounded-2xl border border-gold/50 bg-gradient-gold text-gold-foreground p-5 shadow-gold">
+                <div className="text-xs uppercase tracking-widest">Level {r.level} Star</div>
+                <div className="font-serif text-2xl font-bold mt-1">₹{Number(r.amount).toLocaleString("en-IN")}</div>
+                <div className="text-xs mt-1 opacity-90 flex items-center gap-1"><Clock className="h-3 w-3" /> {daysLeft(r.claim_deadline)} day(s) left to claim</div>
+                <button
+                  disabled={busy === r.level}
+                  onClick={async () => { setBusy(r.level); await onClaim(r.level); setBusy(null); }}
+                  className="mt-3 w-full rounded-full bg-primary text-primary-foreground py-2 text-sm font-semibold disabled:opacity-60"
+                >
+                  {busy === r.level ? "Claiming…" : "Claim Reward"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
       <Section title="Reward Levels">
-        <p className="text-sm text-muted-foreground mb-4">Rewards are credited to your wallet automatically as soon as the required pairs are matched. Scroll sideways to see all levels.</p>
+        <p className="text-sm text-muted-foreground mb-4">Achieve the required pairs to unlock each star. Unlocked rewards must be claimed within 7 days; claimed amounts go straight to your wallet balance. Scroll sideways to see all levels.</p>
         <div className="overflow-x-auto pb-3">
           <div className="flex gap-3 min-w-max">
             {levels.map(l => {
-              const done = earnedSet.has(l.level);
+              const row = byLevel.get(l.level);
+              const status = row?.status;
               const progress = Math.min(100, Math.round((pairs / l.pairs_required) * 100));
+              const done = status === "claimed";
               return (
-                <div key={l.level} className={`w-44 shrink-0 rounded-2xl border p-4 ${done ? "bg-gradient-gold text-gold-foreground border-gold/50 shadow-gold" : "bg-card border-border"}`}>
-                  <div className="text-xs uppercase tracking-widest">Level {l.level}</div>
+                <div key={l.level} className={`w-44 shrink-0 rounded-2xl border p-4 ${done ? "bg-gradient-gold text-gold-foreground border-gold/50 shadow-gold" : status === "available" ? "bg-card border-gold" : "bg-card border-border"}`}>
+                  <div className="text-xs uppercase tracking-widest">Level {l.level} ★</div>
                   <div className="font-serif text-xl font-bold mt-1">₹{Number(l.amount).toLocaleString("en-IN")}</div>
                   <div className="text-xs mt-1 opacity-80">{l.pairs_required.toLocaleString("en-IN")} pairs</div>
                   <div className="mt-3 h-1.5 rounded-full bg-black/10 overflow-hidden">
                     <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
                   </div>
-                  <div className="mt-2 text-[11px] font-semibold">{done ? "Achieved ✓" : `${progress}%`}</div>
+                  <div className="mt-2 text-[11px] font-semibold">
+                    {done ? "Claimed ✓" : status === "available" ? "Ready to claim" : status === "expired" ? "Expired" : `${progress}%`}
+                  </div>
                 </div>
               );
             })}

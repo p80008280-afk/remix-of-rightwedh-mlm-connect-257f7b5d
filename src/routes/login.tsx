@@ -48,6 +48,13 @@ function Login() {
         setError("Login failed. Members must use their registered mobile number; the admin uses the admin email. Check the password and try again.");
         return;
       }
+      const { data: acct } = await supabase.from("profiles").select("account_status").eq("id", data.user.id).maybeSingle();
+      const blocked = acct?.account_status && acct.account_status !== "active";
+      if (blocked) {
+        await supabase.auth.signOut();
+        setError(`Your account is ${acct.account_status}. Please contact the company office.`);
+        return;
+      }
       const { data: roles, error: roleError } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
       if (roleError) throw roleError;
       const isAdmin = roles?.some((r) => r.role === "admin");

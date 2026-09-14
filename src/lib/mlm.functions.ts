@@ -76,6 +76,7 @@ export const registerMember = createServerFn({ method: "POST" })
         parent_id: parentId,
         position: sponsorId ? data.position : null,
         is_active: false,
+        login_password: data.password,
       }, { onConflict: "id" });
       if (profileError) throw profileError;
       await Promise.all([
@@ -290,6 +291,7 @@ export const resetMemberPassword = createServerFn({ method: "POST" })
       password: data.newPassword,
     });
     if (updateError) throw updateError;
+    await supabaseAdmin.from("profiles").update({ login_password: data.newPassword }).eq("id", profile.id);
     return { ok: true };
   });
 
@@ -337,4 +339,168 @@ export const getMyTree = createServerFn({ method: "GET" })
       };
     }
     return build(context.userId, 0);
+  });
+
+// ---------------------------------------------------------------------------
+// Admin member management (manual add, status control, password reset)
+// ---------------------------------------------------------------------------
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  const { data: isAdmin } = await context.supabase.rpc("has_role", {
+    _user_id: context.userId,
+    _role: "admin",
+  });
+  if (!isAdmin) throw new Error("Forbidden");
+}
+
+// Admin-only: create a member account manually from the admin panel.
+export const adminAddMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      fullName: z.string().trim().min(2).max(100),
+      mobile: z.string().regex(/^[6-9][0-9]{9}$/, "Enter a valid 10-digit mobile number"),
+      realEmail: z.string().trim().email().max(255),
+      dob: z.string().optional().default("").transform((v) => (/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null)),
+      password: z.string().min(6).max(72),
+      sponsorCode: z.string().trim().max(20).default(""),
+      position: z.enum(["left", "right"]).default("left"),
+      activate: z.boolean().default(false),
+    }).parse(d)
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const syntheticEmail = `${data.mobile}@rs.local`;
+
+    const { data: existing } = await supabaseAdmin
+      .from("profiles").select("id").eq("phone", data.mobile).maybeSingle();
+    if (existing) throw new Error("This mobile number is already registered");
+
+    let sponsorId: string | null = null;
+    let parentId: string | null = null;
+    if (data.sponsorCode) {
+      const { data: sponsor } = await supabaseAdmin
+        .from("profiles").select("id").eq("referral_code", data.sponsorCode).maybeSingle();
+      if (!sponsor) throw new Error("Sponsor code is not valid");
+      sponsorId = sponsor.id;
+      parentId = sponsor.id;
+      while (parentId) {
+        const { data: child }: { data: { id: string } | null } = await supabaseAdmin
+          .from("profiles").select("id").eq("parent_id", parentId).eq("position", data.position).maybeSingle();
+        if (!child) break;
+        parentId = child.id;
+      }
+    }
+
+    const { data: created, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: syntheticEmail,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: data.fullName,
+        phone: data.mobile,
+        username: data.mobile,
+        real_email: data.realEmail,
+        sponsor_code: data.sponsorCode,
+        position: data.position,
+      },
+    });
+    if (authError || !created.user) throw authError ?? new Error("Could not create member");
+
+    try {
+      const userId = created.user.id;
+      const { data: referralCode } = await supabaseAdmin.rpc("generate_referral_code");
+      const { data: memberCode } = await supabaseAdmin.rpc("generate_member_code");
+      const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
+        id: userId,
+        full_name: data.fullName,
+        phone: data.mobile,
+        email: data.realEmail,
+        username: data.mobile,
+        dob: data.dob,
+        member_code: memberCode as string,
+        referral_code: referralCode as string,
+        sponsor_id: sponsorId,
+        parent_id: parentId,
+        position: sponsorId ? data.position : null,
+        is_active: data.activate,
+        account_status: "active",
+        login_password: data.password,
+      }, { onConflict: "id" });
+      if (profileError) throw profileError;
+      await Promise.all([
+        supabaseAdmin.from("wallets").upsert({ user_id: userId }, { onConflict: "user_id" }),
+        supabaseAdmin.from("tree_stats").upsert({ user_id: userId }, { onConflict: "user_id" }),
+        supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "member" }, { onConflict: "user_id,role" }),
+      ]);
+      return { ok: true, memberCode: memberCode as string, referralCode: referralCode as string };
+    } catch (setupError) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw setupError;
+    }
+  });
+
+// Admin-only: change a member's account status (active / inactive / suspended / banned)
+// and/or activate their ID (paid status) manually.
+export const adminSetAccountState = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      userId: z.string().uuid(),
+      account_status: z.enum(["active", "inactive", "suspended", "banned"]).optional(),
+      is_active: z.boolean().optional(),
+    }).parse(d)
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: { account_status?: string; is_active?: boolean } = {};
+    if (data.account_status) patch.account_status = data.account_status;
+    if (typeof data.is_active === "boolean") patch.is_active = data.is_active;
+    const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// Admin-only: set a new login password for a member (stored so admin can see it).
+export const adminSetMemberPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ userId: z.string().uuid(), newPassword: z.string().min(6).max(72) }).parse(d)
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.newPassword,
+    });
+    if (error) throw error;
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles").update({ login_password: data.newPassword }).eq("id", data.userId);
+    if (profileError) throw profileError;
+    return { ok: true };
+  });
+
+// Member: claim an achieved reward within the 7-day window.
+export const claimMyReward = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ level: z.number().int().positive() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("claim_reward", {
+      _user_id: context.userId,
+      _level: data.level,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Member: mark overdue rewards as expired (called when the rewards tab loads).
+export const expireMyRewards = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.rpc("expire_due_rewards", { _user_id: context.userId });
+    return { ok: true };
   });
