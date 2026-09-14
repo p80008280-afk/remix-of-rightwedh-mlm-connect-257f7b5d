@@ -551,6 +551,8 @@ function MembersTab({
   const [created, setCreated] = useState<{ memberCode: string; mobile: string; password: string } | null>(null);
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
+  const [ask, setAsk] = useState<AskState>(null);
+  const [notice, setNotice] = useState("");
 
   const rows = members.filter(m => {
     const q = query.trim().toLowerCase();
