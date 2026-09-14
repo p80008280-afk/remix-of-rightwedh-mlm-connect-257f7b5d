@@ -412,7 +412,6 @@ function SettingsTab({ settings, onSave }: { settings: PlanSettings; onSave: (se
             <F label="Checkout UPI ID"><input required value={form.upi_id} onChange={e => setForm({ ...form, upi_id: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
             <F label="Payment Account Name"><input required value={form.payment_account_name} onChange={e => setForm({ ...form, payment_account_name: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
           </div>
-          <F label="QR Image URL"><input required value={form.qr_image_url} onChange={e => setForm({ ...form, qr_image_url: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
           <F label="Upload New QR Image"><input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full rounded border px-3 py-2 text-sm" /></F>
           <div className="grid sm:grid-cols-3 gap-4">
             <F label="Minimum Withdrawal ₹"><input type="number" required value={form.min_withdrawal} onChange={e => setForm({ ...form, min_withdrawal: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
