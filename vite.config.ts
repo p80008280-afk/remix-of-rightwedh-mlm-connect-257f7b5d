@@ -7,6 +7,13 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Hostinger's Node Web App runner starts this Nitro bundle with Node 22.
+  // Keeping server functions on the server preserves every admin workflow
+  // without exposing the Supabase service-role key in browser JavaScript.
+  nitro: {
+    preset: "node-server",
+    output: { dir: ".output" },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
