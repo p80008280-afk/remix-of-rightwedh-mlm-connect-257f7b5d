@@ -204,7 +204,7 @@ function Admin() {
                     </td>
                     <td className="py-2 px-2 font-semibold">₹{o.amount}</td>
                     <td className="py-2 px-2 font-mono text-xs">{o.upi_reference || "—"}</td>
-                    <td className="py-2 px-2">
+                    <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
                       {o.payment_screenshot_url ? (
                         <a href={o.payment_screenshot_url} target="_blank" rel="noreferrer" className="inline-block">
                           <img src={o.payment_screenshot_url} alt="proof" className="h-16 w-16 object-cover rounded border border-border hover:ring-2 hover:ring-gold" />
