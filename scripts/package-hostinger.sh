@@ -9,6 +9,14 @@ cd "$ROOT"
 rm -rf "$OUT" "$ZIP"
 mkdir -p "$OUT"
 
+# The Lovable preview sandbox forces its own Cloudflare target. Hostinger and
+# normal local machines are not sandboxed, so this produces the Node preset.
+if [[ "${LOVABLE_SANDBOX:-}" == "1" || -n "${DEV_SERVER__PROJECT_PATH:-}" ]]; then
+  env -u LOVABLE_SANDBOX -u DEV_SERVER__PROJECT_PATH bun run build
+else
+  bun run build
+fi
+
 cp -R .output "$OUT/.output"
 cp package.json "$OUT/package.json"
 cp HOSTINGER-DEPLOYMENT.md "$OUT/HOSTINGER-DEPLOYMENT.md"

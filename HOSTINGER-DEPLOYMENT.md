@@ -5,7 +5,7 @@ This application is a Node Web App, not a plain `public_html` website. Its admin
 ## Upload
 
 1. Open **Hostinger hPanel → Websites → Add website → Node.js Web App**.
-2. Upload `hostinger-upload.zip` and extract it as the application source.
+2. Download the generated `hostinger-upload.zip`, upload it, and extract it as the application source.
 3. Select **Node.js 22**.
 4. Set the start command to `npm start` (entry file: `.output/server/index.mjs`).
 5. Add the environment variables listed below in hPanel. Never put the service-role value in frontend files.
@@ -21,6 +21,8 @@ This application is a Node Web App, not a plain `public_html` website. Its admin
 - `NODE_ENV=production`
 
 The actual secret values are intentionally not stored in this archive or repository. Copy them from the project environment into Hostinger's Environment Variables screen.
+
+To create a fresh archive after future code changes, run `bun run hostinger:package` from the project folder.
 
 ## Health check
 
