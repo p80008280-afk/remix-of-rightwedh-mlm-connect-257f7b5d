@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet, LogOut,
-  IndianRupee, CheckCircle2, XCircle, Plus, Settings,
+  IndianRupee, CheckCircle2, XCircle, Plus, Settings, Database, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -125,6 +125,7 @@ function Admin() {
           <SideBtn active={tab==="orders"} onClick={() => setTab("orders")} icon={ShoppingCart} label={`Orders${pendingOrders.length?` (${pendingOrders.length})`:""}`} />
           <SideBtn active={tab==="withdrawals"} onClick={() => setTab("withdrawals")} icon={Wallet} label={`Withdrawals${pendingWd.length?` (${pendingWd.length})`:""}`} />
           <SideBtn active={tab==="settings"} onClick={() => setTab("settings")} icon={Settings} label="Payment Settings" />
+          <SideBtn active={tab==="records"} onClick={() => setTab("records")} icon={Database} label="Records / Data" />
         </nav>
         <button onClick={logout} className="m-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 text-sm">
           <LogOut className="h-4 w-4" /> Sign out
@@ -133,7 +134,7 @@ function Admin() {
 
       <main className="flex-1 p-6 md:p-10">
         <div className="md:hidden flex gap-1 mb-4 overflow-x-auto text-xs">
-          {(["dash","members","products","orders","withdrawals","settings"] as const).map(t => (
+          {(["dash","members","products","orders","withdrawals","settings","records"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 rounded-lg whitespace-nowrap ${tab===t?"bg-primary text-primary-foreground":"bg-card"}`}>{t}</button>
           ))}
         </div>
