@@ -597,7 +597,12 @@ function MembersTab({
                 {m.is_active
                   ? <span className="text-green-600 font-semibold">Active</span>
                   : <button
-                      onClick={async () => { if (!confirm(`Activate ID for ${m.full_name}? Income will start.`)) return; await onState(m.id, { is_active: true }); }}
+                      onClick={() => setAsk({
+                        title: "Activate this ID?",
+                        message: `${m.full_name}'s ID will be marked as paid and income will start.`,
+                        confirmLabel: "Activate ID",
+                        onConfirm: async () => { await onState(m.id, { is_active: true }); setNotice("ID activated."); },
+                      })}
                       className="rounded bg-green-600 text-white px-2 py-1 text-xs font-semibold">Activate ID</button>}
               </td>
               <td className="py-2 px-2">
