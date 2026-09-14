@@ -455,18 +455,18 @@ function ShopTab({ products, profile, settings, onDone }: { products: Product[];
       {msg && <div className="rounded-lg bg-primary/10 text-primary text-sm p-4">{msg}</div>}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.map(p => (
-          <div key={p.id} className="rounded-2xl bg-card border border-border shadow-soft overflow-hidden">
+          <div key={p.id} className="rounded-2xl bg-card border border-border shadow-soft overflow-hidden flex flex-col h-full">
             <img
               src={p.image_url || capsuleAsset.url}
               alt={p.name}
               className="w-full h-40 object-cover bg-gradient-to-br from-primary/10 to-gold/20"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = capsuleAsset.url; }}
             />
-            <div className="p-5">
+            <div className="p-5 flex flex-col flex-1">
               <div className="text-xs uppercase tracking-wider text-gold font-semibold">{p.category}</div>
-              <h3 className="font-serif text-lg text-primary mt-1">{p.name}</h3>
+              <h3 className="font-serif text-lg text-primary mt-1 min-h-[3.5rem]">{p.name}</h3>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
-              <div className="mt-3 flex items-center justify-between">
+              <div className="mt-auto pt-4 flex items-center justify-between">
                 <div className="font-bold text-primary">₹{p.mrp}</div>
                 <button onClick={() => add(p)} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-semibold text-gold-foreground">Add to Cart</button>
               </div>
