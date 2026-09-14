@@ -182,19 +182,26 @@ function Admin() {
         {tab === "orders" && (
           <Card title={`Orders (${orders.length}) — ${pendingOrders.length} pending review`}>
             <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the amount and receiver UPI ({settings?.upi_id || "current admin UPI"}) match, click <b>Approve</b> — commissions are paid automatically and the member becomes active. Otherwise click <b>Reject</b>.</p>
-            <TableWrap cols={["Date","Member","Product","Amount","UPI Ref","Proof","Status","Action"]}>
+            {orders.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No orders yet. As soon as a member checks out from Shop / Cart, the order appears here with their delivery address and payment screenshot.</p>}
+            <TableWrap cols={["Date","Member","Product","Delivery Address","Amount","UPI Ref","Proof","Status","Action"]}>
               {orders.map(o => {
                 const mem = memberMap.get(o.user_id);
                 const pr = prodMap.get(o.product_id);
                 return (
-                  <tr key={o.id} className="border-b border-border/50 align-top">
+                  <tr key={o.id} className="border-b border-border/50 align-top hover:bg-muted/40 cursor-pointer" onClick={() => setOpenOrder(o)}>
                     <td className="py-2 px-2 text-xs whitespace-nowrap">{new Date(o.created_at).toLocaleString()}</td>
                     <td className="py-2 px-2">
                       <div className="font-medium">{mem?.full_name || o.user_id.slice(0, 8)}</div>
                       <div className="text-xs text-muted-foreground">{mem?.email}</div>
                       <div className="text-xs text-muted-foreground">{mem?.phone}</div>
                     </td>
-                    <td className="py-2 px-2">{pr?.name || "—"}</td>
+                    <td className="py-2 px-2">{pr?.name || "—"}{o.quantity > 1 ? ` × ${o.quantity}` : ""}</td>
+                    <td className="py-2 px-2 text-xs max-w-[220px]">
+                      <div className="font-medium">{o.ship_name || "—"}</div>
+                      <div className="text-muted-foreground">{o.ship_phone}</div>
+                      <div className="text-muted-foreground truncate">{[o.ship_address, o.ship_city, o.ship_state, o.ship_pincode].filter(Boolean).join(", ") || "—"}</div>
+                      <span className="text-primary underline">View full details</span>
+                    </td>
                     <td className="py-2 px-2 font-semibold">₹{o.amount}</td>
                     <td className="py-2 px-2 font-mono text-xs">{o.upi_reference || "—"}</td>
                     <td className="py-2 px-2">
