@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet, LogOut,
-  IndianRupee, CheckCircle2, XCircle, Plus, Settings,
+  IndianRupee, CheckCircle2, XCircle, Plus, Settings, Database, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; member_code: string; is_active: boolean; account_status: string; login_password: string | null; kyc_status: string; created_at: string };
 type NewMember = { fullName: string; mobile: string; realEmail: string; dob: string; password: string; sponsorCode: string; position: "left" | "right"; activate: boolean };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
-type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string };
+type Order = { id: string; user_id: string; product_id: string; amount: number; quantity: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string; cart_group: string | null; ship_name: string | null; ship_phone: string | null; ship_address: string | null; ship_city: string | null; ship_state: string | null; ship_pincode: string | null };
 type Withdrawal = { id: string; user_id: string; amount: number; upi_id: string; status: string; created_at: string };
 type PlanSettings = {
   min_withdrawal: number; tds_percent: number; admin_charge: number; withdrawal_days: number;
@@ -41,7 +41,8 @@ type PlanSettings = {
 
 function Admin() {
   const nav = useNavigate();
-  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals" | "settings">("dash");
+  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals" | "settings" | "records">("dash");
+  const [openOrder, setOpenOrder] = useState<Order | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -124,6 +125,7 @@ function Admin() {
           <SideBtn active={tab==="orders"} onClick={() => setTab("orders")} icon={ShoppingCart} label={`Orders${pendingOrders.length?` (${pendingOrders.length})`:""}`} />
           <SideBtn active={tab==="withdrawals"} onClick={() => setTab("withdrawals")} icon={Wallet} label={`Withdrawals${pendingWd.length?` (${pendingWd.length})`:""}`} />
           <SideBtn active={tab==="settings"} onClick={() => setTab("settings")} icon={Settings} label="Payment Settings" />
+          <SideBtn active={tab==="records"} onClick={() => setTab("records")} icon={Database} label="Records / Data" />
         </nav>
         <button onClick={logout} className="m-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 text-sm">
           <LogOut className="h-4 w-4" /> Sign out
@@ -132,7 +134,7 @@ function Admin() {
 
       <main className="flex-1 p-6 md:p-10">
         <div className="md:hidden flex gap-1 mb-4 overflow-x-auto text-xs">
-          {(["dash","members","products","orders","withdrawals","settings"] as const).map(t => (
+          {(["dash","members","products","orders","withdrawals","settings","records"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 rounded-lg whitespace-nowrap ${tab===t?"bg-primary text-primary-foreground":"bg-card"}`}>{t}</button>
           ))}
         </div>
@@ -180,22 +182,29 @@ function Admin() {
         {tab === "orders" && (
           <Card title={`Orders (${orders.length}) — ${pendingOrders.length} pending review`}>
             <p className="text-xs text-muted-foreground mb-4">Verify each pending order by viewing the payment screenshot. If the amount and receiver UPI ({settings?.upi_id || "current admin UPI"}) match, click <b>Approve</b> — commissions are paid automatically and the member becomes active. Otherwise click <b>Reject</b>.</p>
-            <TableWrap cols={["Date","Member","Product","Amount","UPI Ref","Proof","Status","Action"]}>
+            {orders.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No orders yet. As soon as a member checks out from Shop / Cart, the order appears here with their delivery address and payment screenshot.</p>}
+            <TableWrap cols={["Date","Member","Product","Delivery Address","Amount","UPI Ref","Proof","Status","Action"]}>
               {orders.map(o => {
                 const mem = memberMap.get(o.user_id);
                 const pr = prodMap.get(o.product_id);
                 return (
-                  <tr key={o.id} className="border-b border-border/50 align-top">
+                  <tr key={o.id} className="border-b border-border/50 align-top hover:bg-muted/40 cursor-pointer" onClick={() => setOpenOrder(o)}>
                     <td className="py-2 px-2 text-xs whitespace-nowrap">{new Date(o.created_at).toLocaleString()}</td>
                     <td className="py-2 px-2">
                       <div className="font-medium">{mem?.full_name || o.user_id.slice(0, 8)}</div>
                       <div className="text-xs text-muted-foreground">{mem?.email}</div>
                       <div className="text-xs text-muted-foreground">{mem?.phone}</div>
                     </td>
-                    <td className="py-2 px-2">{pr?.name || "—"}</td>
+                    <td className="py-2 px-2">{pr?.name || "—"}{o.quantity > 1 ? ` × ${o.quantity}` : ""}</td>
+                    <td className="py-2 px-2 text-xs max-w-[220px]">
+                      <div className="font-medium">{o.ship_name || "—"}</div>
+                      <div className="text-muted-foreground">{o.ship_phone}</div>
+                      <div className="text-muted-foreground truncate">{[o.ship_address, o.ship_city, o.ship_state, o.ship_pincode].filter(Boolean).join(", ") || "—"}</div>
+                      <span className="text-primary underline">View full details</span>
+                    </td>
                     <td className="py-2 px-2 font-semibold">₹{o.amount}</td>
                     <td className="py-2 px-2 font-mono text-xs">{o.upi_reference || "—"}</td>
-                    <td className="py-2 px-2">
+                    <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
                       {o.payment_screenshot_url ? (
                         <a href={o.payment_screenshot_url} target="_blank" rel="noreferrer" className="inline-block">
                           <img src={o.payment_screenshot_url} alt="proof" className="h-16 w-16 object-cover rounded border border-border hover:ring-2 hover:ring-gold" />
@@ -203,7 +212,7 @@ function Admin() {
                       ) : <span className="text-xs text-muted-foreground">No proof</span>}
                     </td>
                     <td className="py-2 px-2"><StatusPill status={o.status} /></td>
-                    <td className="py-2 px-2">
+                    <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
                       {o.status === "pending" ? (
                         <div className="flex flex-col gap-1">
                           <button onClick={() => setAsk({
@@ -273,10 +282,132 @@ function Admin() {
             onSave={async (next) => { await upSettings({ data: next }); await loadAll(); }}
           />
         )}
+
+        {tab === "records" && (
+          <RecordsTab members={members} products={products} orders={orders} withdrawals={withdrawals} />
+        )}
       </main>
+      <OrderDetailModal
+        order={openOrder}
+        memberName={openOrder ? (memberMap.get(openOrder.user_id)?.full_name || "") : ""}
+        memberCode={openOrder ? (memberMap.get(openOrder.user_id)?.member_code || "") : ""}
+        productName={openOrder ? (prodMap.get(openOrder.product_id)?.name || "") : ""}
+        onClose={() => setOpenOrder(null)}
+      />
       <AskDialog state={ask} onClose={() => setAsk(null)} />
       <Notice text={notice} onClose={() => setNotice("")} />
     </div>
+  );
+}
+
+function OrderDetailModal({ order, memberName, memberCode, productName, onClose }: {
+  order: Order | null; memberName: string; memberCode: string; productName: string; onClose: () => void;
+}) {
+  if (!order) return null;
+  const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
+    <div className="flex gap-3 py-1.5 border-b border-border/50 text-sm">
+      <div className="w-40 shrink-0 text-muted-foreground">{label}</div>
+      <div className="flex-1 font-medium break-words">{value || "—"}</div>
+    </div>
+  );
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-6 overflow-y-auto" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-2xl w-full shadow-elegant my-8">
+        <h3 className="font-serif text-2xl text-primary">Order Details</h3>
+        <p className="text-xs text-muted-foreground mt-1">Placed {new Date(order.created_at).toLocaleString()}</p>
+
+        <h4 className="mt-5 text-sm font-semibold text-primary uppercase tracking-wide">Customer</h4>
+        <Row label="Member" value={`${memberName}${memberCode ? ` (${memberCode})` : ""}`} />
+        <Row label="Product" value={`${productName} × ${order.quantity}`} />
+        <Row label="Amount" value={`₹${order.amount}`} />
+        <Row label="Status" value={<StatusPill status={order.status} />} />
+
+        <h4 className="mt-5 text-sm font-semibold text-primary uppercase tracking-wide">Delivery Address</h4>
+        <Row label="Name" value={order.ship_name} />
+        <Row label="Mobile" value={order.ship_phone} />
+        <Row label="House / Street / Area" value={order.ship_address} />
+        <Row label="City" value={order.ship_city} />
+        <Row label="State" value={order.ship_state} />
+        <Row label="Pincode" value={order.ship_pincode} />
+
+        <h4 className="mt-5 text-sm font-semibold text-primary uppercase tracking-wide">Payment</h4>
+        <Row label="UPI reference" value={order.upi_reference} />
+        <Row label="Admin note" value={order.admin_note} />
+        {order.payment_screenshot_url && (
+          <a href={order.payment_screenshot_url} target="_blank" rel="noreferrer">
+            <img src={order.payment_screenshot_url} alt="Payment proof" className="mt-3 max-h-72 rounded-xl border border-border" />
+          </a>
+        )}
+
+        <button onClick={onClose} className="mt-6 w-full rounded-full bg-gradient-gold py-2.5 text-sm font-semibold text-gold-foreground">Close</button>
+      </div>
+    </div>
+  );
+}
+
+const RECORD_TABLES = ["members", "orders", "withdrawals", "products"] as const;
+type RecordTable = typeof RECORD_TABLES[number];
+
+function RecordsTab({ members, products, orders, withdrawals }: {
+  members: Profile[]; products: Product[]; orders: Order[]; withdrawals: Withdrawal[];
+}) {
+  const [table, setTable] = useState<RecordTable>("members");
+  const [q, setQ] = useState("");
+
+  const source: Record<RecordTable, any[]> = { members, orders, withdrawals, products };
+  const rows = source[table];
+  const cols = rows.length ? Object.keys(rows[0]) : [];
+  const filtered = q.trim()
+    ? rows.filter(r => JSON.stringify(r).toLowerCase().includes(q.trim().toLowerCase()))
+    : rows;
+
+  function exportCsv() {
+    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = [cols.join(","), ...filtered.map(r => cols.map(c => esc(r[c])).join(","))].join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `righvedh-${table}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <Card title="Records / Data">
+      <p className="text-xs text-muted-foreground mb-4">Complete stored data for every section. Use the search box to find any record, and download a spreadsheet (CSV) copy for your own records or accountant.</p>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {RECORD_TABLES.map(t => (
+          <button key={t} onClick={() => setTable(t)}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold capitalize ${table === t ? "bg-primary text-primary-foreground" : "border border-input"}`}>
+            {t} ({source[t].length})
+          </button>
+        ))}
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search records..." className="rounded-full border border-input bg-background px-4 py-1.5 text-xs flex-1 min-w-[180px]" />
+        <button onClick={exportCsv} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-gold px-4 py-1.5 text-xs font-semibold text-gold-foreground">
+          <Download className="h-3.5 w-3.5" /> Download CSV
+        </button>
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-6 text-center">No records in this section yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-border">
+                {cols.map(c => <th key={c} className="py-2 px-2 whitespace-nowrap uppercase tracking-wide text-[10px] text-muted-foreground">{c.replace(/_/g, " ")}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r, i) => (
+                <tr key={r.id || i} className="border-b border-border/50 hover:bg-muted/40">
+                  {cols.map(c => <td key={c} className="py-2 px-2 max-w-[220px] truncate" title={String(r[c] ?? "")}>{String(r[c] ?? "—")}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }
 
