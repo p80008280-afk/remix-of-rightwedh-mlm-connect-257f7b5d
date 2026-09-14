@@ -443,6 +443,97 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-xs font-medium text-muted-foreground">{label}<div className="mt-1">{children}</div></label>;
 }
 
+// Upload an image to storage and hand back a long-lived link.
+function ImageUploadField({ label, value, folder, onChange }: { label: string; value: string; folder: string; onChange: (url: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function pick(file: File | null) {
+    if (!file) return;
+    setBusy(true); setErr("");
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await supabase.storage.from("payment-assets").upload(path, file, { upsert: false });
+      if (up.error) throw up.error;
+      const signed = await supabase.storage.from("payment-assets").createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+      onChange(signed.data?.signedUrl || "");
+    } catch (e: any) {
+      setErr(e.message || "Upload failed");
+    } finally { setBusy(false); }
+  }
+  return (
+    <F label={label}>
+      <div className="flex items-center gap-3">
+        <div className="h-16 w-16 rounded-lg border border-border bg-background overflow-hidden flex items-center justify-center text-[10px] text-muted-foreground">
+          {value ? <img src={value} alt="" className="h-full w-full object-cover" /> : "No image"}
+        </div>
+        <div className="flex-1">
+          <input type="file" accept="image/*" disabled={busy} onChange={e => pick(e.target.files?.[0] || null)} className="w-full rounded border px-3 py-2 text-sm" />
+          {busy && <div className="text-xs text-muted-foreground mt-1">Uploading...</div>}
+          {err && <div className="text-xs text-destructive mt-1">{err}</div>}
+        </div>
+      </div>
+    </F>
+  );
+}
+
+type AskState = {
+  title: string;
+  message?: string;
+  input?: { label: string; type?: string; required?: boolean };
+  confirmLabel?: string;
+  tone?: "default" | "danger";
+  onConfirm: (value: string) => Promise<void> | void;
+} | null;
+
+// In-app replacement for browser confirm()/prompt()/alert().
+function AskDialog({ state, onClose }: { state: AskState; onClose: () => void }) {
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setValue(""); }, [state]);
+  if (!state) return null;
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-6" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-6 w-full max-w-md shadow-elegant">
+        <h3 className="font-serif text-xl text-primary">{state.title}</h3>
+        {state.message && <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>}
+        {state.input && (
+          <div className="mt-4">
+            <F label={state.input.label}>
+              <input
+                autoFocus
+                type={state.input.type || "text"}
+                value={value}
+                onChange={e => setValue(e.target.value)}
+                className="w-full rounded border px-3 py-2"
+              />
+            </F>
+          </div>
+        )}
+        <div className="mt-6 flex gap-3">
+          <button type="button" onClick={onClose} className="flex-1 rounded-full border py-2.5 text-sm">Cancel</button>
+          <button
+            type="button"
+            disabled={busy || (state.input?.required && !value.trim())}
+            onClick={async () => { setBusy(true); try { await state.onConfirm(value); onClose(); } finally { setBusy(false); } }}
+            className={`flex-1 rounded-full py-2.5 text-sm font-semibold disabled:opacity-60 ${state.tone === "danger" ? "bg-destructive text-destructive-foreground" : "bg-gradient-gold text-gold-foreground"}`}
+          >{busy ? "Please wait..." : (state.confirmLabel || "Confirm")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Notice({ text, onClose }: { text: string; onClose: () => void }) {
+  if (!text) return null;
+  return (
+    <div className="fixed bottom-6 right-6 z-[70] rounded-xl bg-primary text-primary-foreground px-4 py-3 text-sm shadow-elegant flex items-center gap-3">
+      {text}
+      <button onClick={onClose} className="opacity-70 hover:opacity-100">✕</button>
+    </div>
+  );
+}
+
 function MembersTab({
   members, onReload, onKyc, onState, onPassword, onAdd,
 }: {
