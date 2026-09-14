@@ -281,7 +281,7 @@ function Dashboard() {
             pairs={stats?.matched_pairs ?? 0}
             onClaim={async (level) => {
               try { await claimReward({ data: { level } }); await loadAll(); }
-              catch (claimError) { alert(claimError instanceof Error ? claimError.message : "Could not claim reward"); }
+              catch (claimError) { setNotice(claimError instanceof Error ? claimError.message : "Could not claim reward"); }
             }}
           />
         )}
