@@ -244,8 +244,19 @@ function Admin() {
                     <td className="py-2 px-2">
                       {w.status === "pending" ? (
                         <div className="flex gap-1">
-                          <button onClick={async () => { await rvWd({ data: { withdrawalId: w.id, action: "approve" } }); loadAll(); }} className="rounded bg-green-600 text-white px-2 py-1 text-xs">Paid</button>
-                          <button onClick={async () => { await rvWd({ data: { withdrawalId: w.id, action: "reject" } }); loadAll(); }} className="rounded bg-red-600 text-white px-2 py-1 text-xs">Reject</button>
+                          <button onClick={() => setAsk({
+                            title: "Mark as paid?",
+                            message: `₹${w.amount} will be marked paid to ${w.upi_id}.`,
+                            confirmLabel: "Mark paid",
+                            onConfirm: async () => { await rvWd({ data: { withdrawalId: w.id, action: "approve" } }); await loadAll(); setNotice("Withdrawal marked paid."); },
+                          })} className="rounded bg-green-600 text-white px-2 py-1 text-xs">Paid</button>
+                          <button onClick={() => setAsk({
+                            title: "Reject this withdrawal?",
+                            input: { label: "Reason (optional)" },
+                            confirmLabel: "Reject",
+                            tone: "danger",
+                            onConfirm: async (note) => { await rvWd({ data: { withdrawalId: w.id, action: "reject", note } }); await loadAll(); setNotice("Withdrawal rejected."); },
+                          })} className="rounded bg-red-600 text-white px-2 py-1 text-xs">Reject</button>
                         </div>
                       ) : <span className="text-xs text-muted-foreground">—</span>}
                     </td>
