@@ -207,7 +207,7 @@ function Dashboard() {
               <div className="flex gap-2 items-center">
                 <input readOnly value={referralLink} className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-xs font-mono" />
                 <button
-                  onClick={() => { navigator.clipboard.writeText(referralLink); alert("Copied!"); }}
+                  onClick={() => { navigator.clipboard.writeText(referralLink); setNotice("Referral link copied."); }}
                   className="rounded-lg bg-gradient-gold px-4 py-2 text-sm text-gold-foreground font-semibold flex items-center gap-1"
                 ><Copy className="h-4 w-4" /> Copy</button>
               </div>
