@@ -314,6 +314,12 @@ function Dashboard() {
         )}
 
       </main>
+      {notice && (
+        <div className="fixed bottom-6 right-6 z-[70] rounded-xl bg-primary text-primary-foreground px-4 py-3 text-sm shadow-elegant flex items-center gap-3">
+          {notice}
+          <button onClick={() => setNotice("")} className="opacity-70 hover:opacity-100">✕</button>
+        </div>
+      )}
     </div>
   );
 }
