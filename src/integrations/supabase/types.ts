@@ -221,6 +221,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           address_line: string | null
           city: string | null
           created_at: string
@@ -230,6 +231,7 @@ export type Database = {
           id: string
           is_active: boolean
           kyc_status: string
+          login_password: string
           member_code: string
           parent_id: string | null
           phone: string | null
@@ -243,6 +245,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          account_status?: string
           address_line?: string | null
           city?: string | null
           created_at?: string
@@ -252,6 +255,7 @@ export type Database = {
           id: string
           is_active?: boolean
           kyc_status?: string
+          login_password?: string
           member_code?: string
           parent_id?: string | null
           phone?: string | null
@@ -265,6 +269,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          account_status?: string
           address_line?: string | null
           city?: string | null
           created_at?: string
@@ -274,6 +279,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           kyc_status?: string
+          login_password?: string
           member_code?: string
           parent_id?: string | null
           phone?: string | null
@@ -354,23 +360,32 @@ export type Database = {
       user_rewards: {
         Row: {
           amount: number
+          claim_deadline: string | null
+          claimed_at: string | null
           created_at: string
           id: string
           level: number
+          status: string
           user_id: string
         }
         Insert: {
           amount: number
+          claim_deadline?: string | null
+          claimed_at?: string | null
           created_at?: string
           id?: string
           level: number
+          status?: string
           user_id: string
         }
         Update: {
           amount?: number
+          claim_deadline?: string | null
+          claimed_at?: string | null
           created_at?: string
           id?: string
           level?: number
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -475,7 +490,12 @@ export type Database = {
         Args: { _action: string; _note?: string; _withdrawal_id: string }
         Returns: undefined
       }
+      claim_reward: {
+        Args: { _level: number; _user_id: string }
+        Returns: undefined
+      }
       credit_rewards: { Args: { _user_id: string }; Returns: undefined }
+      expire_due_rewards: { Args: { _user_id: string }; Returns: undefined }
       generate_member_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       has_role: {

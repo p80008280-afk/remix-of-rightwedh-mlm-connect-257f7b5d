@@ -6,7 +6,10 @@ import {
   IndianRupee, CheckCircle2, XCircle, Plus, Settings,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { reviewOrder, reviewWithdrawal, upsertProduct, updateMemberStatus, updatePlanSettings } from "@/lib/mlm.functions";
+import {
+  reviewOrder, reviewWithdrawal, upsertProduct, updateMemberStatus, updatePlanSettings,
+  adminAddMember, adminSetAccountState, adminSetMemberPassword,
+} from "@/lib/mlm.functions";
 const logoAsset = { url: "/logo.png" };
 const qrAsset = { url: "/phonepe-qr.png" };
 
@@ -25,7 +28,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; is_active: boolean; kyc_status: string; created_at: string };
+type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; member_code: string; is_active: boolean; account_status: string; login_password: string | null; kyc_status: string; created_at: string };
+type NewMember = { fullName: string; mobile: string; realEmail: string; dob: string; password: string; sponsorCode: string; position: "left" | "right"; activate: boolean };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
 type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string };
 type Withdrawal = { id: string; user_id: string; amount: number; upi_id: string; status: string; created_at: string };
@@ -50,6 +54,9 @@ function Admin() {
   const upProd = useServerFn(upsertProduct);
   const upMem = useServerFn(updateMemberStatus);
   const upSettings = useServerFn(updatePlanSettings);
+  const addMember = useServerFn(adminAddMember);
+  const setState = useServerFn(adminSetAccountState);
+  const setPassword = useServerFn(adminSetMemberPassword);
 
   async function loadAll() {
     const [m, p, o, w, ps] = await Promise.all([
@@ -154,38 +161,14 @@ function Admin() {
         )}
 
         {tab === "members" && (
-          <Card title={`Members (${members.length})`}>
-            <TableWrap cols={["Name","Username","Email","Phone","Ref Code","Status","KYC","Joined","Action"]}>
-              {members.map(m => (
-                <tr key={m.id} className="border-b border-border/50">
-                  <td className="py-2 px-2">{m.full_name || "—"}</td>
-                  <td className="py-2 px-2 font-mono text-xs text-primary">{m.username || "—"}</td>
-                  <td className="py-2 px-2">{m.email}</td>
-                  <td className="py-2 px-2">{m.phone || "—"}</td>
-                  <td className="py-2 px-2 font-mono text-xs">{m.referral_code}</td>
-                  <td className="py-2 px-2">{m.is_active ? <span className="text-green-600 font-semibold">Active</span> : <span className="text-amber-600">Pending</span>}</td>
-                  <td className="py-2 px-2">{m.kyc_status}</td>
-                  <td className="py-2 px-2 text-xs">{new Date(m.created_at).toLocaleDateString()}</td>
-                  <td className="py-2 px-2">
-                    <select
-                      defaultValue=""
-                      onChange={async (e) => {
-                        const v = e.target.value; if (!v) return;
-                        await upMem({ data: { userId: m.id, kyc_status: v as any } });
-                        loadAll(); e.currentTarget.value = "";
-                      }}
-                      className="text-xs border rounded px-2 py-1"
-                    >
-                      <option value="">KYC…</option>
-                      <option value="approved">Approve</option>
-                      <option value="rejected">Reject</option>
-                      <option value="pending">Reset</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </TableWrap>
-          </Card>
+          <MembersTab
+            members={members}
+            onReload={loadAll}
+            onKyc={async (userId, kyc) => { await upMem({ data: { userId, kyc_status: kyc as any } }); loadAll(); }}
+            onState={async (userId, patch) => { await setState({ data: { userId, ...patch } as any }); loadAll(); }}
+            onPassword={async (userId, newPassword) => { await setPassword({ data: { userId, newPassword } }); loadAll(); }}
+            onAdd={async (payload) => { const res = await addMember({ data: payload as any }); await loadAll(); return res; }}
+          />
         )}
 
         {tab === "products" && (
@@ -454,4 +437,187 @@ function SettingsTab({ settings, onSave }: { settings: PlanSettings; onSave: (se
 
 function F({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-xs font-medium text-muted-foreground">{label}<div className="mt-1">{children}</div></label>;
+}
+
+function MembersTab({
+  members, onReload, onKyc, onState, onPassword, onAdd,
+}: {
+  members: Profile[];
+  onReload: () => Promise<void> | void;
+  onKyc: (userId: string, kyc: string) => Promise<void>;
+  onState: (userId: string, patch: { account_status?: string; is_active?: boolean }) => Promise<void>;
+  onPassword: (userId: string, newPassword: string) => Promise<void>;
+  onAdd: (payload: NewMember) => Promise<{ memberCode: string; referralCode: string }>;
+}) {
+  const blank: NewMember = { fullName: "", mobile: "", realEmail: "", dob: "", password: "", sponsorCode: "", position: "left", activate: false };
+  const [form, setForm] = useState<NewMember | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [created, setCreated] = useState<{ memberCode: string; mobile: string; password: string } | null>(null);
+  const [showPass, setShowPass] = useState<Record<string, boolean>>({});
+  const [query, setQuery] = useState("");
+
+  const rows = members.filter(m => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return [m.full_name, m.phone, m.email, m.referral_code, m.member_code].some(v => (v || "").toLowerCase().includes(q));
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-serif text-2xl text-primary">Members ({members.length})</h2>
+        <div className="flex gap-2">
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search name / mobile / ID"
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm"
+          />
+          <button onClick={() => { setErr(""); setForm(blank); }} className="rounded-full bg-gradient-gold text-gold-foreground px-4 py-2 text-sm font-semibold flex items-center gap-1">
+            <Plus className="h-4 w-4" /> Add Member
+          </button>
+        </div>
+      </div>
+
+      <Card title="All Members">
+        <TableWrap cols={["Name","User ID","Mobile","Email","Password","Ref Code","Paid / ID","Account","KYC","Joined","Actions"]}>
+          {rows.map(m => (
+            <tr key={m.id} className="border-b border-border/50 align-top">
+              <td className="py-2 px-2">{m.full_name || "—"}</td>
+              <td className="py-2 px-2 font-mono text-xs text-primary">{m.member_code || "—"}</td>
+              <td className="py-2 px-2">{m.phone || "—"}</td>
+              <td className="py-2 px-2 text-xs">{m.email}</td>
+              <td className="py-2 px-2 text-xs">
+                {m.login_password
+                  ? (showPass[m.id]
+                      ? <span className="font-mono">{m.login_password}</span>
+                      : <button onClick={() => setShowPass(s => ({ ...s, [m.id]: true }))} className="text-primary underline">Show</button>)
+                  : <span className="text-muted-foreground">not stored</span>}
+              </td>
+              <td className="py-2 px-2 font-mono text-xs">{m.referral_code}</td>
+              <td className="py-2 px-2">
+                {m.is_active
+                  ? <span className="text-green-600 font-semibold">Active</span>
+                  : <button
+                      onClick={async () => { if (!confirm(`Activate ID for ${m.full_name}? Income will start.`)) return; await onState(m.id, { is_active: true }); }}
+                      className="rounded bg-green-600 text-white px-2 py-1 text-xs font-semibold">Activate ID</button>}
+              </td>
+              <td className="py-2 px-2">
+                <select
+                  value={m.account_status || "active"}
+                  onChange={async (e) => { await onState(m.id, { account_status: e.target.value }); }}
+                  className="text-xs border rounded px-2 py-1"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="banned">Banned</option>
+                </select>
+              </td>
+              <td className="py-2 px-2">
+                <select
+                  defaultValue=""
+                  onChange={async (e) => { const v = e.target.value; if (!v) return; await onKyc(m.id, v); e.currentTarget.value = ""; }}
+                  className="text-xs border rounded px-2 py-1"
+                >
+                  <option value="">{m.kyc_status}</option>
+                  <option value="approved">Approve</option>
+                  <option value="rejected">Reject</option>
+                  <option value="pending">Reset</option>
+                </select>
+              </td>
+              <td className="py-2 px-2 text-xs">{new Date(m.created_at).toLocaleDateString()}</td>
+              <td className="py-2 px-2">
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={async () => {
+                      const np = prompt(`New password for ${m.full_name} (min 6 characters)`);
+                      if (!np || np.length < 6) return;
+                      await onPassword(m.id, np);
+                      alert("Password updated.");
+                    }}
+                    className="rounded bg-primary text-primary-foreground px-2 py-1 text-xs">Set password</button>
+                  {m.is_active && (
+                    <button
+                      onClick={async () => { if (!confirm("Mark this ID as not paid / deactivate income?")) return; await onState(m.id, { is_active: false }); }}
+                      className="rounded border border-border px-2 py-1 text-xs">Deactivate ID</button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </TableWrap>
+      </Card>
+
+      {form && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setForm(null)}>
+          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-xl w-full shadow-elegant max-h-[90vh] overflow-y-auto">
+            <h3 className="font-serif text-2xl text-primary mb-4">Add Member Manually</h3>
+            <form
+              className="space-y-3"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setBusy(true); setErr("");
+                try {
+                  const res = await onAdd({ ...form, mobile: form.mobile.replace(/\D/g, ""), sponsorCode: form.sponsorCode.trim().toUpperCase() });
+                  setCreated({ memberCode: res.memberCode, mobile: form.mobile, password: form.password });
+                  setForm(null);
+                  await onReload();
+                } catch (addError) {
+                  setErr(addError instanceof Error ? addError.message : "Could not add member");
+                } finally { setBusy(false); }
+              }}
+            >
+              <F label="Full Name"><input required value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <F label="Mobile Number (login ID)"><input required value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value.replace(/\D/g, "").slice(0, 10) })} className="w-full rounded border px-3 py-2" /></F>
+                <F label="Password"><input required minLength={6} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <F label="Email"><input required type="email" value={form.realEmail} onChange={e => setForm({ ...form, realEmail: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+                <F label="Date of Birth"><input type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <F label="Sponsor Code (optional)"><input value={form.sponsorCode} onChange={e => setForm({ ...form, sponsorCode: e.target.value.toUpperCase() })} className="w-full rounded border px-3 py-2" /></F>
+                <F label="Position">
+                  <select value={form.position} onChange={e => setForm({ ...form, position: e.target.value as "left" | "right" })} className="w-full rounded border px-3 py-2">
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                  </select>
+                </F>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.activate} onChange={e => setForm({ ...form, activate: e.target.checked })} />
+                Activate this ID immediately (payment already received)
+              </label>
+              {err && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{err}</div>}
+              <div className="flex gap-2 pt-2">
+                <button disabled={busy} type="submit" className="rounded-full bg-gradient-gold text-gold-foreground px-5 py-2.5 text-sm font-semibold disabled:opacity-60">{busy ? "Creating…" : "Create Member"}</button>
+                <button type="button" onClick={() => setForm(null)} className="rounded-full border border-border px-5 py-2.5 text-sm">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {created && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setCreated(null)}>
+          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-sm w-full shadow-elegant text-center">
+            <CheckCircle2 className="mx-auto h-12 w-12 text-green-600" />
+            <h3 className="font-serif text-2xl text-primary mt-3">Member Created</h3>
+            <div className="mt-4 rounded-xl bg-muted/40 p-4 text-left text-sm space-y-1">
+              <div className="flex justify-between"><span className="text-muted-foreground">User ID</span><b className="text-primary">{created.memberCode}</b></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Login mobile</span><b>{created.mobile}</b></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Password</span><b>{created.password}</b></div>
+            </div>
+            <button
+              onClick={() => navigator.clipboard?.writeText(`User ID: ${created.memberCode}\nMobile: ${created.mobile}\nPassword: ${created.password}`)}
+              className="mt-4 text-sm text-primary underline">Copy details</button>
+            <button onClick={() => setCreated(null)} className="mt-4 w-full rounded-full bg-primary text-primary-foreground py-2.5 text-sm font-semibold">Done</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
