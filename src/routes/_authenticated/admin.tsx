@@ -41,7 +41,7 @@ type PlanSettings = {
 
 function Admin() {
   const nav = useNavigate();
-  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals" | "settings" | "records">("dash");
+  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals" | "settings" | "records" | "database">("dash");
   const [openOrder, setOpenOrder] = useState<Order | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
