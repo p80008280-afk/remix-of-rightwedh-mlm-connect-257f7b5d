@@ -633,16 +633,27 @@ function MembersTab({
               <td className="py-2 px-2">
                 <div className="flex flex-col gap-1">
                   <button
-                    onClick={async () => {
-                      const np = prompt(`New password for ${m.full_name} (min 6 characters)`);
-                      if (!np || np.length < 6) return;
-                      await onPassword(m.id, np);
-                      alert("Password updated.");
-                    }}
+                    onClick={() => setAsk({
+                      title: "Set new password",
+                      message: `New login password for ${m.full_name} (minimum 6 characters).`,
+                      input: { label: "New password", required: true },
+                      confirmLabel: "Update password",
+                      onConfirm: async (v) => {
+                        if (v.trim().length < 6) { setNotice("Password must be at least 6 characters."); return; }
+                        await onPassword(m.id, v.trim());
+                        setNotice("Password updated.");
+                      },
+                    })}
                     className="rounded bg-primary text-primary-foreground px-2 py-1 text-xs">Set password</button>
                   {m.is_active && (
                     <button
-                      onClick={async () => { if (!confirm("Mark this ID as not paid / deactivate income?")) return; await onState(m.id, { is_active: false }); }}
+                      onClick={() => setAsk({
+                        title: "Deactivate this ID?",
+                        message: "The ID will be marked as not paid and income will stop.",
+                        confirmLabel: "Deactivate",
+                        tone: "danger",
+                        onConfirm: async () => { await onState(m.id, { is_active: false }); setNotice("ID deactivated."); },
+                      })}
                       className="rounded border border-border px-2 py-1 text-xs">Deactivate ID</button>
                   )}
                 </div>
