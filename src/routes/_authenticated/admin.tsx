@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; member_code: string; is_active: boolean; account_status: string; login_password: string | null; kyc_status: string; created_at: string };
 type NewMember = { fullName: string; mobile: string; realEmail: string; dob: string; password: string; sponsorCode: string; position: "left" | "right"; activate: boolean };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
-type Order = { id: string; user_id: string; product_id: string; amount: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string };
+type Order = { id: string; user_id: string; product_id: string; amount: number; quantity: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string; cart_group: string | null; ship_name: string | null; ship_phone: string | null; ship_address: string | null; ship_city: string | null; ship_state: string | null; ship_pincode: string | null };
 type Withdrawal = { id: string; user_id: string; amount: number; upi_id: string; status: string; created_at: string };
 type PlanSettings = {
   min_withdrawal: number; tds_percent: number; admin_charge: number; withdrawal_days: number;
@@ -41,7 +41,8 @@ type PlanSettings = {
 
 function Admin() {
   const nav = useNavigate();
-  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals" | "settings">("dash");
+  const [tab, setTab] = useState<"dash" | "members" | "products" | "orders" | "withdrawals" | "settings" | "records">("dash");
+  const [openOrder, setOpenOrder] = useState<Order | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
