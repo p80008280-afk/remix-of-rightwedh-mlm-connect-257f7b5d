@@ -731,6 +731,9 @@ function MembersTab({
           </div>
         </div>
       )}
+
+      <AskDialog state={ask} onClose={() => setAsk(null)} />
+      <Notice text={notice} onClose={() => setNotice("")} />
     </div>
   );
 }
