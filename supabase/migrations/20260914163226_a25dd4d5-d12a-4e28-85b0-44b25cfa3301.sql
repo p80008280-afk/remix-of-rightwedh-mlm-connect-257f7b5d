@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.admin_review_order(uuid, text, text) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.admin_review_withdrawal(uuid, text, text) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.credit_rewards(uuid) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.process_order_approval(uuid) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.process_withdrawal_approval(uuid) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.generate_member_code() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.generate_referral_code() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.grant_admin_for_owner_email() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) FROM anon;
