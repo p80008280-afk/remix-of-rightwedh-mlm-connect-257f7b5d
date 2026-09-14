@@ -48,6 +48,8 @@ function Admin() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [settings, setSettings] = useState<PlanSettings | null>(null);
+  const [ask, setAsk] = useState<AskState>(null);
+  const [notice, setNotice] = useState("");
 
   const rvOrder = useServerFn(reviewOrder);
   const rvWd = useServerFn(reviewWithdrawal);
@@ -204,8 +206,19 @@ function Admin() {
                     <td className="py-2 px-2">
                       {o.status === "pending" ? (
                         <div className="flex flex-col gap-1">
-                          <button onClick={async () => { if (!confirm(`Approve ₹${o.amount} order for ${mem?.full_name || "member"}?`)) return; await rvOrder({ data: { orderId: o.id, action: "approve" } }); loadAll(); }} className="rounded bg-green-600 text-white px-3 py-1 text-xs font-semibold">✓ Approve</button>
-                          <button onClick={async () => { const note = prompt("Reason for rejection?") || ""; await rvOrder({ data: { orderId: o.id, action: "reject", note } }); loadAll(); }} className="rounded bg-red-600 text-white px-3 py-1 text-xs font-semibold">✗ Reject</button>
+                          <button onClick={() => setAsk({
+                            title: "Approve this order?",
+                            message: `₹${o.amount} order for ${mem?.full_name || "member"} will be approved and commissions will be paid.`,
+                            confirmLabel: "Approve",
+                            onConfirm: async () => { await rvOrder({ data: { orderId: o.id, action: "approve" } }); await loadAll(); setNotice("Order approved."); },
+                          })} className="rounded bg-green-600 text-white px-3 py-1 text-xs font-semibold">✓ Approve</button>
+                          <button onClick={() => setAsk({
+                            title: "Reject this order?",
+                            input: { label: "Reason for rejection" },
+                            confirmLabel: "Reject order",
+                            tone: "danger",
+                            onConfirm: async (note) => { await rvOrder({ data: { orderId: o.id, action: "reject", note } }); await loadAll(); setNotice("Order rejected."); },
+                          })} className="rounded bg-red-600 text-white px-3 py-1 text-xs font-semibold">✗ Reject</button>
                         </div>
                       ) : <span className="text-xs text-muted-foreground">{o.admin_note || "—"}</span>}
                     </td>
@@ -231,8 +244,19 @@ function Admin() {
                     <td className="py-2 px-2">
                       {w.status === "pending" ? (
                         <div className="flex gap-1">
-                          <button onClick={async () => { await rvWd({ data: { withdrawalId: w.id, action: "approve" } }); loadAll(); }} className="rounded bg-green-600 text-white px-2 py-1 text-xs">Paid</button>
-                          <button onClick={async () => { await rvWd({ data: { withdrawalId: w.id, action: "reject" } }); loadAll(); }} className="rounded bg-red-600 text-white px-2 py-1 text-xs">Reject</button>
+                          <button onClick={() => setAsk({
+                            title: "Mark as paid?",
+                            message: `₹${w.amount} will be marked paid to ${w.upi_id}.`,
+                            confirmLabel: "Mark paid",
+                            onConfirm: async () => { await rvWd({ data: { withdrawalId: w.id, action: "approve" } }); await loadAll(); setNotice("Withdrawal marked paid."); },
+                          })} className="rounded bg-green-600 text-white px-2 py-1 text-xs">Paid</button>
+                          <button onClick={() => setAsk({
+                            title: "Reject this withdrawal?",
+                            input: { label: "Reason (optional)" },
+                            confirmLabel: "Reject",
+                            tone: "danger",
+                            onConfirm: async (note) => { await rvWd({ data: { withdrawalId: w.id, action: "reject", note } }); await loadAll(); setNotice("Withdrawal rejected."); },
+                          })} className="rounded bg-red-600 text-white px-2 py-1 text-xs">Reject</button>
                         </div>
                       ) : <span className="text-xs text-muted-foreground">—</span>}
                     </td>
@@ -250,6 +274,8 @@ function Admin() {
           />
         )}
       </main>
+      <AskDialog state={ask} onClose={() => setAsk(null)} />
+      <Notice text={notice} onClose={() => setNotice("")} />
     </div>
   );
 }
@@ -340,7 +366,12 @@ function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Pa
               <F label="Description"><textarea value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} rows={2} className="w-full rounded border px-3 py-2" /></F>
               <div className="grid grid-cols-2 gap-3">
                 <F label="Category"><input value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
-                <F label="Image URL"><input value={editing.image_url} onChange={e => setEditing({ ...editing, image_url: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+                <ImageUploadField
+                  label="Product Image"
+                  value={editing.image_url || ""}
+                  folder="products"
+                  onChange={(url) => setEditing(prev => ({ ...(prev || {}), image_url: url }))}
+                />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <F label="MRP ₹"><input type="number" required value={editing.mrp} onChange={e => setEditing({ ...editing, mrp: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
@@ -407,7 +438,6 @@ function SettingsTab({ settings, onSave }: { settings: PlanSettings; onSave: (se
             <F label="Checkout UPI ID"><input required value={form.upi_id} onChange={e => setForm({ ...form, upi_id: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
             <F label="Payment Account Name"><input required value={form.payment_account_name} onChange={e => setForm({ ...form, payment_account_name: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
           </div>
-          <F label="QR Image URL"><input required value={form.qr_image_url} onChange={e => setForm({ ...form, qr_image_url: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
           <F label="Upload New QR Image"><input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full rounded border px-3 py-2 text-sm" /></F>
           <div className="grid sm:grid-cols-3 gap-4">
             <F label="Minimum Withdrawal ₹"><input type="number" required value={form.min_withdrawal} onChange={e => setForm({ ...form, min_withdrawal: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
@@ -439,6 +469,97 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-xs font-medium text-muted-foreground">{label}<div className="mt-1">{children}</div></label>;
 }
 
+// Upload an image to storage and hand back a long-lived link.
+function ImageUploadField({ label, value, folder, onChange }: { label: string; value: string; folder: string; onChange: (url: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function pick(file: File | null) {
+    if (!file) return;
+    setBusy(true); setErr("");
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await supabase.storage.from("payment-assets").upload(path, file, { upsert: false });
+      if (up.error) throw up.error;
+      const signed = await supabase.storage.from("payment-assets").createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+      onChange(signed.data?.signedUrl || "");
+    } catch (e: any) {
+      setErr(e.message || "Upload failed");
+    } finally { setBusy(false); }
+  }
+  return (
+    <F label={label}>
+      <div className="flex items-center gap-3">
+        <div className="h-16 w-16 rounded-lg border border-border bg-background overflow-hidden flex items-center justify-center text-[10px] text-muted-foreground">
+          {value ? <img src={value} alt="" className="h-full w-full object-cover" /> : "No image"}
+        </div>
+        <div className="flex-1">
+          <input type="file" accept="image/*" disabled={busy} onChange={e => pick(e.target.files?.[0] || null)} className="w-full rounded border px-3 py-2 text-sm" />
+          {busy && <div className="text-xs text-muted-foreground mt-1">Uploading...</div>}
+          {err && <div className="text-xs text-destructive mt-1">{err}</div>}
+        </div>
+      </div>
+    </F>
+  );
+}
+
+type AskState = {
+  title: string;
+  message?: string;
+  input?: { label: string; type?: string; required?: boolean };
+  confirmLabel?: string;
+  tone?: "default" | "danger";
+  onConfirm: (value: string) => Promise<void> | void;
+} | null;
+
+// In-app replacement for browser confirm()/prompt()/alert().
+function AskDialog({ state, onClose }: { state: AskState; onClose: () => void }) {
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setValue(""); }, [state]);
+  if (!state) return null;
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-6" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-6 w-full max-w-md shadow-elegant">
+        <h3 className="font-serif text-xl text-primary">{state.title}</h3>
+        {state.message && <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>}
+        {state.input && (
+          <div className="mt-4">
+            <F label={state.input.label}>
+              <input
+                autoFocus
+                type={state.input.type || "text"}
+                value={value}
+                onChange={e => setValue(e.target.value)}
+                className="w-full rounded border px-3 py-2"
+              />
+            </F>
+          </div>
+        )}
+        <div className="mt-6 flex gap-3">
+          <button type="button" onClick={onClose} className="flex-1 rounded-full border py-2.5 text-sm">Cancel</button>
+          <button
+            type="button"
+            disabled={busy || (state.input?.required && !value.trim())}
+            onClick={async () => { setBusy(true); try { await state.onConfirm(value); onClose(); } finally { setBusy(false); } }}
+            className={`flex-1 rounded-full py-2.5 text-sm font-semibold disabled:opacity-60 ${state.tone === "danger" ? "bg-destructive text-destructive-foreground" : "bg-gradient-gold text-gold-foreground"}`}
+          >{busy ? "Please wait..." : (state.confirmLabel || "Confirm")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Notice({ text, onClose }: { text: string; onClose: () => void }) {
+  if (!text) return null;
+  return (
+    <div className="fixed bottom-6 right-6 z-[70] rounded-xl bg-primary text-primary-foreground px-4 py-3 text-sm shadow-elegant flex items-center gap-3">
+      {text}
+      <button onClick={onClose} className="opacity-70 hover:opacity-100">✕</button>
+    </div>
+  );
+}
+
 function MembersTab({
   members, onReload, onKyc, onState, onPassword, onAdd,
 }: {
@@ -456,6 +577,8 @@ function MembersTab({
   const [created, setCreated] = useState<{ memberCode: string; mobile: string; password: string } | null>(null);
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
+  const [ask, setAsk] = useState<AskState>(null);
+  const [notice, setNotice] = useState("");
 
   const rows = members.filter(m => {
     const q = query.trim().toLowerCase();
@@ -500,7 +623,12 @@ function MembersTab({
                 {m.is_active
                   ? <span className="text-green-600 font-semibold">Active</span>
                   : <button
-                      onClick={async () => { if (!confirm(`Activate ID for ${m.full_name}? Income will start.`)) return; await onState(m.id, { is_active: true }); }}
+                      onClick={() => setAsk({
+                        title: "Activate this ID?",
+                        message: `${m.full_name}'s ID will be marked as paid and income will start.`,
+                        confirmLabel: "Activate ID",
+                        onConfirm: async () => { await onState(m.id, { is_active: true }); setNotice("ID activated."); },
+                      })}
                       className="rounded bg-green-600 text-white px-2 py-1 text-xs font-semibold">Activate ID</button>}
               </td>
               <td className="py-2 px-2">
@@ -531,16 +659,27 @@ function MembersTab({
               <td className="py-2 px-2">
                 <div className="flex flex-col gap-1">
                   <button
-                    onClick={async () => {
-                      const np = prompt(`New password for ${m.full_name} (min 6 characters)`);
-                      if (!np || np.length < 6) return;
-                      await onPassword(m.id, np);
-                      alert("Password updated.");
-                    }}
+                    onClick={() => setAsk({
+                      title: "Set new password",
+                      message: `New login password for ${m.full_name} (minimum 6 characters).`,
+                      input: { label: "New password", required: true },
+                      confirmLabel: "Update password",
+                      onConfirm: async (v) => {
+                        if (v.trim().length < 6) { setNotice("Password must be at least 6 characters."); return; }
+                        await onPassword(m.id, v.trim());
+                        setNotice("Password updated.");
+                      },
+                    })}
                     className="rounded bg-primary text-primary-foreground px-2 py-1 text-xs">Set password</button>
                   {m.is_active && (
                     <button
-                      onClick={async () => { if (!confirm("Mark this ID as not paid / deactivate income?")) return; await onState(m.id, { is_active: false }); }}
+                      onClick={() => setAsk({
+                        title: "Deactivate this ID?",
+                        message: "The ID will be marked as not paid and income will stop.",
+                        confirmLabel: "Deactivate",
+                        tone: "danger",
+                        onConfirm: async () => { await onState(m.id, { is_active: false }); setNotice("ID deactivated."); },
+                      })}
                       className="rounded border border-border px-2 py-1 text-xs">Deactivate ID</button>
                   )}
                 </div>
@@ -618,6 +757,9 @@ function MembersTab({
           </div>
         </div>
       )}
+
+      <AskDialog state={ask} onClose={() => setAsk(null)} />
+      <Notice text={notice} onClose={() => setNotice("")} />
     </div>
   );
 }

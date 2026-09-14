@@ -77,6 +77,7 @@ function Dashboard() {
   const [myRewards, setMyRewards] = useState<UserReward[]>([]);
   const [settings, setSettings] = useState<PlanSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState("");
 
   async function loadAll() {
     const { data: userRes } = await supabase.auth.getUser();
@@ -206,7 +207,7 @@ function Dashboard() {
               <div className="flex gap-2 items-center">
                 <input readOnly value={referralLink} className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-xs font-mono" />
                 <button
-                  onClick={() => { navigator.clipboard.writeText(referralLink); alert("Copied!"); }}
+                  onClick={() => { navigator.clipboard.writeText(referralLink); setNotice("Referral link copied."); }}
                   className="rounded-lg bg-gradient-gold px-4 py-2 text-sm text-gold-foreground font-semibold flex items-center gap-1"
                 ><Copy className="h-4 w-4" /> Copy</button>
               </div>
@@ -280,7 +281,7 @@ function Dashboard() {
             pairs={stats?.matched_pairs ?? 0}
             onClaim={async (level) => {
               try { await claimReward({ data: { level } }); await loadAll(); }
-              catch (claimError) { alert(claimError instanceof Error ? claimError.message : "Could not claim reward"); }
+              catch (claimError) { setNotice(claimError instanceof Error ? claimError.message : "Could not claim reward"); }
             }}
           />
         )}
@@ -313,6 +314,12 @@ function Dashboard() {
         )}
 
       </main>
+      {notice && (
+        <div className="fixed bottom-6 right-6 z-[70] rounded-xl bg-primary text-primary-foreground px-4 py-3 text-sm shadow-elegant flex items-center gap-3">
+          {notice}
+          <button onClick={() => setNotice("")} className="opacity-70 hover:opacity-100">✕</button>
+        </div>
+      )}
     </div>
   );
 }
