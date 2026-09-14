@@ -486,18 +486,183 @@ export type Database = {
         Args: { _action: string; _note?: string; _order_id: string }
         Returns: undefined
       }
+      admin_review_order_hosted:
+        | {
+            Args: {
+              _action: string
+              _actor_id: string
+              _note?: string
+              _order_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: { _action: string; _note?: string; _order_id: string }
+            Returns: undefined
+          }
       admin_review_withdrawal: {
         Args: { _action: string; _note?: string; _withdrawal_id: string }
         Returns: undefined
       }
+      admin_review_withdrawal_hosted:
+        | {
+            Args: {
+              _action: string
+              _actor_id: string
+              _note?: string
+              _withdrawal_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: { _action: string; _note?: string; _withdrawal_id: string }
+            Returns: undefined
+          }
+      admin_set_member_state:
+        | {
+            Args: {
+              _account_status?: string
+              _actor_id: string
+              _is_active?: boolean
+              _kyc_status?: string
+              _user_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _account_status?: string
+              _is_active?: boolean
+              _kyc_status?: string
+              _user_id: string
+            }
+            Returns: undefined
+          }
+      admin_update_plan_settings:
+        | {
+            Args: {
+              _actor_id: string
+              _admin_charge: number
+              _daily_pair_cap: number
+              _min_withdrawal: number
+              _monthly_repurchase: boolean
+              _payment_account_name: string
+              _qr_image_path?: string
+              _qr_image_url: string
+              _refund_days: number
+              _tds_percent: number
+              _upi_id: string
+              _withdrawal_days: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _admin_charge: number
+              _daily_pair_cap: number
+              _min_withdrawal: number
+              _monthly_repurchase: boolean
+              _payment_account_name: string
+              _qr_image_path?: string
+              _qr_image_url: string
+              _refund_days: number
+              _tds_percent: number
+              _upi_id: string
+              _withdrawal_days: number
+            }
+            Returns: undefined
+          }
+      admin_upsert_product:
+        | {
+            Args: {
+              _actor_id: string
+              _category: string
+              _description: string
+              _direct_commission: number
+              _id: string
+              _image_url: string
+              _mrp: number
+              _name: string
+              _pair_bonus: number
+              _status: string
+              _stock: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _category: string
+              _description: string
+              _direct_commission: number
+              _id: string
+              _image_url: string
+              _mrp: number
+              _name: string
+              _pair_bonus: number
+              _status: string
+              _stock: number
+            }
+            Returns: undefined
+          }
+      claim_member_reward: {
+        Args: { _level: number; _user_id: string }
+        Returns: undefined
+      }
+      claim_my_reward: { Args: { _level: number }; Returns: undefined }
       claim_reward: {
         Args: { _level: number; _user_id: string }
         Returns: undefined
       }
       credit_rewards: { Args: { _user_id: string }; Returns: undefined }
       expire_due_rewards: { Args: { _user_id: string }; Returns: undefined }
+      expire_member_rewards: { Args: { _user_id: string }; Returns: undefined }
+      expire_my_rewards: { Args: never; Returns: undefined }
       generate_member_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
+      get_member_direct_team: {
+        Args: { _user_id: string }
+        Returns: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          member_position: string
+          referral_code: string
+        }[]
+      }
+      get_member_tree_rows: {
+        Args: { _user_id: string }
+        Returns: {
+          full_name: string
+          id: string
+          is_active: boolean
+          member_code: string
+          member_position: string
+          parent_id: string
+        }[]
+      }
+      get_my_direct_team: {
+        Args: never
+        Returns: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          member_position: string
+          referral_code: string
+        }[]
+      }
+      get_my_tree_rows: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          is_active: boolean
+          member_code: string
+          member_position: string
+          parent_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -513,6 +678,34 @@ export type Database = {
         Args: { _withdrawal_id: string }
         Returns: undefined
       }
+      register_member:
+        | {
+            Args: {
+              _activate?: boolean
+              _dob: string
+              _full_name: string
+              _mobile: string
+              _password: string
+              _position?: string
+              _real_email: string
+              _sponsor_code?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _activate?: boolean
+              _admin_authorized?: boolean
+              _dob: string
+              _full_name: string
+              _mobile: string
+              _password: string
+              _position?: string
+              _real_email: string
+              _sponsor_code?: string
+            }
+            Returns: Json
+          }
     }
     Enums: {
       app_role: "admin" | "member"

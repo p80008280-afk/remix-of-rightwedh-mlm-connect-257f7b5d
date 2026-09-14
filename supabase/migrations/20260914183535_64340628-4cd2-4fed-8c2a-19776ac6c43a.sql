@@ -1,0 +1,21 @@
+REVOKE ALL ON FUNCTION public.register_member(text,text,text,date,text,text,text,boolean) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.get_my_direct_team() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.get_my_tree_rows() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_review_order_hosted(uuid,text,text) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_review_withdrawal_hosted(uuid,text,text) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_set_member_state(uuid,text,boolean,text) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_upsert_product(uuid,text,text,text,text,numeric,numeric,numeric,integer,text) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_update_plan_settings(numeric,numeric,numeric,integer,integer,integer,boolean,text,text,text,text) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.claim_my_reward(integer) FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.expire_my_rewards() FROM anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.register_member(text,text,text,date,text,text,text,boolean) TO service_role;
+GRANT EXECUTE ON FUNCTION public.get_my_direct_team() TO service_role;
+GRANT EXECUTE ON FUNCTION public.get_my_tree_rows() TO service_role;
+GRANT EXECUTE ON FUNCTION public.admin_review_order_hosted(uuid,text,text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.admin_review_withdrawal_hosted(uuid,text,text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.admin_set_member_state(uuid,text,boolean,text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.admin_upsert_product(uuid,text,text,text,text,numeric,numeric,numeric,integer,text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.admin_update_plan_settings(numeric,numeric,numeric,integer,integer,integer,boolean,text,text,text,text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.claim_my_reward(integer) TO service_role;
+GRANT EXECUTE ON FUNCTION public.expire_my_rewards() TO service_role;
