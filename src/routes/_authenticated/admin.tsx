@@ -204,8 +204,19 @@ function Admin() {
                     <td className="py-2 px-2">
                       {o.status === "pending" ? (
                         <div className="flex flex-col gap-1">
-                          <button onClick={async () => { if (!confirm(`Approve ₹${o.amount} order for ${mem?.full_name || "member"}?`)) return; await rvOrder({ data: { orderId: o.id, action: "approve" } }); loadAll(); }} className="rounded bg-green-600 text-white px-3 py-1 text-xs font-semibold">✓ Approve</button>
-                          <button onClick={async () => { const note = prompt("Reason for rejection?") || ""; await rvOrder({ data: { orderId: o.id, action: "reject", note } }); loadAll(); }} className="rounded bg-red-600 text-white px-3 py-1 text-xs font-semibold">✗ Reject</button>
+                          <button onClick={() => setAsk({
+                            title: "Approve this order?",
+                            message: `₹${o.amount} order for ${mem?.full_name || "member"} will be approved and commissions will be paid.`,
+                            confirmLabel: "Approve",
+                            onConfirm: async () => { await rvOrder({ data: { orderId: o.id, action: "approve" } }); await loadAll(); setNotice("Order approved."); },
+                          })} className="rounded bg-green-600 text-white px-3 py-1 text-xs font-semibold">✓ Approve</button>
+                          <button onClick={() => setAsk({
+                            title: "Reject this order?",
+                            input: { label: "Reason for rejection" },
+                            confirmLabel: "Reject order",
+                            tone: "danger",
+                            onConfirm: async (note) => { await rvOrder({ data: { orderId: o.id, action: "reject", note } }); await loadAll(); setNotice("Order rejected."); },
+                          })} className="rounded bg-red-600 text-white px-3 py-1 text-xs font-semibold">✗ Reject</button>
                         </div>
                       ) : <span className="text-xs text-muted-foreground">{o.admin_note || "—"}</span>}
                     </td>
