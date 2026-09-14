@@ -340,7 +340,12 @@ function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Pa
               <F label="Description"><textarea value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} rows={2} className="w-full rounded border px-3 py-2" /></F>
               <div className="grid grid-cols-2 gap-3">
                 <F label="Category"><input value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
-                <F label="Image URL"><input value={editing.image_url} onChange={e => setEditing({ ...editing, image_url: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
+                <ImageUploadField
+                  label="Product Image"
+                  value={editing.image_url || ""}
+                  folder="products"
+                  onChange={(url) => setEditing(prev => ({ ...(prev || {}), image_url: url }))}
+                />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <F label="MRP ₹"><input type="number" required value={editing.mrp} onChange={e => setEditing({ ...editing, mrp: Number(e.target.value) })} className="w-full rounded border px-3 py-2" /></F>
