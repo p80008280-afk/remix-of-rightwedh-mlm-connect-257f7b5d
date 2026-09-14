@@ -274,6 +274,8 @@ function Admin() {
           />
         )}
       </main>
+      <AskDialog state={ask} onClose={() => setAsk(null)} />
+      <Notice text={notice} onClose={() => setNotice("")} />
     </div>
   );
 }
