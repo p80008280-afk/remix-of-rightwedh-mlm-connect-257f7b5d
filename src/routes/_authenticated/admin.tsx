@@ -212,7 +212,7 @@ function Admin() {
                       ) : <span className="text-xs text-muted-foreground">No proof</span>}
                     </td>
                     <td className="py-2 px-2"><StatusPill status={o.status} /></td>
-                    <td className="py-2 px-2">
+                    <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
                       {o.status === "pending" ? (
                         <div className="flex flex-col gap-1">
                           <button onClick={() => setAsk({
