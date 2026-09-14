@@ -77,6 +77,7 @@ function Dashboard() {
   const [myRewards, setMyRewards] = useState<UserReward[]>([]);
   const [settings, setSettings] = useState<PlanSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState("");
 
   async function loadAll() {
     const { data: userRes } = await supabase.auth.getUser();
