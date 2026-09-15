@@ -1,0 +1,7 @@
+[build]
+  command = "bun install && bun run build:netlify"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NODE_ENV = "production"
