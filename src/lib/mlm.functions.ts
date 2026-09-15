@@ -37,7 +37,7 @@ async function getAnonSupabase() {
 // Mobile number is the login credential. It is mapped to a synthetic auth email
 // (<mobile>@rs.local) so one real Gmail can be reused across many member accounts.
 export const registerMember = createServerFn({ method: "POST" })
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       fullName: z.string().trim().min(2).max(100),
       mobile: z.string().regex(/^[6-9][0-9]{9}$/, "Enter a valid 10-digit mobile number"),
@@ -68,7 +68,7 @@ export const registerMember = createServerFn({ method: "POST" })
 
 export const adminAddMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       fullName: z.string().trim().min(2).max(100),
       mobile: z.string().regex(/^[6-9][0-9]{9}$/),
@@ -174,7 +174,7 @@ export const getMyTree = createServerFn({ method: "GET" })
 // pays direct commission + walks up the tree to pay pair bonuses.
 export const reviewOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       orderId: z.string().uuid(),
       action: z.enum(["approve", "reject"]),
@@ -193,7 +193,7 @@ export const reviewOrder = createServerFn({ method: "POST" })
 
 export const reviewWithdrawal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       withdrawalId: z.string().uuid(),
       action: z.enum(["approve", "reject"]),
@@ -212,7 +212,7 @@ export const reviewWithdrawal = createServerFn({ method: "POST" })
 
 export const upsertProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       id: z.string().uuid().optional(),
       name: z.string().min(1),
@@ -245,7 +245,7 @@ export const upsertProduct = createServerFn({ method: "POST" })
 
 export const updateMemberStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       userId: z.string().uuid(),
       account_status: z.enum(["Active", "Inactive", "Suspended", "Banned"]).optional(),
@@ -266,7 +266,7 @@ export const updateMemberStatus = createServerFn({ method: "POST" })
 
 export const adminSetAccountState = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       userId: z.string().uuid(),
       account_status: z.enum(["Active", "Inactive", "Suspended", "Banned"]),
@@ -286,7 +286,7 @@ export const adminSetAccountState = createServerFn({ method: "POST" })
 
 export const updatePlanSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       min_withdrawal: z.number().nonnegative(),
       tds_percent: z.number().min(0).max(100),
@@ -320,7 +320,7 @@ export const updatePlanSettings = createServerFn({ method: "POST" })
   });
 
 export const resetMemberPassword = createServerFn({ method: "POST" })
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       mobile: z.string().regex(/^[6-9][0-9]{9}$/),
       email: z.string().trim().email(),
@@ -342,7 +342,7 @@ export const resetMemberPassword = createServerFn({ method: "POST" })
 
 export const adminSetMemberPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       userId: z.string().uuid(),
       newPassword: z.string().min(6).max(72),
@@ -359,7 +359,7 @@ export const adminSetMemberPassword = createServerFn({ method: "POST" })
 
 export const claimMyReward = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       level: z.number().int().min(1).max(18),
     }).parse(d)
