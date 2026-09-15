@@ -38,6 +38,15 @@ type RewardLevel = { level: number; pairs_required: number; amount: number };
 type UserReward = { level: number; amount: number; created_at: string; status: string; claim_deadline: string | null };
 type CartLine = { product: Product; qty: number };
 
+function withTimeout<T>(promise: Promise<T>, milliseconds = 8000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error("Request timed out")), milliseconds);
+    }),
+  ]);
+}
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -80,37 +89,47 @@ function Dashboard() {
   const [notice, setNotice] = useState("");
 
   async function loadAll() {
-    const { data: userRes } = await supabase.auth.getUser();
-    try { await expireRewards({}); } catch { /* non-blocking */ }
-    if (!userRes.user) return;
-    const uid = userRes.user.id;
-    const [p, w, s, pr, o, c, wd, tm, ps, rl, ur, tr] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-      supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
-      supabase.from("tree_stats").select("*").eq("user_id", uid).maybeSingle(),
-      supabase.from("products").select("*").eq("status", "active").order("created_at"),
-      supabase.from("orders").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("commissions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
-      supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-      fetchDirectTeam(),
-      supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
-      supabase.from("reward_levels").select("*").order("level"),
-      supabase.from("user_rewards").select("level,amount,created_at,status,claim_deadline").eq("user_id", uid),
-      fetchTree(),
-    ]);
-    if (p.data) setProfile(p.data as Profile);
-    if (w.data) setWallet(w.data as WalletRow);
-    if (s.data) setStats(s.data as TreeStats);
-    setProducts((pr.data || []) as Product[]);
-    setOrders((o.data || []) as Order[]);
-    setCommissions((c.data || []) as Commission[]);
-    setWithdrawals((wd.data || []) as Withdrawal[]);
-    setTeam((tm || []) as TeamMember[]);
-    setRewardLevels((rl.data || []) as RewardLevel[]);
-    setMyRewards((ur.data || []) as UserReward[]);
-    setTree((tr as TreeNode | null) ?? null);
-    if (ps.data) setSettings(ps.data as PlanSettings);
-    setLoading(false);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      if (!userRes.user) {
+        await nav({ to: "/login", replace: true });
+        return;
+      }
+
+      const uid = userRes.user.id;
+      const [p, w, s, pr, o, c, wd, ps, rl, ur] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
+        supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
+        supabase.from("tree_stats").select("*").eq("user_id", uid).maybeSingle(),
+        supabase.from("products").select("*").eq("status", "active").order("created_at"),
+        supabase.from("orders").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("commissions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(50),
+        supabase.from("withdrawals").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("plan_settings").select("*").eq("id", 1).maybeSingle(),
+        supabase.from("reward_levels").select("*").order("level"),
+        supabase.from("user_rewards").select("level,amount,created_at,status,claim_deadline").eq("user_id", uid),
+      ]);
+      if (p.data) setProfile(p.data as Profile);
+      if (w.data) setWallet(w.data as WalletRow);
+      if (s.data) setStats(s.data as TreeStats);
+      setProducts((pr.data || []) as Product[]);
+      setOrders((o.data || []) as Order[]);
+      setCommissions((c.data || []) as Commission[]);
+      setWithdrawals((wd.data || []) as Withdrawal[]);
+      setRewardLevels((rl.data || []) as RewardLevel[]);
+      setMyRewards((ur.data || []) as UserReward[]);
+      if (ps.data) setSettings(ps.data as PlanSettings);
+
+      void Promise.allSettled([
+        withTimeout(fetchDirectTeam()).then((rows) => setTeam((rows || []) as TeamMember[])),
+        withTimeout(fetchTree()).then((row) => setTree((row as TreeNode | null) ?? null)),
+        withTimeout(expireRewards({})),
+      ]);
+    } catch {
+      setNotice("Some dashboard details could not be loaded. Please refresh once.");
+    } finally {
+      setLoading(false);
+    }
   }
 
 
