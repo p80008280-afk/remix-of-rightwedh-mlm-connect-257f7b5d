@@ -17,12 +17,11 @@ Go to **Site settings → Environment variables** and add:
 
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
 - `VITE_SUPABASE_URL` (same value as `SUPABASE_URL`)
 - `VITE_SUPABASE_PUBLISHABLE_KEY` (same value as `SUPABASE_PUBLISHABLE_KEY`)
 - `NODE_ENV=production`
 
-The service-role key must stay in Netlify environment variables only — never commit it.
+Admin actions are handled by authenticated database functions, so a service-role key is not required. Keep these values in Netlify environment variables only — never commit them.
 
 ## Alternative: Netlify CLI
 

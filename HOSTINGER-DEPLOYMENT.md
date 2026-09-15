@@ -15,12 +15,11 @@ This application is a Node Web App, not a plain `public_html` website. Its admin
 
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
 - `VITE_SUPABASE_URL` (same value as `SUPABASE_URL`)
 - `VITE_SUPABASE_PUBLISHABLE_KEY` (same value as `SUPABASE_PUBLISHABLE_KEY`)
 - `NODE_ENV=production`
 
-The actual secret values are intentionally not stored in this archive or repository. Copy them from the project environment into Hostinger's Environment Variables screen.
+Admin actions are handled by authenticated database functions, so a service-role key is not required. The actual values are intentionally not stored in this archive or repository. Copy them from the project environment into Hostinger's Environment Variables screen.
 
 To create a fresh archive after future code changes, run `bun run hostinger:package` from the project folder.
 

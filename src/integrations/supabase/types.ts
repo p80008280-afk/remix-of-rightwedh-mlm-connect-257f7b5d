@@ -518,6 +518,10 @@ export type Database = {
             Args: { _action: string; _note?: string; _withdrawal_id: string }
             Returns: undefined
           }
+      admin_set_member_password: {
+        Args: { _new_password: string; _user_id: string }
+        Returns: undefined
+      }
       admin_set_member_state:
         | {
             Args: {
@@ -706,6 +710,15 @@ export type Database = {
             }
             Returns: Json
           }
+      reset_member_password: {
+        Args: {
+          _dob: string
+          _email: string
+          _mobile: string
+          _new_password: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "member"
