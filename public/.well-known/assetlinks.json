@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "in.righvedhsanjivni.app",
+        "sha256_cert_fingerprints": ["08:90:80:9D:48:09:C2:DD:A7:C0:0C:47:87:45:C7:43:BD:69:41:2E:46:2C:94:FA:79:85:0C:FA:74:93:D7:29"]
+      }
+    }]
