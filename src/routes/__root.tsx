@@ -84,6 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Righvedh Sanjivni is a premium Ayurveda wellness company offering pure herbal products and a rewarding binary MLM business opportunity across India.",
       },
       { name: "author", content: "Righvedh Sanjivni" },
+      { name: "theme-color", content: "#1F4D2B" },
       { property: "og:title", content: "Righvedh Sanjivni — Ayurveda Wellness" },
       {
         property: "og:description",
@@ -96,6 +97,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/logo.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

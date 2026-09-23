@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star, ShoppingBag, Upload, UserCheck } from "lucide-react";
+import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star, ShoppingBag, Upload, UserCheck, Smartphone, Download } from "lucide-react";
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
 export const Route = createFileRoute("/")({
@@ -52,6 +52,17 @@ function Home() {
                 View Business Plan
               </Link>
             </div>
+            <a
+              href="/righvedh-sanjivni.apk"
+              download="Righvedh-Sanjivni.apk"
+              className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-gold/40 bg-primary-foreground/10 px-5 py-3 hover:bg-gold/10 transition"
+            >
+              <Smartphone className="h-6 w-6 text-gold" />
+              <span className="text-left leading-tight">
+                <span className="block text-[11px] uppercase tracking-widest text-primary-foreground/70">Free Android App</span>
+                <span className="block text-sm font-semibold">Download APK <Download className="inline h-3.5 w-3.5 ml-1" /></span>
+              </span>
+            </a>
             <div className="mt-12 grid grid-cols-3 gap-6 max-w-lg">
               {[
                 { n: "₹900", l: "Direct Commission" },

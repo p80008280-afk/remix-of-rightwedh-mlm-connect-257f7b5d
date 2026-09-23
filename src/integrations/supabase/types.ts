@@ -312,18 +312,27 @@ export type Database = {
       reward_levels: {
         Row: {
           amount: number
+          base_amount: number
+          gst_percent: number
           level: number
           pairs_required: number
+          title: string
         }
         Insert: {
           amount: number
+          base_amount?: number
+          gst_percent?: number
           level: number
           pairs_required: number
+          title?: string
         }
         Update: {
           amount?: number
+          base_amount?: number
+          gst_percent?: number
           level?: number
           pairs_required?: number
+          title?: string
         }
         Relationships: []
       }

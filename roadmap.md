@@ -13,3 +13,6 @@
    - (Done) Document GitHub/CLI deploy steps and required environment variables
 
 3. (Done) Admin Database console added — shows all tables live from DB.
+
+4. (Done) New 18-level reward values + 18% GST added on top; Level 18 titled "The King 👑".
+5. (Done) Free Android APK (opens righvedhsanjivni.in) with homepage download button.

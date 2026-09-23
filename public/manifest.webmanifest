@@ -1,0 +1,12 @@
+{
+  "name": "Righvedh Sanjivni",
+  "short_name": "Righvedh",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1F4D2B",
+  "icons": [
+    { "src": "/logo.png", "sizes": "1254x1254", "type": "image/png", "purpose": "any" }
+  ]
+}
