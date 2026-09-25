@@ -16,3 +16,4 @@
 
 4. (Done) New 18-level reward values + 18% GST added on top; Level 18 titled "The King 👑".
 5. (Done) Free Android APK (opens righvedhsanjivni.in) with homepage download button.
+6. (Done) Aaurva direct commission and pair matching updated everywhere to ₹500 each.

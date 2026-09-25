@@ -34,7 +34,7 @@ function Terms() {
           Membership requires a one-time joining product purchase of ₹3,250. Every member is placed in a binary tree structure (Left / Right leg) under the sponsor who invited them.
         </Block>
         <Block title="3. Commissions & Income">
-          Members earn a ₹900 direct commission on every direct member's product purchase and a ₹300 pair-matching bonus for each matched pair (subject to a daily cap of 20 pairs per member). Level income, rank rewards and leadership bonuses may be introduced in future updates.
+          Members earn a ₹500 direct commission on every direct member's product purchase and a ₹500 pair-matching bonus for each matched pair (subject to a daily cap of 20 pairs per member). Level income, rank rewards and leadership bonuses may be introduced in future updates.
         </Block>
         <Block title="4. Monthly Repurchase">
           To remain active and eligible for pair matching income, every member must purchase at least one product per month.
