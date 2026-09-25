@@ -467,7 +467,7 @@ function StatusPill({ status }: { status: string }) {
 
 function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Partial<Product>) => Promise<void> }) {
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
-  const blank: Partial<Product> = { name: "", description: "", category: "General", image_url: "", mrp: 3250, direct_commission: 900, pair_bonus: 300, stock: 100, status: "active" };
+  const blank: Partial<Product> = { name: "", description: "", category: "General", image_url: "", mrp: 3250, direct_commission: 500, pair_bonus: 500, stock: 100, status: "active" };
 
   return (
     <div className="space-y-6">

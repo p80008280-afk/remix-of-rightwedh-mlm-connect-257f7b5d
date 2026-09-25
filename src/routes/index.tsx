@@ -65,8 +65,8 @@ function Home() {
             </a>
             <div className="mt-12 grid grid-cols-3 gap-6 max-w-lg">
               {[
-                { n: "₹900", l: "Direct Commission" },
-                { n: "₹300", l: "Pair Matching" },
+                { n: "₹500", l: "Direct Commission" },
+                { n: "₹500", l: "Pair Matching" },
                 { n: "24/7", l: "Support" },
               ].map((s) => (
                 <div key={s.l}>
@@ -96,7 +96,7 @@ function Home() {
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-white/70">Earn per sale</div>
-                      <div className="font-bold text-xl text-gold">₹ 900</div>
+                      <div className="font-bold text-xl text-gold">₹ 500</div>
                     </div>
                   </div>
                 </div>
@@ -146,8 +146,8 @@ function Home() {
             </p>
             <ul className="mt-6 space-y-3">
               {[
-                "₹900 direct sponsor commission on every product sale",
-                "₹300 pair matching bonus on every left-right match",
+                "₹500 direct sponsor commission on every product sale",
+                "₹500 pair matching bonus on every left-right match",
                 "Level & rank rewards for growing leaders",
                 "Real-time genealogy tree with plus-position invites",
               ].map((i) => (
@@ -201,8 +201,8 @@ function Home() {
 
             <div className="mt-6 grid grid-cols-3 gap-4">
               <Stat label="MRP" value="₹ 3,250" />
-              <Stat label="Direct Commission" value="₹ 900" accent />
-              <Stat label="Pair Matching" value="₹ 300" accent />
+              <Stat label="Direct Commission" value="₹ 500" accent />
+              <Stat label="Pair Matching" value="₹ 500" accent />
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">

@@ -30,8 +30,8 @@ function Plan() {
 
           <div className="mt-10 grid grid-cols-3 gap-4 max-w-xl mx-auto">
             <PlanStat label="Product MRP" value="₹ 3,250" />
-            <PlanStat label="Direct Commission" value="₹ 900" gold />
-            <PlanStat label="Pair Match" value="₹ 300" gold />
+            <PlanStat label="Direct Commission" value="₹ 500" gold />
+            <PlanStat label="Pair Match" value="₹ 500" gold />
           </div>
         </div>
       </section>
@@ -51,8 +51,8 @@ function Plan() {
             {[
               { s: "Step 1", t: "You are A", d: "You register using your sponsor's referral link." },
               { s: "Step 2", t: "Add B and C", d: "You place B on your left and C on your right — both are your directs." },
-              { s: "Step 3", t: "Direct Commission", d: "Whenever B makes a purchase, A earns ₹900. Whenever C makes a purchase, A earns ₹900." },
-              { s: "Step 4", t: "Pair Bonus", d: "When the BV of B and C matches, A earns a pair matching bonus of ₹300." },
+              { s: "Step 3", t: "Direct Commission", d: "Whenever B makes a purchase, A earns ₹500. Whenever C makes a purchase, A earns ₹500." },
+              { s: "Step 4", t: "Pair Bonus", d: "When the BV of B and C matches, A earns a pair matching bonus of ₹500." },
               { s: "Step 5", t: "The chain grows", d: "B and C build their own teams below them — their pairs count for their upline, and the chain grows to infinite depth." },
               { s: "Step 6", t: "The \"+\" option", d: "Every member sees a + button on their tree — invite a new member into any empty left/right position at any time." },
             ].map((s, i) => (
@@ -78,8 +78,8 @@ function Plan() {
           </div>
           <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: DollarSign, t: "Direct Sale Income", d: "Earn ₹900 fixed commission for every product purchase made by your direct member." },
-              { icon: Users, t: "Pair Matching Bonus", d: "Earn ₹300 every time your Left and Right legs form a matched pair in BV." },
+              { icon: DollarSign, t: "Direct Sale Income", d: "Earn ₹500 fixed commission for every product purchase made by your direct member." },
+              { icon: Users, t: "Pair Matching Bonus", d: "Earn ₹500 every time your Left and Right legs form a matched pair in BV." },
               { icon: TrendingUp, t: "Level Income", d: "A small % commission from the generations below you — deep-team rewards." },
               { icon: Trophy, t: "Rank & Reward Bonus", d: "Silver, Gold and Diamond ranks unlock travel, gifts and cash rewards." },
             ].map((f) => (
@@ -104,8 +104,8 @@ function Plan() {
         <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[
             { t: "Joining Fee", d: "₹3,250 — one time via Ayurvedic product purchase." },
-            { t: "Direct Sale Commission", d: "₹900 fixed on every direct member's purchase." },
-            { t: "Pair Matching Bonus", d: "₹300 per matched pair (1 Left + 1 Right)." },
+            { t: "Direct Sale Commission", d: "₹500 fixed on every direct member's purchase." },
+            { t: "Pair Matching Bonus", d: "₹500 per matched pair (1 Left + 1 Right)." },
             { t: "Daily Capping", d: "Maximum 20 pairs per day, per member. Extra pairs carry no bonus." },
             { t: "Monthly Repurchase", d: "1 product repurchase per month is compulsory to keep the ID active and eligible for pair income." },
             { t: "Withdrawal", d: "Minimum ₹300 • 5% TDS deducted • 0 admin charge • paid within 7 days of admin approval." },
