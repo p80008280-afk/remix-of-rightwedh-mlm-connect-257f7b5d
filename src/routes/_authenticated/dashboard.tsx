@@ -838,7 +838,7 @@ function RewardsTab({ levels, earned, pairs, onClaim }: { levels: RewardLevel[];
       )}
 
       <Section title="Reward Levels">
-        <p className="text-sm text-muted-foreground mb-4">Achieve the required pairs to unlock each star. Every reward includes 18% GST on top of the base value. Unlocked rewards must be claimed within 7 days; claimed amounts go straight to your wallet balance. Scroll sideways to see all levels.</p>
+        <p className="text-sm text-muted-foreground mb-4">Achieve the required pairs to unlock each star. Unlocked rewards must be claimed within 7 days; claimed amounts go straight to your wallet balance. Scroll sideways to see all levels.</p>
         <div className="overflow-x-auto pb-3">
           <div className="flex gap-3 min-w-max">
             {levels.map(l => {
@@ -846,15 +846,11 @@ function RewardsTab({ levels, earned, pairs, onClaim }: { levels: RewardLevel[];
               const status = row?.status;
               const progress = Math.min(100, Math.round((pairs / l.pairs_required) * 100));
               const done = status === "claimed";
-              const base = Number(l.base_amount || 0);
               return (
                 <div key={l.level} className={`w-48 shrink-0 rounded-2xl border p-4 ${done ? "bg-gradient-gold text-gold-foreground border-gold/50 shadow-gold" : status === "available" ? "bg-card border-gold" : l.title ? "bg-card border-gold/60" : "bg-card border-border"}`}>
                   <div className="text-xs uppercase tracking-widest">Level {l.level} ★</div>
                   {l.title && <div className="text-sm font-semibold text-gold mt-0.5">{l.title}</div>}
                   <div className="font-serif text-xl font-bold mt-1">₹{Number(l.amount).toLocaleString("en-IN")}</div>
-                  {base > 0 && (
-                    <div className="text-[11px] opacity-80">₹{base.toLocaleString("en-IN")} + {Number(l.gst_percent ?? 18)}% GST</div>
-                  )}
                   <div className="text-xs mt-1 opacity-80">{l.pairs_required.toLocaleString("en-IN")} pairs</div>
                   <div className="mt-3 h-1.5 rounded-full bg-black/10 overflow-hidden">
                     <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
