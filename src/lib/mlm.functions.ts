@@ -248,7 +248,7 @@ export const updateMemberStatus = createServerFn({ method: "POST" })
   .validator((d) =>
     z.object({
       userId: z.string().uuid(),
-      account_status: z.enum(["Active", "Inactive", "Suspended", "Banned"]).optional(),
+      account_status: z.enum(["active", "inactive", "suspended", "banned"]).optional(),
       is_active: z.boolean().optional(),
       kyc_status: z.enum(["pending", "approved", "rejected"]).optional(),
     }).parse(d)
@@ -269,7 +269,7 @@ export const adminSetAccountState = createServerFn({ method: "POST" })
   .validator((d) =>
     z.object({
       userId: z.string().uuid(),
-      account_status: z.enum(["Active", "Inactive", "Suspended", "Banned"]),
+      account_status: z.enum(["active", "inactive", "suspended", "banned"]),
       is_active: z.boolean(),
     }).parse(d)
   )

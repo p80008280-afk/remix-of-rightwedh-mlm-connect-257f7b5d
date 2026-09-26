@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet, LogOut,
-  IndianRupee, CheckCircle2, XCircle, Plus, Settings, Database, Download,
+  IndianRupee, CheckCircle2, XCircle, Plus, Settings, Database, Download, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DatabaseConsole from "@/components/DatabaseConsole";
@@ -170,9 +170,9 @@ function Admin() {
           <MembersTab
             members={members}
             onReload={loadAll}
-            onKyc={async (userId, kyc) => { await upMem({ data: { userId, kyc_status: kyc as any } }); loadAll(); }}
-            onState={async (userId, patch) => { await setState({ data: { userId, ...patch } as any }); loadAll(); }}
-            onPassword={async (userId, newPassword) => { await setPassword({ data: { userId, newPassword } }); loadAll(); }}
+            onKyc={async (userId, kyc) => { await upMem({ data: { userId, kyc_status: kyc as "pending" | "approved" | "rejected" } }); await loadAll(); }}
+            onState={async (userId, patch) => { await setState({ data: { userId, ...patch } as { userId: string; account_status: "active" | "inactive" | "suspended" | "banned"; is_active: boolean } }); await loadAll(); }}
+            onPassword={async (userId, newPassword) => { await setPassword({ data: { userId, newPassword } }); await loadAll(); }}
             onAdd={async (payload) => { const res = await addMember({ data: payload as any }); await loadAll(); return res; }}
           />
         )}
@@ -316,7 +316,8 @@ function OrderDetailModal({ order, memberName, memberCode, productName, onClose 
   );
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-6 overflow-y-auto" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-2xl w-full shadow-elegant my-8">
+      <div onClick={(e) => e.stopPropagation()} className="relative bg-card rounded-2xl p-8 max-w-2xl w-full shadow-elegant my-8">
+        <button type="button" aria-label="Close order details" onClick={onClose} className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground hover:bg-muted"><X className="h-5 w-5" /></button>
         <h3 className="font-serif text-2xl text-primary">Order Details</h3>
         <p className="text-xs text-muted-foreground mt-1">Placed {new Date(order.created_at).toLocaleString()}</p>
 
@@ -467,6 +468,8 @@ function StatusPill({ status }: { status: string }) {
 
 function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Partial<Product>) => Promise<void> }) {
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
   const blank: Partial<Product> = { name: "", description: "", category: "General", image_url: "", mrp: 3250, direct_commission: 500, pair_bonus: 500, stock: 100, status: "active" };
 
   return (
@@ -475,6 +478,7 @@ function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Pa
         <h2 className="font-serif text-2xl text-primary">Products ({products.length})</h2>
         <button onClick={() => setEditing(blank)} className="rounded-full bg-gradient-gold text-gold-foreground px-4 py-2 text-sm font-semibold flex items-center gap-1"><Plus className="h-4 w-4" /> Add Product</button>
       </div>
+      {message && <div className={`rounded-lg p-3 text-sm ${message.startsWith("Error:") ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{message}</div>}
       <Card title="All Products">
         <TableWrap cols={["Name","Category","MRP","Direct","Pair","Stock","Status","Action"]}>
           {products.map(p => (
@@ -494,9 +498,10 @@ function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Pa
 
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setEditing(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-2xl w-full shadow-elegant max-h-[90vh] overflow-y-auto">
+          <div onClick={e => e.stopPropagation()} className="relative bg-card rounded-2xl p-8 max-w-2xl w-full shadow-elegant max-h-[90vh] overflow-y-auto">
+            <button type="button" aria-label="Close product editor" onClick={() => setEditing(null)} className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground hover:bg-muted"><X className="h-5 w-5" /></button>
             <h3 className="font-serif text-2xl text-primary mb-4">{editing.id ? "Edit" : "Add"} Product</h3>
-            <form onSubmit={async (e) => { e.preventDefault(); await onSave(editing); setEditing(null); }} className="space-y-3">
+            <form onSubmit={async (e) => { e.preventDefault(); setBusy(true); setMessage(""); try { await onSave(editing); setEditing(null); setMessage("Product saved successfully."); } catch (error) { setMessage(`Error: ${error instanceof Error ? error.message : "Product could not be saved."}`); } finally { setBusy(false); } }} className="space-y-3">
               <F label="Name"><input required value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
               <F label="Description"><textarea value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} rows={2} className="w-full rounded border px-3 py-2" /></F>
               <div className="grid grid-cols-2 gap-3">
@@ -523,7 +528,7 @@ function ProductsTab({ products, onSave }: { products: Product[]; onSave: (p: Pa
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditing(null)} className="flex-1 rounded-full border py-2.5">Cancel</button>
-                <button className="flex-1 rounded-full bg-gradient-gold text-gold-foreground py-2.5 font-semibold">Save</button>
+                <button disabled={busy} className="flex-1 rounded-full bg-gradient-gold text-gold-foreground py-2.5 font-semibold disabled:opacity-60">{busy ? "Saving…" : "Save"}</button>
               </div>
             </form>
           </div>
@@ -651,11 +656,13 @@ type AskState = {
 function AskDialog({ state, onClose }: { state: AskState; onClose: () => void }) {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
-  useEffect(() => { setValue(""); }, [state]);
+  const [error, setError] = useState("");
+  useEffect(() => { setValue(""); setError(""); }, [state]);
   if (!state) return null;
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-6" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-6 w-full max-w-md shadow-elegant">
+      <div onClick={e => e.stopPropagation()} className="relative bg-card rounded-2xl p-6 w-full max-w-md shadow-elegant">
+        <button type="button" aria-label="Close dialog" disabled={busy} onClick={onClose} className="absolute right-3 top-3 rounded-full p-2 text-muted-foreground hover:bg-muted disabled:opacity-50"><X className="h-5 w-5" /></button>
         <h3 className="font-serif text-xl text-primary">{state.title}</h3>
         {state.message && <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>}
         {state.input && (
@@ -671,12 +678,13 @@ function AskDialog({ state, onClose }: { state: AskState; onClose: () => void })
             </F>
           </div>
         )}
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
         <div className="mt-6 flex gap-3">
           <button type="button" onClick={onClose} className="flex-1 rounded-full border py-2.5 text-sm">Cancel</button>
           <button
             type="button"
             disabled={busy || (state.input?.required && !value.trim())}
-            onClick={async () => { setBusy(true); try { await state.onConfirm(value); onClose(); } finally { setBusy(false); } }}
+            onClick={async () => { setBusy(true); setError(""); try { await state.onConfirm(value); onClose(); } catch (dialogError) { setError(dialogError instanceof Error ? dialogError.message : "Could not save changes."); } finally { setBusy(false); } }}
             className={`flex-1 rounded-full py-2.5 text-sm font-semibold disabled:opacity-60 ${state.tone === "danger" ? "bg-destructive text-destructive-foreground" : "bg-gradient-gold text-gold-foreground"}`}
           >{busy ? "Please wait..." : (state.confirmLabel || "Confirm")}</button>
         </div>
@@ -826,7 +834,8 @@ function MembersTab({
 
       {form && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setForm(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-xl w-full shadow-elegant max-h-[90vh] overflow-y-auto">
+          <div onClick={e => e.stopPropagation()} className="relative bg-card rounded-2xl p-8 max-w-xl w-full shadow-elegant max-h-[90vh] overflow-y-auto">
+            <button type="button" aria-label="Close add member form" onClick={() => setForm(null)} className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground hover:bg-muted"><X className="h-5 w-5" /></button>
             <h3 className="font-serif text-2xl text-primary mb-4">Add Member Manually</h3>
             <form
               className="space-y-3"
@@ -877,7 +886,8 @@ function MembersTab({
 
       {created && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setCreated(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl p-8 max-w-sm w-full shadow-elegant text-center">
+          <div onClick={e => e.stopPropagation()} className="relative bg-card rounded-2xl p-8 max-w-sm w-full shadow-elegant text-center">
+            <button type="button" aria-label="Close member details" onClick={() => setCreated(null)} className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground hover:bg-muted"><X className="h-5 w-5" /></button>
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-600" />
             <h3 className="font-serif text-2xl text-primary mt-3">Member Created</h3>
             <div className="mt-4 rounded-xl bg-muted/40 p-4 text-left text-sm space-y-1">
