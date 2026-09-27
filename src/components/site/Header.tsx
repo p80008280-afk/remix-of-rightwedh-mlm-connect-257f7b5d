@@ -60,9 +60,14 @@ export function Header() {
 
         <div className="hidden lg:flex items-center gap-3">
           {authed ? (
-            <Link to={dashboardPath} className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
-              {dashboardPath === "/admin" ? "Admin Panel" : "My Dashboard"}
-            </Link>
+            <>
+              <Link to={dashboardPath} className="text-sm font-medium text-primary hover:text-primary-glow">
+                {dashboardPath === "/admin" ? "Admin Panel" : "My Dashboard"}
+              </Link>
+              <Link to="/register" className="inline-flex items-center rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-gold hover:opacity-90 transition">
+                Join Now
+              </Link>
+            </>
           ) : (
             <>
               <Link to="/login" className="text-sm font-medium text-primary hover:text-primary-glow">Login</Link>
@@ -88,9 +93,12 @@ export function Header() {
             ))}
             <div className="flex gap-3 pt-2">
               {authed ? (
-                <Link to={dashboardPath} className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground" onClick={() => setOpen(false)}>
-                  {dashboardPath === "/admin" ? "Admin Panel" : "My Dashboard"}
-                </Link>
+                <>
+                  <Link to={dashboardPath} className="flex-1 text-center py-2 rounded-full border border-primary text-primary" onClick={() => setOpen(false)}>
+                    {dashboardPath === "/admin" ? "Admin Panel" : "My Dashboard"}
+                  </Link>
+                  <Link to="/register" className="flex-1 text-center py-2 rounded-full bg-gradient-gold text-gold-foreground" onClick={() => setOpen(false)}>Join</Link>
+                </>
               ) : (
                 <>
                   <Link to="/login" className="flex-1 text-center py-2 rounded-full border border-primary text-primary" onClick={() => setOpen(false)}>Login</Link>
