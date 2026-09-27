@@ -21,4 +21,4 @@
    - (Done) Correct account-status saving and show success/error feedback
    - (Done) Add visible × close controls to admin popups
    - (Done) Restore reward amounts without the extra 18% GST
-   - (In progress) Rebuild the APK as an in-app browser experience instead of opening Chrome
+   - (Done) App link verified on righvedhsanjivni.in; password change fixed
