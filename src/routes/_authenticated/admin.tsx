@@ -172,7 +172,7 @@ function Admin() {
             onReload={loadAll}
             onKyc={async (userId, kyc) => { await upMem({ data: { userId, kyc_status: kyc as "pending" | "approved" | "rejected" } }); await loadAll(); }}
             onState={async (userId, patch) => { await setState({ data: { userId, ...patch } as { userId: string; account_status: "active" | "inactive" | "suspended" | "banned"; is_active: boolean } }); await loadAll(); }}
-            onPassword={async (userId, newPassword) => { await setPassword({ data: { userId, newPassword } }); await loadAll(); }}
+            onPassword={async (userId, newPassword) => { { const { error } = await supabase.rpc("admin_set_member_password" as any, { _user_id: userId, _new_password: newPassword } as any); if (error) throw new Error(error.message); } await loadAll(); }}
             onAdd={async (payload) => { const res = await addMember({ data: payload as any }); await loadAll(); return res; }}
           />
         )}
