@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star, ShoppingBag, Upload, UserCheck, Smartphone, Download } from "lucide-react";
+import apkAsset from "@/assets/righvedh-sanjivni.apk.asset.json";
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
 export const Route = createFileRoute("/")({
@@ -53,7 +54,7 @@ function Home() {
               </Link>
             </div>
             <a
-              href="/righvedh-sanjivni.apk"
+              href={apkAsset.url}
               download="Righvedh-Sanjivni.apk"
               className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-gold/40 bg-primary-foreground/10 px-5 py-3 hover:bg-gold/10 transition"
             >
