@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.resolve_member_login(text);
