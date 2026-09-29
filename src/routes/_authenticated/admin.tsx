@@ -164,7 +164,7 @@ function Admin() {
         )}
 
         {tab === "products" && (
-          <ProductsTab products={products} onSave={async (p) => { const { error } = await supabase.rpc("admin_upsert_product", { _id: p.id ?? undefined, _name: p.name ?? "", _description: p.description ?? "", _category: p.category ?? "General", _image_url: p.image_url ?? "", _mrp: Number(p.mrp ?? 0), _direct_commission: Number(p.direct_commission ?? 0), _pair_bonus: Number(p.pair_bonus ?? 0), _stock: Number(p.stock ?? 0), _status: p.status ?? "active" }); if (error) throw new Error(error.message); await loadAll(); }} />
+          <ProductsTab products={products} onSave={async (p) => { const { error } = await supabase.rpc("admin_upsert_product", { _id: p.id ?? null, _name: p.name ?? "", _description: p.description ?? "", _category: p.category ?? "General", _image_url: p.image_url ?? "", _mrp: Number(p.mrp ?? 0), _direct_commission: Number(p.direct_commission ?? 0), _pair_bonus: Number(p.pair_bonus ?? 0), _stock: Number(p.stock ?? 0), _status: p.status ?? "active" } as any); if (error) throw new Error(error.message); await loadAll(); }} />
         )}
 
         {tab === "orders" && (
@@ -214,7 +214,7 @@ function Admin() {
                             input: { label: "Reason for rejection" },
                             confirmLabel: "Reject order",
                             tone: "danger",
-                            onConfirm: async (note) => { await rvOrder({ data: { orderId: o.id, action: "reject", note } }); await loadAll(); setNotice("Order rejected."); },
+                            onConfirm: async (note) => { const { error } = await supabase.rpc("admin_review_order_hosted", { _order_id: o.id, _action: "reject", _note: note } as any); if (error) throw new Error(error.message); await loadAll(); setNotice("Order rejected."); },
                           })} className="rounded bg-red-600 text-white px-3 py-1 text-xs font-semibold">✗ Reject</button>
                         </div>
                       ) : <span className="text-xs text-muted-foreground">{o.admin_note || "—"}</span>}
@@ -245,14 +245,14 @@ function Admin() {
                             title: "Mark as paid?",
                             message: `₹${w.amount} will be marked paid to ${w.upi_id}.`,
                             confirmLabel: "Mark paid",
-                            onConfirm: async () => { await rvWd({ data: { withdrawalId: w.id, action: "approve" } }); await loadAll(); setNotice("Withdrawal marked paid."); },
+                            onConfirm: async () => { const { error } = await supabase.rpc("admin_review_withdrawal_hosted", { _withdrawal_id: w.id, _action: "approve", _note: "" } as any); if (error) throw new Error(error.message); await loadAll(); setNotice("Withdrawal marked paid."); },
                           })} className="rounded bg-green-600 text-white px-2 py-1 text-xs">Paid</button>
                           <button onClick={() => setAsk({
                             title: "Reject this withdrawal?",
                             input: { label: "Reason (optional)" },
                             confirmLabel: "Reject",
                             tone: "danger",
-                            onConfirm: async (note) => { await rvWd({ data: { withdrawalId: w.id, action: "reject", note } }); await loadAll(); setNotice("Withdrawal rejected."); },
+                            onConfirm: async (note) => { const { error } = await supabase.rpc("admin_review_withdrawal_hosted", { _withdrawal_id: w.id, _action: "reject", _note: note } as any); if (error) throw new Error(error.message); await loadAll(); setNotice("Withdrawal rejected."); },
                           })} className="rounded bg-red-600 text-white px-2 py-1 text-xs">Reject</button>
                         </div>
                       ) : <span className="text-xs text-muted-foreground">—</span>}
@@ -267,7 +267,7 @@ function Admin() {
         {tab === "settings" && settings && (
           <SettingsTab
             settings={settings}
-            onSave={async (next) => { await upSettings({ data: next }); await loadAll(); }}
+            onSave={async (next) => { const { error } = await supabase.rpc("admin_update_plan_settings", { _min_withdrawal: next.min_withdrawal, _tds_percent: next.tds_percent, _admin_charge: next.admin_charge, _withdrawal_days: next.withdrawal_days, _daily_pair_cap: next.daily_pair_cap, _refund_days: next.refund_days, _monthly_repurchase: next.monthly_repurchase, _upi_id: next.upi_id, _payment_account_name: next.payment_account_name, _qr_image_url: next.qr_image_url, _qr_image_path: next.qr_image_path ?? null } as any); if (error) throw new Error(error.message); await loadAll(); }}
           />
         )}
 
