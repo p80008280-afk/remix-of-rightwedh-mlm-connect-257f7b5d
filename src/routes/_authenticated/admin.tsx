@@ -1,16 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet, LogOut,
   IndianRupee, CheckCircle2, XCircle, Plus, Settings, Database, Download, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DatabaseConsole from "@/components/DatabaseConsole";
-import {
-  reviewOrder, reviewWithdrawal, upsertProduct, updateMemberStatus, updatePlanSettings,
-  adminAddMember, adminSetAccountState, adminSetMemberPassword,
-} from "@/lib/mlm.functions";
 const logoAsset = { url: "/logo.png" };
 const qrAsset = { url: "/phonepe-qr.png" };
 
@@ -52,15 +47,6 @@ function Admin() {
   const [settings, setSettings] = useState<PlanSettings | null>(null);
   const [ask, setAsk] = useState<AskState>(null);
   const [notice, setNotice] = useState("");
-
-  const rvOrder = useServerFn(reviewOrder);
-  const rvWd = useServerFn(reviewWithdrawal);
-  const upProd = useServerFn(upsertProduct);
-  const upMem = useServerFn(updateMemberStatus);
-  const upSettings = useServerFn(updatePlanSettings);
-  const addMember = useServerFn(adminAddMember);
-  const setState = useServerFn(adminSetAccountState);
-  const setPassword = useServerFn(adminSetMemberPassword);
 
   async function loadAll() {
     const [m, p, o, w, ps] = await Promise.all([
@@ -170,15 +156,15 @@ function Admin() {
           <MembersTab
             members={members}
             onReload={loadAll}
-            onKyc={async (userId, kyc) => { await upMem({ data: { userId, kyc_status: kyc as "pending" | "approved" | "rejected" } }); await loadAll(); }}
-            onState={async (userId, patch) => { await setState({ data: { userId, ...patch } as { userId: string; account_status: "active" | "inactive" | "suspended" | "banned"; is_active: boolean } }); await loadAll(); }}
+            onKyc={async (userId, kyc) => { const { error } = await supabase.rpc("admin_set_member_state", { _user_id: userId, _account_status: undefined, _is_active: undefined, _kyc_status: kyc }); if (error) throw new Error(error.message); await loadAll(); }}
+            onState={async (userId, patch) => { const { error } = await supabase.rpc("admin_set_member_state", { _user_id: userId, _account_status: patch.account_status, _is_active: patch.is_active, _kyc_status: undefined }); if (error) throw new Error(error.message); await loadAll(); }}
             onPassword={async (userId, newPassword) => { { const { error } = await supabase.rpc("admin_set_member_password" as any, { _user_id: userId, _new_password: newPassword } as any); if (error) throw new Error(error.message); } await loadAll(); }}
-            onAdd={async (payload) => { const res = await addMember({ data: payload as any }); await loadAll(); return res; }}
+            onAdd={async (payload) => { const { data, error } = await supabase.rpc("register_member", { _full_name: payload.fullName, _mobile: payload.mobile, _real_email: payload.realEmail, _dob: payload.dob, _password: payload.password, _sponsor_code: payload.sponsorCode, _position: payload.position, _activate: payload.activate }); if (error) throw new Error(error.message); await loadAll(); return data as unknown as { memberCode: string; referralCode: string }; }}
           />
         )}
 
         {tab === "products" && (
-          <ProductsTab products={products} onSave={async (p) => { await upProd({ data: p as any }); loadAll(); }} />
+          <ProductsTab products={products} onSave={async (p) => { const { error } = await supabase.rpc("admin_upsert_product", { _id: p.id ?? undefined, _name: p.name ?? "", _description: p.description ?? "", _category: p.category ?? "General", _image_url: p.image_url ?? "", _mrp: Number(p.mrp ?? 0), _direct_commission: Number(p.direct_commission ?? 0), _pair_bonus: Number(p.pair_bonus ?? 0), _stock: Number(p.stock ?? 0), _status: p.status ?? "active" }); if (error) throw new Error(error.message); await loadAll(); }} />
         )}
 
         {tab === "orders" && (
@@ -221,7 +207,7 @@ function Admin() {
                             title: "Approve this order?",
                             message: `₹${o.amount} order for ${mem?.full_name || "member"} will be approved and commissions will be paid.`,
                             confirmLabel: "Approve",
-                            onConfirm: async () => { await rvOrder({ data: { orderId: o.id, action: "approve" } }); await loadAll(); setNotice("Order approved."); },
+                            onConfirm: async () => { const { error } = await supabase.rpc("admin_review_order_hosted", { _order_id: o.id, _action: "approve", _note: "" }); if (error) throw new Error(error.message); await loadAll(); setNotice("Order approved."); },
                           })} className="rounded bg-green-600 text-white px-3 py-1 text-xs font-semibold">✓ Approve</button>
                           <button onClick={() => setAsk({
                             title: "Reject this order?",
