@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.admin_register_member_hosted(text,text,text,date,text,text,text,boolean) FROM PUBLIC, anon, authenticated, service_role;
+DROP FUNCTION public.admin_register_member_hosted(text,text,text,date,text,text,text,boolean);

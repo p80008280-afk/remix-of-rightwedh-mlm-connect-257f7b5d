@@ -506,19 +506,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_register_member_hosted: {
-        Args: {
-          _activate?: boolean
-          _dob: string
-          _full_name: string
-          _mobile: string
-          _password: string
-          _position?: string
-          _real_email: string
-          _sponsor_code?: string
-        }
-        Returns: Json
-      }
       admin_review_order: {
         Args: { _action: string; _note?: string; _order_id: string }
         Returns: undefined
