@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Reward payouts use the company-provided values directly with no additional GST because GST is already handled on the product.
+- Admin actions use authenticated browser RPC calls so they work on external hosting without server environment variables.

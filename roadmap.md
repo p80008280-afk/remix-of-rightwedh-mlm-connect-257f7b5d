@@ -22,3 +22,7 @@
    - (Done) Add visible × close controls to admin popups
    - (Done) Restore reward amounts without the extra 18% GST
    - (Done) App link verified on righvedhsanjivni.in; password change fixed
+8. Login and hosted admin reliability
+   - (Done) Support old accounts through username, unique mobile, and Member ID login aliases
+   - (Done) Save products, plan settings, member state, passwords, orders, and withdrawals directly from the signed-in admin session
+   - (Pending) Verify the updated deployed site and Android APK on a physical phone
