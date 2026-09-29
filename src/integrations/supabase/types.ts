@@ -728,6 +728,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      resolve_member_login: { Args: { _identifier: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "member"
