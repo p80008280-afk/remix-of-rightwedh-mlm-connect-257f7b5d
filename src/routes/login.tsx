@@ -27,6 +27,12 @@ function identifierToEmail(identifier: string) {
   return `${identifier.trim().toLowerCase().replace(/\s/g, "")}@rs.local`;
 }
 
+async function sha256(value: string) {
+  const bytes = new TextEncoder().encode(value.trim().toLowerCase());
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 function Login() {
   const nav = useNavigate();
   const [identifier, setIdentifier] = useState("");
@@ -42,10 +48,20 @@ function Login() {
     setLoading(true);
     // Admin logs in with their real email; members use their mobile number.
     try {
-      const email = identifier.includes("@") ? identifier.trim().toLowerCase() : identifierToEmail(identifier);
+      let email = identifier.includes("@") ? identifier.trim().toLowerCase() : identifierToEmail(identifier);
+      if (!identifier.includes("@")) {
+        const identifierHash = await sha256(identifier);
+        const { data: alias } = await supabase
+          .from("login_aliases" as never)
+          .select("auth_email")
+          .eq("identifier_hash", identifierHash)
+          .maybeSingle();
+        const resolvedEmail = (alias as { auth_email?: string } | null)?.auth_email;
+        if (resolvedEmail) email = resolvedEmail;
+      }
       const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err || !data.user) {
-        setError("Login failed. Members must use their registered mobile number; the admin uses the admin email. Check the password and try again.");
+        setError("Login failed. Use your mobile number, username, or Member ID and check the password.");
         return;
       }
       const { data: acct } = await supabase.from("profiles").select("account_status").eq("id", data.user.id).maybeSingle();
@@ -76,18 +92,18 @@ function Login() {
               <img src={logoAsset.url} alt="Logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="mt-4 font-serif text-3xl text-primary">Login</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Members login with mobile number. Admin can use email.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Members can use mobile, username, or Member ID. Admin can use email.</p>
           </div>
           <form className="mt-8 space-y-4" onSubmit={submit}>
             <label className="block text-sm font-medium">
-              Mobile Number or Admin Email
+              Mobile, Username, Member ID, or Admin Email
               <input
                 type="text"
                 required
                 autoComplete="username"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="10-digit mobile number or admin email"
+                placeholder="Mobile, username, Member ID, or email"
                 className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-ring"
               />
             </label>
@@ -108,7 +124,7 @@ function Login() {
             <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link>
           </div>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Use the mobile number given at registration; the same email can be reused for many accounts.
+            If a mobile number is shared by multiple old accounts, use the unique Member ID shown by admin.
           </p>
 
         </div>

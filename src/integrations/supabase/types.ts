@@ -55,6 +55,21 @@ export type Database = {
           },
         ]
       }
+      login_aliases: {
+        Row: {
+          auth_email: string
+          identifier_hash: string
+        }
+        Insert: {
+          auth_email: string
+          identifier_hash: string
+        }
+        Update: {
+          auth_email?: string
+          identifier_hash?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           admin_note: string | null
