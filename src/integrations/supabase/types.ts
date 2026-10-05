@@ -566,6 +566,10 @@ export type Database = {
             }
             Returns: undefined
           }
+      admin_topup_member: {
+        Args: { _member_code: string; _product_id?: string }
+        Returns: Json
+      }
       admin_update_plan_settings:
         | {
             Args: {
