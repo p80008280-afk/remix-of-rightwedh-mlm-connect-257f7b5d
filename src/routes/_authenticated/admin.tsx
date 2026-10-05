@@ -159,7 +159,23 @@ function Admin() {
             onKyc={async (userId, kyc) => { const { error } = await supabase.rpc("admin_set_member_state", { _user_id: userId, _account_status: undefined, _is_active: undefined, _kyc_status: kyc }); if (error) throw new Error(error.message); await loadAll(); }}
             onState={async (userId, patch) => { const { error } = await supabase.rpc("admin_set_member_state", { _user_id: userId, _account_status: patch.account_status, _is_active: patch.is_active, _kyc_status: undefined }); if (error) throw new Error(error.message); await loadAll(); }}
             onPassword={async (userId, newPassword) => { { const { error } = await supabase.rpc("admin_set_member_password" as any, { _user_id: userId, _new_password: newPassword } as any); if (error) throw new Error(error.message); } await loadAll(); }}
-            onAdd={async (payload) => { const { data, error } = await supabase.rpc("register_member", { _full_name: payload.fullName, _mobile: payload.mobile, _real_email: payload.realEmail, _dob: payload.dob, _password: payload.password, _sponsor_code: payload.sponsorCode, _position: payload.position, _activate: payload.activate }); if (error) throw new Error(error.message); await loadAll(); return data as unknown as { memberCode: string; referralCode: string }; }}
+            onAdd={async (payload) => {
+              let sponsor = payload.sponsorCode.trim().toUpperCase();
+              if (sponsor) {
+                const { data: sp } = await supabase.from("profiles").select("referral_code").or(`member_code.eq.${sponsor},referral_code.eq.${sponsor}`).limit(1).maybeSingle();
+                if (!sp) throw new Error(`Sponsor ID ${sponsor} not found`);
+                sponsor = sp.referral_code;
+              }
+              const { data, error } = await supabase.rpc("register_member", { _full_name: payload.fullName, _mobile: payload.mobile, _real_email: payload.realEmail, _dob: payload.dob, _password: payload.password, _sponsor_code: sponsor, _position: payload.position, _activate: false });
+              if (error) throw new Error(error.message);
+              const res = data as unknown as { memberCode: string; referralCode: string };
+              if (payload.activate) {
+                const { error: tErr } = await supabase.rpc("admin_topup_member" as any, { _member_code: res.memberCode } as any);
+                if (tErr) throw new Error(`ID ${res.memberCode} created, but top-up failed: ${tErr.message}`);
+              }
+              await loadAll();
+              return res;
+            }}
           />
         )}
 
@@ -726,6 +742,20 @@ function MembersTab({
             placeholder="Search name / mobile / ID"
             className="rounded-full border border-border bg-card px-4 py-2 text-sm"
           />
+          <button onClick={() => setAsk({
+              title: "Top-up ID (no payment)",
+              message: "Enter the RS Member ID. It will be activated and normal payouts will run.",
+              input: { label: "Member ID (e.g. RS-123456)", required: true }, confirmLabel: "Top-up",
+              onConfirm: async (v: string) => {
+                const code = (v || "").trim().toUpperCase();
+                if (!code) throw new Error("Enter a Member ID");
+                const { error } = await supabase.rpc("admin_topup_member" as any, { _member_code: code } as any);
+                if (error) throw new Error(error.message);
+                setNotice(`${code} topped up and activated.`); await onReload();
+              },
+            })} className="rounded-full border border-primary text-primary px-4 py-2 text-sm font-semibold">
+            Top-up ID
+          </button>
           <button onClick={() => { setErr(""); setForm(blank); }} className="rounded-full bg-gradient-gold text-gold-foreground px-4 py-2 text-sm font-semibold flex items-center gap-1">
             <Plus className="h-4 w-4" /> Add Member
           </button>
@@ -848,7 +878,7 @@ function MembersTab({
                 <F label="Date of Birth"><input type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} className="w-full rounded border px-3 py-2" /></F>
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <F label="Sponsor Code (optional)"><input value={form.sponsorCode} onChange={e => setForm({ ...form, sponsorCode: e.target.value.toUpperCase() })} className="w-full rounded border px-3 py-2" /></F>
+                <F label="Place under ID (optional — RS ID, blank = company)"><input value={form.sponsorCode} placeholder="e.g. RS-123456" onChange={e => setForm({ ...form, sponsorCode: e.target.value.toUpperCase() })} className="w-full rounded border px-3 py-2" /></F>
                 <F label="Position">
                   <select value={form.position} onChange={e => setForm({ ...form, position: e.target.value as "left" | "right" })} className="w-full rounded border px-3 py-2">
                     <option value="left">Left</option>
@@ -858,7 +888,7 @@ function MembersTab({
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.activate} onChange={e => setForm({ ...form, activate: e.target.checked })} />
-                Activate this ID immediately (payment already received)
+                Top-up & activate now without payment (payout starts)
               </label>
               {err && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{err}</div>}
               <div className="flex gap-2 pt-2">
