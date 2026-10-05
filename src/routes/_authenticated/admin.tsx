@@ -745,15 +745,15 @@ function MembersTab({
           <button onClick={() => setAsk({
               title: "Top-up ID (no payment)",
               message: "Enter the RS Member ID. It will be activated and normal payouts will run.",
-              inputLabel: "Member ID", inputPlaceholder: "RS-123456", confirmLabel: "Top-up",
-              onConfirm: async (v?: string) => {
+              input: { label: "Member ID (e.g. RS-123456)", required: true }, confirmLabel: "Top-up",
+              onConfirm: async (v: string) => {
                 const code = (v || "").trim().toUpperCase();
                 if (!code) throw new Error("Enter a Member ID");
                 const { error } = await supabase.rpc("admin_topup_member" as any, { _member_code: code } as any);
                 if (error) throw new Error(error.message);
                 setNotice(`${code} topped up and activated.`); await onReload();
               },
-            } as any)} className="rounded-full border border-primary text-primary px-4 py-2 text-sm font-semibold">
+            })} className="rounded-full border border-primary text-primary px-4 py-2 text-sm font-semibold">
             Top-up ID
           </button>
           <button onClick={() => { setErr(""); setForm(blank); }} className="rounded-full bg-gradient-gold text-gold-foreground px-4 py-2 text-sm font-semibold flex items-center gap-1">
