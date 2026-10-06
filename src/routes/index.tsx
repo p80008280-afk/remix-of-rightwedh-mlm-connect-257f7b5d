@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Leaf, ShieldCheck, Users, TrendingUp, Award, Sparkles, ArrowRight, CheckCircle2, Star, ShoppingBag, Upload, UserCheck, Smartphone, Download } from "lucide-react";
-import apkAsset from "@/assets/righvedh-sanjivni.apk.asset.json";
+// Served from public/ so it works on every host (Hostinger/Netlify), not only Lovable hosting.
+const apkAsset = { url: "/righvedh-sanjivni.apk" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
 export const Route = createFileRoute("/")({

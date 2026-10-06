@@ -11,3 +11,4 @@
 
 - Reward payouts use the company-provided values directly with no additional GST because GST is already handled on the product.
 - Admin actions use authenticated browser RPC calls so they work on external hosting without server environment variables.
+- The Android APK is served from public/righvedh-sanjivni.apk (not a CDN asset pointer) because the site is also hosted outside Lovable, where /__l5e asset URLs 404.
