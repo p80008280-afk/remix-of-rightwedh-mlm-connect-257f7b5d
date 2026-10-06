@@ -1,9 +1,8 @@
 import { PasswordInput } from "@/components/ui/password-input";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { resetMemberPassword } from "@/lib/mlm.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
@@ -23,7 +22,6 @@ export const Route = createFileRoute("/forgot-password")({
 
 function ForgotPassword() {
   const nav = useNavigate();
-  const reset = useServerFn(resetMemberPassword);
   const [f, setF] = useState({ mobile: "", email: "", dob: "", newPassword: "", confirm: "" });
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
@@ -37,7 +35,9 @@ function ForgotPassword() {
     if (f.newPassword !== f.confirm) { setError("Both passwords must match."); return; }
     setBusy(true);
     try {
-      await reset({ data: { mobile: f.mobile.trim(), email: f.email, dob: f.dob, newPassword: f.newPassword } });
+      if (f.newPassword.length < 6) throw new Error("Password must be at least 6 characters.");
+      const { error: rpcError } = await supabase.rpc("reset_member_password" as any, { _mobile: f.mobile.trim(), _email: f.email.trim(), _dob: f.dob, _new_password: f.newPassword } as any);
+      if (rpcError) throw new Error(rpcError.message);
       setMsg("Password updated. You can login now with your mobile number and new password.");
       setTimeout(() => { void nav({ to: "/login" }); }, 1800);
     } catch (err) {

@@ -5,8 +5,7 @@ import {
   GitBranch, ShoppingBag, Send, Clock, Gift, IdCard, Trash2, Network, User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyDirectTeam, getMyTree, claimMyReward, expireMyRewards, type TreeNode } from "@/lib/mlm.functions";
-import { useServerFn } from "@tanstack/react-start";
+import type { TreeNode } from "@/lib/mlm.functions";
 const logoAsset = { url: "/logo.png" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
@@ -65,10 +64,37 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const nav = useNavigate();
-  const fetchDirectTeam = useServerFn(getMyDirectTeam);
-  const fetchTree = useServerFn(getMyTree);
-  const claimReward = useServerFn(claimMyReward);
-  const expireRewards = useServerFn(expireMyRewards);
+  const fetchDirectTeam = async () => {
+    const { data, error } = await supabase.rpc("get_my_direct_team" as any);
+    if (error) throw error;
+    return (data ?? []) as any[];
+  };
+  const fetchTree = async (): Promise<TreeNode | null> => {
+    const { data: u } = await supabase.auth.getUser();
+    const uid = u.user?.id;
+    if (!uid) return null;
+    const { data, error } = await supabase.rpc("get_my_tree_rows" as any);
+    if (error) throw error;
+    const rows = (data ?? []) as Array<{ id: string; full_name: string; member_code: string; parent_id: string | null; member_position: "left" | "right"; is_active: boolean }>;
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const kids = new Map<string, { left?: string; right?: string }>();
+    for (const r of rows) { const k = kids.get(r.parent_id ?? "") ?? {}; k[r.member_position] = r.id; kids.set(r.parent_id ?? "", k); }
+    const build = (id: string, seen = new Set<string>()): TreeNode | null => {
+      const self = byId.get(id); if (!self || seen.has(id)) return null; seen.add(id);
+      const k = kids.get(id) ?? {};
+      return { id: self.id, full_name: self.full_name, member_code: self.member_code, is_active: self.is_active,
+        left: k.left ? build(k.left, seen) : null, right: k.right ? build(k.right, seen) : null };
+    };
+    return build(uid);
+  };
+  const claimReward = async ({ data }: { data: { level: number } }) => {
+    const { error } = await supabase.rpc("claim_my_reward" as any, { _level: data.level } as any);
+    if (error) throw new Error(error.message);
+  };
+  const expireRewards = async (_: object) => {
+    const { error } = await supabase.rpc("expire_my_rewards" as any);
+    if (error) throw new Error(error.message);
+  };
   const [tab, setTab] = useState<"overview" | "shop" | "orders" | "team" | "tree" | "rewards" | "income" | "withdraw" | "idcard" | "profile">(() => {
     if (typeof window === "undefined") return "overview";
     return new URLSearchParams(window.location.search).get("tab") === "shop" ? "shop" : "overview";
