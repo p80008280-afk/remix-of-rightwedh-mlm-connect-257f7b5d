@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { registerMember } from "@/lib/mlm.functions";
-import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Copy } from "lucide-react";
 const logoAsset = { url: "/logo.png" };
 
@@ -34,7 +32,6 @@ function mobileToEmail(mobile: string) {
 
 function Register() {
   const nav = useNavigate();
-  const createMember = useServerFn(registerMember);
   const s = useSearch({ from: "/register" });
   const [form, setForm] = useState({
     full_name: "",
@@ -65,15 +62,21 @@ function Register() {
     }
     setLoading(true);
     try {
-      const res = await createMember({ data: {
-        fullName: form.full_name.trim(),
-        mobile,
-        realEmail: form.email.trim(),
-        dob: form.dob,
-        password: form.password,
-        sponsorCode: form.sponsor_code.trim().toUpperCase(),
-        position: form.position,
-      } });
+      if (!form.dob) throw new Error("Enter your date of birth.");
+      if (form.password.length < 6) throw new Error("Password must be at least 6 characters.");
+      const { data: rpcData, error: rpcError } = await supabase.rpc("register_member" as any, {
+        _full_name: form.full_name.trim(),
+        _mobile: mobile,
+        _real_email: form.email.trim(),
+        _dob: form.dob,
+        _password: form.password,
+        _sponsor_code: form.sponsor_code.trim().toUpperCase(),
+        _position: form.position,
+        _activate: false,
+      } as any);
+      if (rpcError) throw new Error(rpcError.message);
+      const res = rpcData as unknown as { ok: boolean; memberCode: string };
+      if (!res?.ok) throw new Error("Registration failed");
       const { error: loginError } = await supabase.auth.signInWithPassword({
         email: mobileToEmail(mobile),
         password: form.password,
