@@ -710,34 +710,19 @@ export type Database = {
         Args: { _withdrawal_id: string }
         Returns: undefined
       }
-      register_member:
-        | {
-            Args: {
-              _activate?: boolean
-              _dob: string
-              _full_name: string
-              _mobile: string
-              _password: string
-              _position?: string
-              _real_email: string
-              _sponsor_code?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              _activate?: boolean
-              _admin_authorized?: boolean
-              _dob: string
-              _full_name: string
-              _mobile: string
-              _password: string
-              _position?: string
-              _real_email: string
-              _sponsor_code?: string
-            }
-            Returns: Json
-          }
+      register_member: {
+        Args: {
+          _activate?: boolean
+          _dob: string
+          _full_name: string
+          _mobile: string
+          _password: string
+          _position?: string
+          _real_email: string
+          _sponsor_code?: string
+        }
+        Returns: Json
+      }
       reset_member_password: {
         Args: {
           _dob: string
