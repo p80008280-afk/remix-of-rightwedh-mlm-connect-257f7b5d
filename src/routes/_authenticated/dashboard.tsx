@@ -978,13 +978,13 @@ function IdCardTab({ profile, onDone }: { profile: Profile; onDone: () => void }
               <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Member Identity Card</div>
             </div>
           </div>
-          <div className="bg-cream p-6 flex gap-6">
+          <div className="bg-cream p-4 sm:p-6 flex flex-col items-center sm:flex-row sm:items-start gap-4 sm:gap-6">
             <div className="h-36 w-28 shrink-0 rounded-lg border-2 border-primary overflow-hidden bg-white flex items-center justify-center">
               {profile.photo_url
                 ? <img src={profile.photo_url} alt="Member" className="h-full w-full object-cover" />
                 : <span className="text-[11px] text-muted-foreground text-center px-2">No photo uploaded</span>}
             </div>
-            <div className="text-sm space-y-1.5">
+            <div className="text-sm space-y-1.5 w-full min-w-0">
               <CardRow k="Name" v={profile.full_name || "—"} />
               <CardRow k="User ID" v={profile.member_code} mono />
               <CardRow k="Mobile" v={profile.username || profile.phone || "—"} mono />

@@ -830,6 +830,20 @@ function MembersTab({
                       },
                     })}
                     className="rounded bg-primary text-primary-foreground px-2 py-1 text-xs">Set password</button>
+                  <button
+                    onClick={() => setAsk({
+                      title: "Delete this ID?",
+                      message: `Are you sure you want to permanently delete ${m.full_name} (${m.member_code})? This cannot be undone.`,
+                      confirmLabel: "Yes, delete",
+                      tone: "danger",
+                      onConfirm: async () => {
+                        const { error } = await supabase.rpc("admin_delete_member" as any, { _user_id: m.id } as any);
+                        if (error) { setNotice(error.message); return; }
+                        setNotice("ID deleted.");
+                        await onReload();
+                      },
+                    })}
+                    className="rounded bg-destructive text-destructive-foreground px-2 py-1 text-xs">Delete ID</button>
                   {m.is_active && (
                     <button
                       onClick={() => setAsk({
