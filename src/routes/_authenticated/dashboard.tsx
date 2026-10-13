@@ -312,9 +312,9 @@ function Dashboard() {
               positions top to bottom. One left member + one right member makes a pair, and each matched pair
               pays your pair bonus. Tree shows up to 10 levels deep.
             </p>
-            <div className="overflow-x-auto pb-4">
+            <div className="overflow-x-auto pb-4 -mx-2"><div className="w-max min-w-full flex justify-center px-2">
               {tree ? <TreeBranch node={tree} root /> : <p className="text-sm text-muted-foreground">Tree is not available yet.</p>}
-            </div>
+            </div></div>
           </Section>
         )}
 
@@ -759,7 +759,7 @@ function countLeg(node: TreeNode | null): number {
 function NodeCard({ node, root }: { node: TreeNode | null; root?: boolean }) {
   if (!node) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-4 min-w-[150px] text-center">
+      <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-2 py-3 sm:px-4 sm:py-4 min-w-[84px] sm:min-w-[150px] text-center">
         <div className="mx-auto h-9 w-9 rounded-full border border-dashed border-border" />
         <div className="mt-2 text-xs text-muted-foreground">Empty position</div>
       </div>
@@ -767,14 +767,14 @@ function NodeCard({ node, root }: { node: TreeNode | null; root?: boolean }) {
   }
   const initials = (node.full_name || "M").trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
   return (
-    <div className={`rounded-2xl border px-4 py-3 min-w-[150px] text-center shadow-soft ${root
+    <div className={`rounded-2xl border px-2 py-2 sm:px-4 sm:py-3 min-w-[84px] sm:min-w-[150px] text-center shadow-soft ${root
       ? "bg-gradient-gold text-gold-foreground border-gold/50"
       : node.is_active ? "bg-card border-primary/40" : "bg-card border-border"}`}>
       <div className={`mx-auto h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold ${root ? "bg-gold-foreground/15" : node.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
         {initials}
       </div>
-      <div className="mt-2 text-sm font-semibold truncate max-w-[150px] mx-auto">{node.full_name || "Member"}</div>
-      <div className="font-mono text-[11px] opacity-80">{node.member_code}</div>
+      <div className="mt-2 text-[11px] sm:text-sm font-semibold truncate max-w-[84px] sm:max-w-[150px] mx-auto">{node.full_name || "Member"}</div>
+      <div className="font-mono text-[9px] sm:text-[11px] opacity-80">{node.member_code}</div>
       <div className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${root ? "bg-gold-foreground/15" : node.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
         {root ? "You" : node.is_active ? "Active" : "Pending"}
       </div>
@@ -804,7 +804,7 @@ function TreeBranch({ node, root, depth = 0 }: { node: TreeNode; root?: boolean;
 
 function TreeLeg({ label, child, depth, side }: { label: string; child: TreeNode | null; depth: number; side: "left" | "right" }) {
   return (
-    <div className="flex flex-col items-center px-3 sm:px-5">
+    <div className="flex flex-col items-center px-1 sm:px-5">
       {/* horizontal connector: half-width line towards the parent stem */}
       <div className="flex w-full h-4">
         <div className={`flex-1 ${side === "right" ? "border-t border-border" : ""}`} />
@@ -978,13 +978,13 @@ function IdCardTab({ profile, onDone }: { profile: Profile; onDone: () => void }
               <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Member Identity Card</div>
             </div>
           </div>
-          <div className="bg-cream p-6 flex gap-6">
+          <div className="bg-cream p-4 sm:p-6 flex flex-col items-center sm:flex-row sm:items-start gap-4 sm:gap-6">
             <div className="h-36 w-28 shrink-0 rounded-lg border-2 border-primary overflow-hidden bg-white flex items-center justify-center">
               {profile.photo_url
                 ? <img src={profile.photo_url} alt="Member" className="h-full w-full object-cover" />
                 : <span className="text-[11px] text-muted-foreground text-center px-2">No photo uploaded</span>}
             </div>
-            <div className="text-sm space-y-1.5">
+            <div className="text-sm space-y-1.5 w-full min-w-0">
               <CardRow k="Name" v={profile.full_name || "—"} />
               <CardRow k="User ID" v={profile.member_code} mono />
               <CardRow k="Mobile" v={profile.username || profile.phone || "—"} mono />
@@ -1012,9 +1012,9 @@ function IdCardTab({ profile, onDone }: { profile: Profile; onDone: () => void }
 
 function CardRow({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
   return (
-    <div className="flex gap-2">
-      <span className="w-28 text-xs uppercase tracking-wide text-muted-foreground pt-0.5">{k}</span>
-      <span className={`font-semibold text-primary ${mono ? "font-mono" : ""}`}>{v}</span>
+    <div className="flex gap-2 min-w-0">
+      <span className="w-24 sm:w-28 shrink-0 text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground pt-0.5">{k}</span>
+      <span className={`font-semibold text-primary break-all min-w-0 ${mono ? "font-mono" : ""}`}>{v}</span>
     </div>
   );
 }
