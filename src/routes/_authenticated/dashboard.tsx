@@ -314,7 +314,7 @@ function Dashboard() {
             </p>
             <div className="overflow-x-auto pb-4 -mx-2"><div className="w-max min-w-full flex justify-center px-2">
               {tree ? <TreeBranch node={tree} root /> : <p className="text-sm text-muted-foreground">Tree is not available yet.</p>}
-            </div>
+            </div></div>
           </Section>
         )}
 
