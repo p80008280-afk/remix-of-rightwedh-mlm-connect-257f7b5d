@@ -506,6 +506,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_member: { Args: { _user_id: string }; Returns: undefined }
       admin_review_order: {
         Args: { _action: string; _note?: string; _order_id: string }
         Returns: undefined
