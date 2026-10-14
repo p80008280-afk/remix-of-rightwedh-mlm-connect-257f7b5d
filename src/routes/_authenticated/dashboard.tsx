@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   LayoutDashboard, Users, Wallet, TrendingUp, Copy, LogOut, IndianRupee,
   GitBranch, ShoppingBag, Send, Clock, Gift, IdCard, Trash2, Network, User,
@@ -754,7 +754,7 @@ function countLeg(node: TreeNode | null): number {
   return 1 + countLeg(node.left) + countLeg(node.right);
 }
 
-function NodeCard({ node, root }: { node: TreeNode | null; root?: boolean }) {
+function NodeCard({ node, root, focused }: { node: TreeNode | null; root?: boolean; focused?: boolean }) {
   if (!node) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-2 py-3 sm:px-4 sm:py-4 min-w-[84px] sm:min-w-[150px] text-center">
@@ -774,7 +774,7 @@ function NodeCard({ node, root }: { node: TreeNode | null; root?: boolean }) {
       <div className="mt-2 text-[11px] sm:text-sm font-semibold truncate max-w-[84px] sm:max-w-[150px] mx-auto">{node.full_name || "Member"}</div>
       <div className="font-mono text-[9px] sm:text-[11px] opacity-80">{node.member_code}</div>
       <div className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${root ? "bg-gold-foreground/15" : node.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-        {root ? "You" : node.is_active ? "Active" : "Pending"}
+        {root ? (focused ? (node.is_active ? "Active" : "Pending") : "You") : node.is_active ? "Active" : "Pending"}
       </div>
     </div>
   );
@@ -846,7 +846,7 @@ function TreeBranch({ node, root, highlight, depth = 0, onFocus }: { node: TreeN
   const atLimit = depth >= VISIBLE_LEVELS - 1;
   return (
     <div className="flex flex-col items-center">
-      <NodeCard node={node} root={root || highlight} />
+      <NodeCard node={node} root={root || highlight} focused={highlight} />
       {atLimit && hasKids ? (
         <button onClick={() => onFocus(node.id)} className="mt-2 rounded-full bg-primary text-primary-foreground px-3 py-1 text-[10px] sm:text-xs font-semibold">
           View deeper ↓ ({countLeg(node.left) + countLeg(node.right)})
