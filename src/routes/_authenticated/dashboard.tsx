@@ -308,13 +308,11 @@ function Dashboard() {
             </div>
 
             <p className="text-sm text-muted-foreground mb-4">
-              Every member has two positions — Left and Right. New joinings under your referral fill these
-              positions top to bottom. One left member + one right member makes a pair, and each matched pair
-              pays your pair bonus. Tree shows up to 10 levels deep.
+              Every member has two positions — Left and Right. One left member + one right member makes a pair,
+              and each matched pair pays your pair bonus. Your full downline is available at any depth — tap
+              <b> "View deeper"</b> under a member to keep going down, or search a Member ID.
             </p>
-            <div className="overflow-x-auto pb-4 -mx-2"><div className="w-max min-w-full flex justify-center px-2">
-              {tree ? <TreeBranch node={tree} root /> : <p className="text-sm text-muted-foreground">Tree is not available yet.</p>}
-            </div></div>
+            {tree ? <DeepTree tree={tree} /> : <p className="text-sm text-muted-foreground">Tree is not available yet.</p>}
           </Section>
         )}
 
