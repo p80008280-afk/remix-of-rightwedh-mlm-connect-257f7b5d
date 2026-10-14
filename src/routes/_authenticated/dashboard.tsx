@@ -780,30 +780,93 @@ function NodeCard({ node, root }: { node: TreeNode | null; root?: boolean }) {
   );
 }
 
-function TreeBranch({ node, root, depth = 0 }: { node: TreeNode; root?: boolean; depth?: number }) {
-  // Show empty slots for the first few levels so the binary structure is visible.
-  const showSlots = depth < 2 || !!(node.left || node.right);
-  const expand = depth < 10 && showSlots;
+const VISIBLE_LEVELS = 4;
+
+function treeDepth(node: TreeNode | null): number {
+  if (!node) return 0;
+  return 1 + Math.max(treeDepth(node.left), treeDepth(node.right));
+}
+
+function DeepTree({ tree }: { tree: TreeNode }) {
+  const index = useMemo(() => {
+    const byId = new Map<string, TreeNode>();
+    const parent = new Map<string, string>();
+    const walk = (n: TreeNode) => {
+      byId.set(n.id, n);
+      for (const c of [n.left, n.right]) if (c) { parent.set(c.id, n.id); walk(c); }
+    };
+    walk(tree);
+    return { byId, parent };
+  }, [tree]);
+  const [focusId, setFocusId] = useState(tree.id);
+  const [query, setQuery] = useState("");
+  const [searchMsg, setSearchMsg] = useState("");
+  const focus = index.byId.get(focusId) ?? tree;
+
+  const path: TreeNode[] = [];
+  let cur: string | undefined = focus.id;
+  while (cur) { const n = index.byId.get(cur); if (!n) break; path.unshift(n); cur = index.parent.get(cur); }
+
+  const search = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim().toUpperCase();
+    if (!q) return;
+    const found = [...index.byId.values()].find(n => (n.member_code || "").toUpperCase() === q || (n.full_name || "").toUpperCase().includes(q));
+    if (found) { setFocusId(found.id); setSearchMsg(""); }
+    else setSearchMsg("This ID is not in your downline.");
+  };
+
   return (
-    <div className="flex flex-col items-center">
-      <NodeCard node={node} root={root} />
-      {expand && (
-        <>
-          <div className="h-6 w-px bg-border" />
-          <div className="flex">
-            <TreeLeg label="Left" child={node.left} depth={depth} side="left" />
-            <TreeLeg label="Right" child={node.right} depth={depth} side="right" />
-          </div>
-        </>
+    <div>
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center mb-3">
+        <form onSubmit={search} className="flex gap-2 flex-1">
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search Member ID or name (e.g. RS-123456)" className="flex-1 min-w-0 rounded-full border border-input bg-background px-4 py-2 text-sm" />
+          <button className="rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold">Find</button>
+        </form>
+        <div className="text-xs text-muted-foreground">Total downline depth: <b>{Math.max(0, treeDepth(tree) - 1)}</b> levels</div>
+      </div>
+      {searchMsg && <p className="text-sm text-destructive mb-2">{searchMsg}</p>}
+      {path.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
+          <button onClick={() => setFocusId(tree.id)} className="rounded-full border border-border px-3 py-1 hover:bg-muted">⤒ Back to me</button>
+          <button onClick={() => setFocusId(path[path.length - 2].id)} className="rounded-full border border-border px-3 py-1 hover:bg-muted">↑ One level up</button>
+          <span className="text-muted-foreground">Viewing level {path.length - 1}: {path.map(p => p.member_code).join(" › ")}</span>
+        </div>
       )}
+      <div className="overflow-x-auto pb-4 -mx-2"><div className="w-max min-w-full flex justify-center px-2">
+        <TreeBranch node={focus} root={focus.id === tree.id} highlight={focus.id !== tree.id} onFocus={setFocusId} />
+      </div></div>
     </div>
   );
 }
 
-function TreeLeg({ label, child, depth, side }: { label: string; child: TreeNode | null; depth: number; side: "left" | "right" }) {
+function TreeBranch({ node, root, highlight, depth = 0, onFocus }: { node: TreeNode; root?: boolean; highlight?: boolean; depth?: number; onFocus: (id: string) => void }) {
+  const hasKids = !!(node.left || node.right);
+  const showSlots = depth < 2 || hasKids;
+  const atLimit = depth >= VISIBLE_LEVELS - 1;
+  return (
+    <div className="flex flex-col items-center">
+      <NodeCard node={node} root={root || highlight} />
+      {atLimit && hasKids ? (
+        <button onClick={() => onFocus(node.id)} className="mt-2 rounded-full bg-primary text-primary-foreground px-3 py-1 text-[10px] sm:text-xs font-semibold">
+          View deeper ↓ ({countLeg(node.left) + countLeg(node.right)})
+        </button>
+      ) : !atLimit && showSlots ? (
+        <>
+          <div className="h-6 w-px bg-border" />
+          <div className="flex">
+            <TreeLeg label="Left" child={node.left} depth={depth} side="left" onFocus={onFocus} />
+            <TreeLeg label="Right" child={node.right} depth={depth} side="right" onFocus={onFocus} />
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function TreeLeg({ label, child, depth, side, onFocus }: { label: string; child: TreeNode | null; depth: number; side: "left" | "right"; onFocus: (id: string) => void }) {
   return (
     <div className="flex flex-col items-center px-1 sm:px-5">
-      {/* horizontal connector: half-width line towards the parent stem */}
       <div className="flex w-full h-4">
         <div className={`flex-1 ${side === "right" ? "border-t border-border" : ""}`} />
         <div className={`flex-1 ${side === "left" ? "border-t border-border" : ""}`} />
@@ -811,7 +874,7 @@ function TreeLeg({ label, child, depth, side }: { label: string; child: TreeNode
       <div className="h-4 w-px bg-border" />
       <div className={`mb-2 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest ${side === "left" ? "bg-primary/10 text-primary" : "bg-gold/15 text-gold"}`}>{label}</div>
       {child
-        ? <TreeBranch node={child} depth={depth + 1} />
+        ? <TreeBranch node={child} depth={depth + 1} onFocus={onFocus} />
         : <NodeCard node={null} />}
     </div>
   );
