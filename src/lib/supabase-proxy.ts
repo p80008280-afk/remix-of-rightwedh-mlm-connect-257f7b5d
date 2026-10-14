@@ -41,6 +41,23 @@ export function installSupabaseProxy() {
     }
     return original(input, init);
   };
+
+  // Photos, payment proofs and QR images are also served from the blocked
+  // domain; rewrite <img src> to go through the same relay.
+  const setAttr = Element.prototype.setAttribute;
+  Element.prototype.setAttribute = function (name: string, value: string) {
+    if (name === "src" && typeof value === "string" && SB_HOST_RE.test(value)) value = proxiedUrl(value);
+    return setAttr.call(this, name, value);
+  };
+  const desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "src");
+  if (desc?.set && desc.get) {
+    Object.defineProperty(HTMLImageElement.prototype, "src", {
+      ...desc,
+      set(value: string) {
+        desc.set!.call(this, typeof value === "string" ? proxiedUrl(value) : value);
+      },
+    });
+  }
 }
 
 installSupabaseProxy();
