@@ -23,6 +23,22 @@ export function proxiedUrl(url: string): string {
   return url.replace(SB_HOST_RE, `${window.location.origin}/sbp/`);
 }
 
+// Hostinger's CDN answers 404 to POST/PUT on URLs that end in a file
+// extension (.jpg, .png...), which broke QR/photo/payment-proof uploads.
+// Move the real path into a query param for write requests.
+const EXT_RE = /\.[a-z0-9]{2,5}$/i;
+function writeSafe(url: string, method: string): string {
+  if (method === "GET" || method === "HEAD") return url;
+  const u = new URL(url);
+  const prefix = "/sbp/";
+  if (!u.pathname.startsWith(prefix) || !EXT_RE.test(u.pathname)) return url;
+  const real = decodeURIComponent(u.pathname.slice(prefix.length));
+  const out = new URL(`${u.origin}/sbp/_x`);
+  out.searchParams.set("__p", real);
+  u.searchParams.forEach((v, k) => out.searchParams.append(k, v));
+  return out.href;
+}
+
 let installed = false;
 export function installSupabaseProxy() {
   if (installed || !shouldProxy()) return;
@@ -32,7 +48,8 @@ export function installSupabaseProxy() {
     try {
       const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
       if (SB_HOST_RE.test(url)) {
-        const next = proxiedUrl(url);
+        const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
+        const next = writeSafe(proxiedUrl(url), method);
         if (typeof input === "string" || input instanceof URL) return original(next, init);
         return original(new Request(next, input), init);
       }
