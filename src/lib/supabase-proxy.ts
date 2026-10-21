@@ -77,4 +77,4 @@ export function installSupabaseProxy() {
   }
 }
 
-installSupabaseProxy();
+// Installed explicitly from __root.tsx (sideEffects:false would drop a bare import).

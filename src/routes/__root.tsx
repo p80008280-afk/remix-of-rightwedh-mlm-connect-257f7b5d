@@ -9,7 +9,10 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import "../lib/supabase-proxy";
+import { installSupabaseProxy } from "../lib/supabase-proxy";
+// Explicit call: package.json has "sideEffects": false, which made the
+// production build silently drop a bare `import "../lib/supabase-proxy"`.
+installSupabaseProxy();
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
