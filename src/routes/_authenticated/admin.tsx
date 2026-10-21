@@ -7,6 +7,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import DatabaseConsole from "@/components/DatabaseConsole";
 const logoAsset = { url: "/logo.png" };
+import { shrinkImage } from "@/lib/shrink-image";
 const qrAsset = { url: "/phonepe-qr.png" };
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -553,9 +554,10 @@ function SettingsTab({ settings, onSave }: { settings: PlanSettings; onSave: (se
     try {
       let next = { ...form };
       if (file) {
-        const ext = file.name.split(".").pop() || "png";
+        const small = await shrinkImage(file);
+        const ext = small.name.split(".").pop() || "jpg";
         const path = `qr/payment-qr-${Date.now()}.${ext}`;
-        const upload = await supabase.storage.from("payment-assets").upload(path, file, { upsert: false });
+        const upload = await supabase.storage.from("payment-assets").upload(path, small, { upsert: false, contentType: small.type });
         if (upload.error) throw upload.error;
         const signed = await supabase.storage.from("payment-assets").createSignedUrl(path, 60 * 60 * 24 * 365);
         next = { ...next, qr_image_path: path, qr_image_url: signed.data?.signedUrl || qrAsset.url };
@@ -619,9 +621,10 @@ function ImageUploadField({ label, value, folder, onChange }: { label: string; v
     if (!file) return;
     setBusy(true); setErr("");
     try {
-      const ext = file.name.split(".").pop() || "png";
+      const small = await shrinkImage(file);
+      const ext = small.name.split(".").pop() || "jpg";
       const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const up = await supabase.storage.from("payment-assets").upload(path, file, { upsert: false });
+      const up = await supabase.storage.from("payment-assets").upload(path, small, { upsert: false, contentType: small.type });
       if (up.error) throw up.error;
       const signed = await supabase.storage.from("payment-assets").createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
       onChange(signed.data?.signedUrl || "");

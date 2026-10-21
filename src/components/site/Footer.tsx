@@ -54,7 +54,7 @@ export function Footer() {
           <h4 className="font-serif text-gold text-lg mb-4">Reach Us</h4>
           <ul className="space-y-3 text-sm text-primary-foreground/80">
             <li className="flex gap-2"><MapPin className="h-4 w-4 mt-0.5 text-gold shrink-0" /> Scheme No. 136-A, Indore, MP, India</li>
-            <li className="flex gap-2"><Phone className="h-4 w-4 mt-0.5 text-gold shrink-0" /> +91 86199 90944</li>
+            <li className="flex gap-2"><Phone className="h-4 w-4 mt-0.5 text-gold shrink-0" /> +91 99816 55514</li>
             <li className="flex gap-2"><Mail className="h-4 w-4 mt-0.5 text-gold shrink-0" /> righvedhsanjivni@gmail.com</li>
             <li className="flex gap-2"><Clock className="h-4 w-4 mt-0.5 text-gold shrink-0" /> Support: 24 hours</li>
           </ul>
