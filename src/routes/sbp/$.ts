@@ -7,7 +7,7 @@ import type {} from "@tanstack/react-start";
 // this server forwards it. Only the project's own API paths are allowed.
 const FALLBACK_URL = "https://pyarcaxdnxnzedprfvyx.supabase.co";
 const ALLOWED = /^(auth|rest|storage|functions)\/v1(\/|$)/;
-const DROP_REQ = new Set(["host", "cookie", "connection", "content-length", "accept-encoding", "origin", "referer"]);
+const DROP_REQ = new Set(["host", "cookie", "connection", "content-length", "accept-encoding", "origin", "referer", "expect", "keep-alive", "upgrade", "te", "trailer"]);
 const DROP_RES = new Set(["content-encoding", "content-length", "transfer-encoding", "connection", "set-cookie"]);
 
 async function relay({ request, params }: { request: Request; params: { _splat?: string } }) {
