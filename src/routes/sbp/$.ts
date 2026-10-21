@@ -11,11 +11,18 @@ const DROP_REQ = new Set(["host", "cookie", "connection", "content-length", "acc
 const DROP_RES = new Set(["content-encoding", "content-length", "transfer-encoding", "connection", "set-cookie"]);
 
 async function relay({ request, params }: { request: Request; params: { _splat?: string } }) {
-  const path = params._splat ?? "";
-  if (!ALLOWED.test(path)) return new Response("Not found", { status: 404 });
+  const incoming = new URL(request.url);
+  let path = params._splat ?? "";
+  // Hostinger's CDN rejects POST/PUT to URLs ending in .jpg/.png etc. (404),
+  // so the browser sends file uploads as /sbp/_x?__p=<real path>.
+  if (path === "_x") {
+    path = incoming.searchParams.get("__p") ?? "";
+    incoming.searchParams.delete("__p");
+  }
+  if (!ALLOWED.test(path) || path.includes("..")) return new Response("Not found", { status: 404 });
   const base = (process.env["SUPABASE_URL"] || FALLBACK_URL).replace(/\/$/, "");
   const target = new URL(`${base}/${path}`);
-  target.search = new URL(request.url).search;
+  target.search = incoming.search;
 
   const headers = new Headers();
   request.headers.forEach((v, k) => {
