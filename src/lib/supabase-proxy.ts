@@ -20,15 +20,17 @@ function shouldProxy(): boolean {
 
 export function proxiedUrl(url: string): string {
   if (!shouldProxy() || !SB_HOST_RE.test(url)) return url;
-  return url.replace(SB_HOST_RE, `${window.location.origin}/sbp/`);
+  return extSafe(url.replace(SB_HOST_RE, `${window.location.origin}/sbp/`));
 }
 
-// Hostinger's CDN answers 404 to POST/PUT on URLs that end in a file
-// extension (.jpg, .png...), which broke QR/photo/payment-proof uploads.
-// Move the real path into a query param for write requests.
+// Hostinger's CDN treats any URL ending in a file extension (.jpg, .png...)
+// as a static file and answers 404 — for uploads AND for viewing images
+// (QR, photos, payment proofs). Move the real path into a query param.
 const EXT_RE = /\.[a-z0-9]{2,5}$/i;
-function writeSafe(url: string, method: string): string {
-  if (method === "GET" || method === "HEAD") return url;
+function writeSafe(url: string, _method: string): string {
+  return extSafe(url);
+}
+function extSafe(url: string): string {
   const u = new URL(url);
   const prefix = "/sbp/";
   if (!u.pathname.startsWith(prefix) || !EXT_RE.test(u.pathname)) return url;
