@@ -379,6 +379,7 @@ function NavBtn({ active, onClick, icon: Icon, label }: any) {
 }
 
 function ActivationCard({ profile, onRepurchase }: { profile: Profile; onRepurchase: () => void }) {
+  if (profile.is_active && !profile.active_until) return null; // company/admin IDs never expire
   const info = activationInfo(profile.is_active, profile.active_until);
   const pct = Math.max(0, Math.min(100, (info.daysLeft / ACTIVATION_DAYS) * 100));
   const urgent = info.active && info.daysLeft <= 5;
