@@ -784,16 +784,29 @@ function MembersTab({
               </td>
               <td className="py-2 px-2 font-mono text-xs">{m.referral_code}</td>
               <td className="py-2 px-2">
-                {m.is_active
-                  ? <span className="text-green-600 font-semibold">Active</span>
-                  : <button
-                      onClick={() => setAsk({
-                        title: "Activate this ID?",
-                        message: `${m.full_name}'s ID will be marked as paid and income will start.`,
-                        confirmLabel: "Activate ID",
-                        onConfirm: async () => { await onState(m.id, { is_active: true }); setNotice("ID activated."); },
-                      })}
-                      className="rounded bg-green-600 text-white px-2 py-1 text-xs font-semibold">Activate ID</button>}
+                {(() => {
+                  const info = activationInfo(m.is_active, m.active_until);
+                  if (m.is_active && !m.active_until) return <span className="text-green-600 font-semibold">Active</span>;
+                  if (info.active) return (
+                    <div className="text-xs">
+                      <span className="text-green-600 font-semibold">Active · {info.daysLeft}d left</span>
+                      <div className="text-muted-foreground">till {formatDate(info.until)}</div>
+                    </div>
+                  );
+                  return (
+                    <div className="text-xs space-y-1">
+                      {info.until && <div className="text-destructive">Expired {formatDate(info.until)}</div>}
+                      <button
+                        onClick={() => setAsk({
+                          title: "Activate this ID for 30 days?",
+                          message: `${m.full_name}'s ID will be marked as paid and income will start for the next 30 days.`,
+                          confirmLabel: "Activate ID",
+                          onConfirm: async () => { await onState(m.id, { is_active: true }); setNotice("ID activated for 30 days."); },
+                        })}
+                        className="rounded bg-green-600 text-white px-2 py-1 text-xs font-semibold">Activate ID</button>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="py-2 px-2">
                 <select
