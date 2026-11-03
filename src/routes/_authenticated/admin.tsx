@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DatabaseConsole from "@/components/DatabaseConsole";
 const logoAsset = { url: "/logo.png" };
 import { shrinkImage } from "@/lib/shrink-image";
+import { activationInfo, formatDate } from "@/lib/activation";
 const qrAsset = { url: "/phonepe-qr.png" };
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; member_code: string; is_active: boolean; account_status: string; login_password: string | null; kyc_status: string; created_at: string };
+type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; member_code: string; is_active: boolean; active_until: string | null; account_status: string; login_password: string | null; kyc_status: string; created_at: string };
 type NewMember = { fullName: string; mobile: string; realEmail: string; dob: string; password: string; sponsorCode: string; position: "left" | "right"; activate: boolean };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
 type Order = { id: string; user_id: string; product_id: string; amount: number; quantity: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string; cart_group: string | null; ship_name: string | null; ship_phone: string | null; ship_address: string | null; ship_city: string | null; ship_state: string | null; ship_pincode: string | null };
@@ -50,6 +51,7 @@ function Admin() {
   const [notice, setNotice] = useState("");
 
   async function loadAll() {
+    await supabase.rpc("expire_lapsed_members");
     const [m, p, o, w, ps] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("products").select("*").order("created_at"),
