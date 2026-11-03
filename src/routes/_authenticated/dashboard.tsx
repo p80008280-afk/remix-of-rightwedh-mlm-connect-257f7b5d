@@ -14,7 +14,7 @@ type Profile = {
   username: string | null; member_code: string; dob: string | null; photo_url: string | null;
   address_line: string | null; city: string | null; state: string | null; pincode: string | null;
   referral_code: string; sponsor_id: string | null; position: string | null;
-  upi_id: string; kyc_status: string; is_active: boolean;
+  upi_id: string; kyc_status: string; is_active: boolean; active_until: string | null;
 };
 type WalletRow = { balance: number; total_earned: number; direct_income: number; pair_income: number };
 type TreeStats = { left_count: number; right_count: number; matched_pairs: number };
@@ -123,6 +123,7 @@ function Dashboard() {
       }
 
       const uid = userRes.user.id;
+      await supabase.rpc("expire_lapsed_members");
       const [p, w, s, pr, o, c, wd, ps, rl, ur] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
         supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
@@ -235,6 +236,7 @@ function Dashboard() {
 
         {tab === "overview" && (
           <div className="space-y-6">
+            <ActivationCard profile={profile} onRepurchase={() => setTab("shop")} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Stat icon={Wallet} label="Wallet Balance" value={`₹${wallet.balance}`} accent="gold" />
               <Stat icon={TrendingUp} label="Total Earned" value={`₹${wallet.total_earned}`} />
