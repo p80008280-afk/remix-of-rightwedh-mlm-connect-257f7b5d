@@ -237,6 +237,7 @@ export type Database = {
       profiles: {
         Row: {
           account_status: string
+          active_until: string | null
           address_line: string | null
           city: string | null
           created_at: string
@@ -261,6 +262,7 @@ export type Database = {
         }
         Insert: {
           account_status?: string
+          active_until?: string | null
           address_line?: string | null
           city?: string | null
           created_at?: string
@@ -285,6 +287,7 @@ export type Database = {
         }
         Update: {
           account_status?: string
+          active_until?: string | null
           address_line?: string | null
           city?: string | null
           created_at?: string
@@ -648,6 +651,7 @@ export type Database = {
       }
       credit_rewards: { Args: { _user_id: string }; Returns: undefined }
       expire_due_rewards: { Args: { _user_id: string }; Returns: undefined }
+      expire_lapsed_members: { Args: never; Returns: number }
       expire_member_rewards: { Args: { _user_id: string }; Returns: undefined }
       expire_my_rewards: { Args: never; Returns: undefined }
       generate_member_code: { Args: never; Returns: string }
@@ -703,6 +707,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      member_is_earning: { Args: { _user_id: string }; Returns: boolean }
       process_order_approval: {
         Args: { _order_id: string }
         Returns: undefined
