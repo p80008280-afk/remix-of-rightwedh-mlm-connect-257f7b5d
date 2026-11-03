@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DatabaseConsole from "@/components/DatabaseConsole";
 const logoAsset = { url: "/logo.png" };
 import { shrinkImage } from "@/lib/shrink-image";
+import { activationInfo, formatDate } from "@/lib/activation";
 const qrAsset = { url: "/phonepe-qr.png" };
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; member_code: string; is_active: boolean; account_status: string; login_password: string | null; kyc_status: string; created_at: string };
+type Profile = { id: string; full_name: string; username: string | null; email: string; phone: string; referral_code: string; member_code: string; is_active: boolean; active_until: string | null; account_status: string; login_password: string | null; kyc_status: string; created_at: string };
 type NewMember = { fullName: string; mobile: string; realEmail: string; dob: string; password: string; sponsorCode: string; position: "left" | "right"; activate: boolean };
 type Product = { id: string; name: string; description: string; category: string; image_url: string; mrp: number; direct_commission: number; pair_bonus: number; stock: number; status: string };
 type Order = { id: string; user_id: string; product_id: string; amount: number; quantity: number; status: string; upi_reference: string; payment_screenshot_url: string | null; admin_note: string | null; created_at: string; cart_group: string | null; ship_name: string | null; ship_phone: string | null; ship_address: string | null; ship_city: string | null; ship_state: string | null; ship_pincode: string | null };
@@ -50,6 +51,7 @@ function Admin() {
   const [notice, setNotice] = useState("");
 
   async function loadAll() {
+    await supabase.rpc("expire_lapsed_members");
     const [m, p, o, w, ps] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("products").select("*").order("created_at"),
@@ -782,16 +784,29 @@ function MembersTab({
               </td>
               <td className="py-2 px-2 font-mono text-xs">{m.referral_code}</td>
               <td className="py-2 px-2">
-                {m.is_active
-                  ? <span className="text-green-600 font-semibold">Active</span>
-                  : <button
-                      onClick={() => setAsk({
-                        title: "Activate this ID?",
-                        message: `${m.full_name}'s ID will be marked as paid and income will start.`,
-                        confirmLabel: "Activate ID",
-                        onConfirm: async () => { await onState(m.id, { is_active: true }); setNotice("ID activated."); },
-                      })}
-                      className="rounded bg-green-600 text-white px-2 py-1 text-xs font-semibold">Activate ID</button>}
+                {(() => {
+                  const info = activationInfo(m.is_active, m.active_until);
+                  if (m.is_active && !m.active_until) return <span className="text-green-600 font-semibold">Active</span>;
+                  if (info.active) return (
+                    <div className="text-xs">
+                      <span className="text-green-600 font-semibold">Active · {info.daysLeft}d left</span>
+                      <div className="text-muted-foreground">till {formatDate(info.until)}</div>
+                    </div>
+                  );
+                  return (
+                    <div className="text-xs space-y-1">
+                      {info.until && <div className="text-destructive">Expired {formatDate(info.until)}</div>}
+                      <button
+                        onClick={() => setAsk({
+                          title: "Activate this ID for 30 days?",
+                          message: `${m.full_name}'s ID will be marked as paid and income will start for the next 30 days.`,
+                          confirmLabel: "Activate ID",
+                          onConfirm: async () => { await onState(m.id, { is_active: true }); setNotice("ID activated for 30 days."); },
+                        })}
+                        className="rounded bg-green-600 text-white px-2 py-1 text-xs font-semibold">Activate ID</button>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="py-2 px-2">
                 <select

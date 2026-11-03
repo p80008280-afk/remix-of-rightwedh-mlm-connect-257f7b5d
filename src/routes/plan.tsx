@@ -107,7 +107,7 @@ function Plan() {
             { t: "Direct Sale Commission", d: "₹500 fixed on every direct member's purchase." },
             { t: "Pair Matching Bonus", d: "₹500 per matched pair (1 Left + 1 Right)." },
             { t: "Daily Capping", d: "Maximum 20 pairs per day, per member. Extra pairs carry no bonus." },
-            { t: "Monthly Repurchase", d: "1 product repurchase per month is compulsory to keep the ID active and eligible for pair income." },
+            { t: "Monthly Repurchase", d: "Each activation keeps the ID active for 30 days. After 30 days the ID becomes inactive and earns no direct or pair income until a product is repurchased." },
             { t: "Withdrawal", d: "Minimum ₹300 • 5% TDS deducted • 0 admin charge • paid within 7 days of admin approval." },
             { t: "Refund / Return", d: "15 days from purchase — only if the pair-matching income has not yet been distributed on your order." },
             { t: "Product Exchange", d: "Product exchange is allowed within the same 15-day window." },

@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { TreeNode } from "@/lib/mlm.functions";
+import { ACTIVATION_DAYS, activationInfo, formatDate } from "@/lib/activation";
 const logoAsset = { url: "/logo.png" };
 const capsuleAsset = { url: "/aaurva-capsule.png" };
 
@@ -14,7 +15,7 @@ type Profile = {
   username: string | null; member_code: string; dob: string | null; photo_url: string | null;
   address_line: string | null; city: string | null; state: string | null; pincode: string | null;
   referral_code: string; sponsor_id: string | null; position: string | null;
-  upi_id: string; kyc_status: string; is_active: boolean;
+  upi_id: string; kyc_status: string; is_active: boolean; active_until: string | null;
 };
 type WalletRow = { balance: number; total_earned: number; direct_income: number; pair_income: number };
 type TreeStats = { left_count: number; right_count: number; matched_pairs: number };
@@ -123,6 +124,7 @@ function Dashboard() {
       }
 
       const uid = userRes.user.id;
+      await supabase.rpc("expire_lapsed_members");
       const [p, w, s, pr, o, c, wd, ps, rl, ur] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
         supabase.from("wallets").select("*").eq("user_id", uid).maybeSingle(),
@@ -235,6 +237,7 @@ function Dashboard() {
 
         {tab === "overview" && (
           <div className="space-y-6">
+            <ActivationCard profile={profile} onRepurchase={() => setTab("shop")} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Stat icon={Wallet} label="Wallet Balance" value={`₹${wallet.balance}`} accent="gold" />
               <Stat icon={TrendingUp} label="Total Earned" value={`₹${wallet.total_earned}`} />
@@ -372,6 +375,52 @@ function NavBtn({ active, onClick, icon: Icon, label }: any) {
     <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm ${active ? "bg-gold text-gold-foreground font-semibold" : "hover:bg-primary-foreground/10"}`}>
       <Icon className="h-4 w-4" /> {label}
     </button>
+  );
+}
+
+function ActivationCard({ profile, onRepurchase }: { profile: Profile; onRepurchase: () => void }) {
+  if (profile.is_active && !profile.active_until) return null; // company/admin IDs never expire
+  const info = activationInfo(profile.is_active, profile.active_until);
+  const pct = Math.max(0, Math.min(100, (info.daysLeft / ACTIVATION_DAYS) * 100));
+  const urgent = info.active && info.daysLeft <= 5;
+  return (
+    <div className={`rounded-2xl border p-5 shadow-soft ${info.active ? (urgent ? "bg-card border-gold" : "bg-card border-primary/30") : "bg-destructive/10 border-destructive/40"}`}>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className={`flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full font-serif ${info.active ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"}`}>
+            <span className="text-2xl font-bold leading-none">{info.daysLeft}</span>
+            <span className="text-[9px] uppercase tracking-wider">days</span>
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">ID Status</div>
+            {info.active ? (
+              <>
+                <div className="font-serif text-xl text-primary">Active · {info.daysLeft} day{info.daysLeft === 1 ? "" : "s"} left</div>
+                <p className="text-sm text-muted-foreground">
+                  Your ID becomes inactive on <b>{formatDate(info.until)}</b>. Repurchase a product before this date to keep earning.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="font-serif text-xl text-destructive">Inactive — repurchase due</div>
+                <p className="text-sm text-muted-foreground">
+                  {info.until ? <>Your 30 days ended on <b>{formatDate(info.until)}</b>. </> : null}
+                  You will not receive direct or pair income until you buy a product and it is approved.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+        <button onClick={onRepurchase} className="rounded-full bg-gradient-gold px-5 py-2 text-sm font-semibold text-gold-foreground">
+          {info.active ? "Repurchase now" : "Repurchase to activate"}
+        </button>
+      </div>
+      {info.active && (
+        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className={`h-full ${urgent ? "bg-gold" : "bg-primary"}`} style={{ width: `${pct}%` }} />
+        </div>
+      )}
+    </div>
   );
 }
 

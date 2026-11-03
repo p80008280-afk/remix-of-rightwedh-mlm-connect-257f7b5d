@@ -22,6 +22,20 @@
       "when": 1788579261134,
       "tag": "0002_member_photos_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793678756857,
+      "tag": "0003_monthly_id_activation",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793678784291,
+      "tag": "0004_daily_expire_members_cron",
+      "breakpoints": true
     }
   ]
 }

@@ -37,7 +37,7 @@ function Terms() {
           Members earn a ₹500 direct commission on every direct member's product purchase and a ₹500 pair-matching bonus for each matched pair (subject to a daily cap of 20 pairs per member). Level income, rank rewards and leadership bonuses may be introduced in future updates.
         </Block>
         <Block title="4. Monthly Repurchase">
-          To remain active and eligible for pair matching income, every member must purchase at least one product per month.
+          Every activation or product repurchase keeps a member's ID active for 30 days. Once the 30 days end, the ID becomes inactive and does not receive direct or pair income until a new product purchase is approved.
         </Block>
         <Block title="5. Withdrawals">
           Minimum withdrawal is ₹300. A 5% TDS is deducted from every withdrawal. Approved withdrawals are paid to the member's registered UPI within 7 days.
